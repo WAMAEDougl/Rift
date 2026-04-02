@@ -30,26 +30,31 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect admin routes
+  // Protect admin routes — /admin/login stays public
   if (request.nextUrl.pathname.startsWith("/admin")) {
-    if (!user) {
+    const isLoginPage = request.nextUrl.pathname === "/admin/login";
+
+    if (!user && !isLoginPage) {
+      // Unauthenticated: send to admin login
       const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("redirect", request.nextUrl.pathname);
+      url.pathname = "/admin/login";
       return NextResponse.redirect(url);
     }
 
-    // Check admin/kitchen role
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    if (user && !isLoginPage) {
+      // Authenticated: verify the user has admin or kitchen role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
 
-    if (!profile || !["admin", "kitchen"].includes(profile.role)) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
+      if (!profile || !["admin", "kitchen"].includes(profile.role)) {
+        // Valid session but wrong role — bounce to home
+        const url = request.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+      }
     }
   }
 
