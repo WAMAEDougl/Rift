@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/utils/api";
 import type { STKCallbackData } from "@/lib/mpesa";
+import { createNotification } from "@/lib/admin/notifications";
 
 export async function POST(request: Request) {
   try {
@@ -48,6 +49,13 @@ export async function POST(request: Request) {
         event_type: "payment_confirmed",
         raw_payload: { receipt: receiptNumber },
       });
+
+      createNotification(
+        "payment_completed",
+        `Payment Received for #${order.order_number}`,
+        `M-Pesa payment confirmed. Receipt: ${receiptNumber}`,
+        order.id
+      );
     } else {
       // Payment failed
       await supabase
@@ -61,6 +69,13 @@ export async function POST(request: Request) {
         event_type: "payment_failed",
         raw_payload: { result_code: callback.ResultCode, result_desc: callback.ResultDesc },
       });
+
+      createNotification(
+        "payment_failed",
+        `Payment Failed for #${order.order_number}`,
+        `M-Pesa payment failed. Code: ${callback.ResultCode} - ${callback.ResultDesc}`,
+        order.id
+      );
     }
 
     return NextResponse.json({ ResultCode: 0, ResultDesc: "Accepted" });

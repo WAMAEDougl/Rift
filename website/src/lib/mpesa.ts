@@ -32,7 +32,7 @@ export interface STKCallbackData {
 }
 
 // Get OAuth token from Safaricom
-async function getOAuthToken(): Promise<string> {
+export async function getOAuthToken(): Promise<string> {
   const consumerKey = process.env.MPESA_CONSUMER_KEY!;
   const consumerSecret = process.env.MPESA_CONSUMER_SECRET!;
   const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
