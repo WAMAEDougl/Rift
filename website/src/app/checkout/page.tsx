@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/products";
@@ -10,21 +10,30 @@ import type { SavedCustomer } from "@/types/api";
 import {
   ShieldCheck, Truck, Beaker, Check, Loader2,
   AlertCircle, ShoppingBag, MessageCircle, MapPin, ChevronDown,
-  Plus, Minus, Trash2,
+  Plus, Minus, Trash2, Smartphone, Banknote, ArrowRight,
 } from "lucide-react";
+
+type Step = "form" | "awaiting_payment" | "confirmed";
 
 export default function CheckoutPage() {
   const { items, totalItems, totalPrice, clearCart, updateQuantity } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showNotes, setShowNotes] = useState(false);
+  const [step, setStep] = useState<Step>("form");
+
   const [orderResult, setOrderResult] = useState<{
     order_number: string;
+    order_id: string;
     total: number;
+    checkout_request_id?: string;
   } | null>(null);
+
+  const [pollingMsg, setPollingMsg] = useState("Waiting for M-Pesa confirmation...");
 
   const [form, setForm] = useState({
     name: "", phone: "", address: "", city: "Nairobi", delivery_type: "delivery", notes: "",
+    payment_method: "mpesa" as "mpesa" | "cash_on_delivery",
   });
 
   useEffect(() => {
@@ -34,14 +43,61 @@ export default function CheckoutPage() {
     }
   }, []);
 
+  // Poll order status for M-Pesa confirmation
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startPolling = (orderId: string) => {
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes at 5s intervals
+
+    pollRef.current = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await fetch(`/api/orders/${orderId}`);
+        const json = await res.json();
+        const order = json.data?.order;
+
+        if (order?.payment_status === "completed") {
+          clearInterval(pollRef.current!);
+          setOrderResult((prev) => prev ? { ...prev } : null);
+          setStep("confirmed");
+          clearCart();
+          const waMsg = `Hi! I've completed payment for order ${orderResult?.order_number}. Thank you!`;
+          window.open(getWhatsAppOrderLink(waMsg), "_blank");
+          return;
+        }
+
+        if (order?.payment_status === "failed") {
+          clearInterval(pollRef.current!);
+          setError("M-Pesa payment failed. Please try again or select cash on delivery.");
+          setStep("form");
+          return;
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(pollRef.current!);
+          setPollingMsg("Payment not confirmed after 5 minutes. You can wait for manual confirmation or contact us on WhatsApp.");
+        } else if (attempts % 6 === 0) {
+          setPollingMsg("Still waiting for confirmation... If you haven't received the M-Pesa prompt on your phone, check your phone or try again.");
+        }
+      } catch {}
+    }, 5000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
+
   const deliveryFee = totalPrice >= 2000 || form.delivery_type === "pickup" ? 0 : 200;
   const grandTotal = totalPrice + deliveryFee;
 
   const buildWhatsAppMessage = () =>
-    `Hi Ayola Foods! I'd like to order:\n\n${items.map((i) => `• ${i.quantity}x ${i.product.name} — KES ${(i.product.price * i.quantity).toLocaleString()}`).join("\n")}\n\nTotal: KES ${grandTotal.toLocaleString()}\n${form.name ? `Name: ${form.name}` : ""}${form.phone ? `\nPhone: ${form.phone}` : ""}${form.address ? `\nDeliver to: ${form.address}, ${form.city}` : ""}${form.notes ? `\nNotes: ${form.notes}` : ""}`;
+    `Hi Ayola Foods! I'd like to order:\n\n${items.map((i) => `• ${i.quantity}x ${i.product.name} — KES ${(i.product.price * i.quantity).toLocaleString()}`).join("\n")}\n\nTotal: KES ${grandTotal.toLocaleString()}`;
 
   // Empty cart
-  if (items.length === 0 && !orderResult) {
+  if (items.length === 0 && step === "form") {
     return (
       <div className="pt-32 pb-20 text-center">
         <ShoppingBag className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
@@ -54,8 +110,164 @@ export default function CheckoutPage() {
     );
   }
 
-  // Confirmation
-  if (orderResult) {
+  // Awaiting M-Pesa payment
+  if (step === "awaiting_payment" && orderResult) {
+    return (
+      <div className="pt-28 pb-20">
+        <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
+          <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Check Your Phone</h1>
+          <p className="text-muted-foreground mb-6">
+            An M-Pesa prompt has been sent to <strong>{form.phone}</strong>. Enter your PIN to complete payment.
+          </p>
+
+          <div className="bg-card rounded-2xl p-6 text-left mb-6 space-y-3 border border-border">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Order</span>
+              <span className="font-bold text-foreground font-mono">{orderResult.order_number}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Total</span>
+              <span className="font-bold text-primary">{formatPrice(orderResult.total)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Status</span>
+              <span className="text-amber-600 font-medium">Awaiting payment...</span>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground">{pollingMsg}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Confirmed
+  if (step === "confirmed" && orderResult) {
+    return (
+      <div className="pt-28 pb-20">
+        <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
+          <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check className="w-10 h-10 text-green-600 dark:text-green-400" />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Payment Confirmed!</h1>
+          <p className="text-muted-foreground mb-6">Your M-Pesa payment has been received. We&apos;re preparing your order now.</p>
+
+          <div className="bg-card rounded-2xl p-6 text-left mb-6 space-y-3 border border-border">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Order</span>
+              <span className="font-bold text-foreground font-mono">{orderResult.order_number}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Total</span>
+              <span className="font-bold text-primary">{formatPrice(orderResult.total)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Payment</span>
+              <span className="flex items-center gap-1 text-green-600 font-medium"><Check className="w-4 h-4" /> Paid via M-Pesa</span>
+            </div>
+          </div>
+
+          <div className="flex gap-3 flex-wrap justify-center">
+            <Link href="/products" className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors">
+              Continue Shopping
+            </Link>
+            <a href={getWhatsAppOrderLink(`Hi! My order ${orderResult.order_number} is paid. Just confirming!`)} target="_blank" rel="noopener noreferrer"
+              className="bg-whatsapp text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-colors inline-flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" /> WhatsApp Us
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handlePlaceOrder = async () => {
+    if (!form.name.trim()) { setError("Enter your name"); return; }
+    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 9) { setError("Enter a valid phone number"); return; }
+    if (form.delivery_type !== "pickup" && !form.address.trim()) { setError("Enter a delivery address"); return; }
+
+    setLoading(true);
+    setError("");
+    setItem(STORAGE_KEYS.CUSTOMER, { name: form.name, phone: form.phone, address: form.address, city: form.city });
+
+    const phone = form.phone.replace(/\D/g, "");
+    const normalizedPhone = phone.startsWith("0") ? `254${phone.slice(1)}` : phone.startsWith("+") ? phone.slice(1) : phone;
+
+    try {
+      // Step 1: Create order
+      const res = await fetch("/api/orders", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer_name: form.name, customer_phone: form.phone,
+          delivery_address: form.delivery_type === "pickup" ? "Pickup — Ruhan Plaza, Kahawa Sukari" : form.address,
+          delivery_city: form.city, delivery_type: form.delivery_type, order_notes: form.notes || null,
+          payment_method: form.payment_method,
+          items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Order failed. Please try again."); setLoading(false); return; }
+
+      const orderId = data.order.id;
+
+      if (form.payment_method === "mpesa") {
+        // Step 2: Trigger M-Pesa STK push
+        const mpesaRes = await fetch("/api/payments/mpesa/initiate", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order_id: orderId, phone: normalizedPhone }),
+        });
+        const mpesaData = await mpesaRes.json();
+
+        if (mpesaRes.ok && mpesaData.data?.checkout_request_id) {
+          // Step 3: Show awaiting payment, start polling
+          setOrderResult({
+            order_number: data.order.order_number,
+            order_id: orderId,
+            total: data.order.total,
+            checkout_request_id: mpesaData.data.checkout_request_id,
+          });
+          setPollingMsg("Waiting for M-Pesa confirmation...");
+          setStep("awaiting_payment");
+          startPolling(orderId);
+        } else {
+          // Fallback to cash
+          console.warn("M-Pesa STK push failed:", mpesaData);
+          setForm((prev) => ({ ...prev, payment_method: "cash_on_delivery" }));
+          setOrderResult({
+            order_number: data.order.order_number,
+            order_id: orderId,
+            total: data.order.total,
+          });
+          clearCart();
+          setStep("confirmed");
+          const waMsg = `NEW ORDER ${data.order.order_number}\n\n${items.map((i) => `${i.quantity}x ${i.product.name}`).join("\n")}\n\nTotal: KES ${data.order.total}\nCustomer: ${form.name}\nPhone: ${form.phone}\nPayment: Cash on Delivery\n${form.delivery_type === "pickup" ? "PICKUP" : `Deliver to: ${form.address}, ${form.city}`}`;
+          window.open(getWhatsAppOrderLink(waMsg), "_blank");
+        }
+      } else {
+        // Cash on delivery
+        setOrderResult({
+          order_number: data.order.order_number,
+          order_id: orderId,
+          total: data.order.total,
+        });
+        clearCart();
+        setStep("confirmed");
+        const waMsg = `NEW ORDER ${data.order.order_number}\n\n${items.map((i) => `${i.quantity}x ${i.product.name}`).join("\n")}\n\nTotal: KES ${data.order.total}\nCustomer: ${form.name}\nPhone: ${form.phone}\nPayment: Cash on Delivery\n${form.delivery_type === "pickup" ? "PICKUP" : `Deliver to: ${form.address}, ${form.city}`}`;
+        window.open(getWhatsAppOrderLink(waMsg), "_blank");
+      }
+    } catch {
+      window.open(getWhatsAppOrderLink(buildWhatsAppMessage()), "_blank");
+      setError("Network issue — we've opened WhatsApp to complete your order.");
+    } finally { setLoading(false); }
+  };
+
+  const inputCls = "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm placeholder:text-muted-foreground/50";
+
+  // Cash confirmation view (when STK push failed and fell back to cash)
+  if (step === "confirmed" && orderResult && form.payment_method === "cash_on_delivery") {
     return (
       <div className="pt-28 pb-20">
         <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
@@ -76,7 +288,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Payment</span>
-              <span className="font-medium text-foreground">Pay on Delivery / M-Pesa to Ayola</span>
+              <span className="font-medium text-foreground">Pay on Delivery</span>
             </div>
           </div>
 
@@ -103,44 +315,6 @@ export default function CheckoutPage() {
       </div>
     );
   }
-
-  const handlePlaceOrder = async () => {
-    if (!form.name.trim()) { setError("Enter your name"); return; }
-    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 9) { setError("Enter a valid phone number"); return; }
-    if (form.delivery_type !== "pickup" && !form.address.trim()) { setError("Enter a delivery address"); return; }
-
-    setLoading(true);
-    setError("");
-    setItem(STORAGE_KEYS.CUSTOMER, { name: form.name, phone: form.phone, address: form.address, city: form.city });
-
-    const phone = form.phone.startsWith("0") ? form.phone : form.phone.startsWith("254") ? form.phone : form.phone.startsWith("+") ? form.phone : "0" + form.phone;
-
-    try {
-      const res = await fetch("/api/orders", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_name: form.name, customer_phone: phone,
-          delivery_address: form.delivery_type === "pickup" ? "Pickup — Ruhan Plaza, Kahawa Sukari" : form.address,
-          delivery_city: form.city, delivery_type: form.delivery_type, order_notes: form.notes || null,
-          payment_method: "cash_on_delivery",
-          items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || "Order failed. Please try again."); setLoading(false); return; }
-
-      setOrderResult({ order_number: data.order.order_number, total: data.order.total });
-      clearCart();
-      const waMsg = `NEW ORDER ${data.order.order_number}\n\n${items.map((i) => `${i.quantity}x ${i.product.name}`).join("\n")}\n\nTotal: KES ${data.order.total}\nCustomer: ${form.name}\nPhone: ${phone}\n${form.delivery_type === "pickup" ? "PICKUP" : `Deliver to: ${form.address}, ${form.city}`}`;
-      window.open(getWhatsAppOrderLink(waMsg), "_blank");
-    } catch {
-      window.open(getWhatsAppOrderLink(buildWhatsAppMessage()), "_blank");
-      setError("Network issue — we've opened WhatsApp to complete your order.");
-    } finally { setLoading(false); }
-  };
-
-  // Input class — reusable
-  const inputCls = "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm placeholder:text-muted-foreground/50";
 
   return (
     <div className="pt-28 pb-20 bg-muted/30 min-h-screen">
@@ -178,15 +352,6 @@ export default function CheckoutPage() {
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 text-sm">+254</span>
                   <input type="tel" placeholder="712 345 678" value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    onBlur={async () => {
-                      if (form.phone.replace(/\D/g, "").length >= 9 && !form.name) {
-                        try {
-                          const res = await fetch(`/api/customers/lookup?phone=${encodeURIComponent(form.phone)}`);
-                          const data = await res.json();
-                          if (data.customer) setForm((prev) => ({ ...prev, name: data.customer.name || prev.name, address: data.customer.address || prev.address }));
-                        } catch {}
-                      }
-                    }}
                     className={`${inputCls} pl-14`} />
                 </div>
               </div>
@@ -239,6 +404,40 @@ export default function CheckoutPage() {
               )}
             </div>
 
+            {/* Payment */}
+            <div className="bg-card rounded-2xl p-5 border border-border">
+              <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-primary" /> Payment
+              </h2>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setForm({ ...form, payment_method: "mpesa" })}
+                  className={`py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                    form.payment_method === "mpesa"
+                      ? "bg-green-600 text-white shadow-sm"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  <Smartphone className="w-4 h-4" /> M-Pesa
+                </button>
+                <button
+                  onClick={() => setForm({ ...form, payment_method: "cash_on_delivery" })}
+                  className={`py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                    form.payment_method === "cash_on_delivery"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  <Banknote className="w-4 h-4" /> Cash
+                </button>
+              </div>
+              {form.payment_method === "mpesa" && (
+                <p className="text-xs text-green-600 dark:text-green-400/70 mt-2">
+                  ✓ You&apos;ll receive an M-Pesa prompt on your phone to complete payment
+                </p>
+              )}
+            </div>
+
             {/* Notes */}
             <button onClick={() => setShowNotes(!showNotes)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               {showNotes ? "- Hide" : "+ Add"} order notes
@@ -258,11 +457,17 @@ export default function CheckoutPage() {
             {/* Place Order */}
             <button onClick={handlePlaceOrder} disabled={loading}
               className="w-full bg-primary text-primary-foreground py-4 rounded-2xl font-bold text-lg hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
-              {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Placing Order...</> : <>Place Order — {formatPrice(grandTotal)}</>}
+              {loading ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Placing Order...</>
+              ) : (
+                <>{form.payment_method === "mpesa" ? "Pay with M-Pesa" : "Place Order"} — {formatPrice(grandTotal)}</>
+              )}
             </button>
 
             <p className="text-xs text-muted-foreground/60 text-center">
-              Pay via M-Pesa or cash when your order arrives. We&apos;ll confirm on WhatsApp.
+              {form.payment_method === "mpesa"
+                ? "You'll get an M-Pesa prompt. We'll confirm once payment is received."
+                : "Pay via cash when your order arrives. We'll confirm on WhatsApp."}
             </p>
 
             <div className="flex items-center justify-center gap-5 text-[11px] text-muted-foreground/50 pt-1">

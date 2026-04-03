@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       .eq("id", order_id)
       .single();
 
-    if (orderError || !order || order.payment_status !== "pending") {
+    if (orderError || !order || !["pending", "processing"].includes(order.payment_status)) {
       return err("Order not found or not eligible for payment", "VALIDATION_ERROR", 422);
     }
 
@@ -68,12 +68,19 @@ export async function POST(request: Request) {
       })
       .eq("id", order_id);
 
+    const rawPayload = {
+      CheckoutRequestID: stkResponse.CheckoutRequestID,
+      response_code: stkResponse.ResponseCode,
+      response_description: stkResponse.ResponseDescription,
+      merchant_request_id: stkResponse.MerchantRequestID,
+    };
+
     // Insert payment log
     await supabase.from("payment_logs").insert({
       order_id,
       provider: "mpesa",
       event_type: "stk_push_initiated",
-      raw_payload: stkResponse,
+      raw_payload: rawPayload,
     });
 
     return ok({

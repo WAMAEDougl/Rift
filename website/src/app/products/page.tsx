@@ -1,23 +1,89 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import AnimatedSection from "@/components/AnimatedSection";
 import ProductCard from "@/components/ProductCard";
 import TextGenerateEffect from "@/components/aceternity/TextGenerateEffect";
-import { products, categories, getProductsByCategory } from "@/lib/products";
+import { products as fallbackProducts, categories as fallbackCategories, formatPrice } from "@/lib/products";
+import type { Product } from "@/lib/products";
 import { Leaf, ShoppingBag } from "lucide-react";
 
+interface Category {
+  slug: string;
+  name: string;
+  icon: string;
+  color: string;
+  bgColor: string;
+}
+
 export default function Products() {
+  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [categories, setCategories] = useState<Category[]>(fallbackCategories);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("all");
+
+  // Fetch products and categories from DB
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetch("/api/products").then(async (r) => {
+        const json = await r.json();
+        return json.products ?? [];
+      }).catch(() => []),
+      fetch("/api/categories").then(async (r) => {
+        const json = await r.json();
+        return json.categories ?? fallbackCategories;
+      }).catch(() => fallbackCategories),
+    ]).then(([dbProducts, dbCats]) => {
+      if (dbProducts && dbProducts.length > 0) {
+        const mapped = dbProducts.map((p: any) => ({
+          id: String(p.legacy_id || p.id),
+          name: p.name,
+          slug: p.slug,
+          category: p.category?.name ?? "",
+          categorySlug: p.category?.slug ?? "",
+          description: p.description ?? "",
+          longDescription: p.long_description ?? "",
+          price: p.price,
+          size: p.size ?? "",
+          image: p.image_url ?? "/images/products/placeholder.jpg",
+          features: p.features ?? [],
+          ingredients: p.ingredients ?? "",
+          nutritionHighlights: p.nutrition_highlights ?? [],
+          badge: p.badge ?? undefined,
+          inStock: p.in_stock ?? true,
+        }));
+        setProducts(mapped);
+      }
+      if (dbCats && dbCats.length > 0) {
+        setCategories(dbCats.map((c: Category) => ({
+          slug: c.slug,
+          name: c.name,
+          icon: c.icon ?? "🍽️",
+          color: c.color ?? fallbackCategories[0]?.color,
+          bgColor: c.bgColor ?? "bg-gray-50",
+        })));
+      }
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
 
   const filteredProducts =
     activeCategory === "all"
       ? products
-      : getProductsByCategory(activeCategory);
+      : products.filter((p) => p.categorySlug === activeCategory);
 
   const getCategoryMeta = (slug: string) =>
     categories.find((c) => c.slug === slug);
+
+  if (loading) {
+    return (
+      <div className="pt-32 pb-20 text-center">
+        <p className="text-muted-foreground/60 text-lg">Loading products...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -90,7 +156,7 @@ export default function Products() {
               const catMeta = getCategoryMeta(product.categorySlug);
               return (
                 <ProductCard
-                  key={product.id}
+                  key={product.slug}
                   product={product}
                   categoryColor={catMeta?.color || "from-amber-200 to-orange-300"}
                   categoryIcon={catMeta?.icon || "🍽️"}
@@ -109,3 +175,4 @@ export default function Products() {
     </>
   );
 }
+

@@ -301,6 +301,74 @@ export interface Database {
           },
         ];
       };
+      store_settings: {
+        Row: {
+          id: number;
+          store_name: string;
+          support_email: string | null;
+          support_phone: string | null;
+          default_delivery_fee: number;
+          delivery_cities: string[];
+          order_notification_emails: string[];
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          store_name?: string;
+          support_email?: string | null;
+          support_phone?: string | null;
+          default_delivery_fee?: number;
+          delivery_cities?: string[];
+          order_notification_emails?: string[];
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          store_name?: string;
+          support_email?: string | null;
+          support_phone?: string | null;
+          default_delivery_fee?: number;
+          delivery_cities?: string[];
+          order_notification_emails?: string[];
+        };
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          type: string;
+          title: string;
+          message: string;
+          order_id: string | null;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          type: string;
+          title: string;
+          message: string;
+          order_id?: string | null;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          type?: string;
+          title?: string;
+          message?: string;
+          order_id?: string | null;
+          is_read?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
