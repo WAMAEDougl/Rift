@@ -1,9 +1,23 @@
+import { Manrope } from "next/font/google"
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-manrope",
+})
+
 // This layout sits above the app root layout which has Navbar/Footer.
 // We use fixed inset-0 z-50 to cover them for admin pages.
 export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 bg-white overflow-auto">
-      {children}
-    </div>
-  );
+    <>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet"
+      />
+      <div className={`${manrope.variable} fixed inset-0 z-50 bg-[#fcf8ff] overflow-auto`}>
+        {children}
+      </div>
+    </>
+  )
 }

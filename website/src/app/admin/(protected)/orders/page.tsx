@@ -1,10 +1,17 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import {
+  TrendingUp,
+  Clock,
+  ArrowUpRight,
+  ShoppingBag,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+} from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
@@ -43,9 +50,6 @@ interface OrdersResponse {
   }
   error: string | null
 }
-
-const FILTER_INPUT_CLASS =
-  "border border-gray-200 rounded-md px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
 
 export default function OrdersPage() {
   const router = useRouter()
@@ -178,196 +182,214 @@ export default function OrdersPage() {
     }
   }
 
-  const pageNumbers = pagination
-    ? Array.from({ length: pagination.total_pages }, (_, i) => i + 1)
-    : []
+  const getPageNumbers = (): (number | "...")[] => {
+    if (!pagination) return []
+    const { total_pages } = pagination
+    if (total_pages <= 5) return Array.from({ length: total_pages }, (_, i) => i + 1)
+    if (page <= 3) return [1, 2, 3, "...", total_pages]
+    if (page >= total_pages - 2) return [1, "...", total_pages - 2, total_pages - 1, total_pages]
+    return [1, "...", page, "...", total_pages]
+  }
+
+  const stats = useMemo(() => {
+    const totalRevenue = orders.reduce((acc, o) => acc + o.total, 0)
+    const pendingCount = orders.filter((o) => o.status === "pending").length
+    return { totalRevenue, pendingCount }
+  }, [orders])
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Orders</h1>
-          {pagination && (
-            <p className="text-sm text-gray-500 mt-0.5">{pagination.total} total orders</p>
-          )}
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 w-full px-4">
+      {/* ── High-Premium Header ── */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 pb-2">
+        <div className="space-y-1">
+          <p className="text-[#22c55e] text-[10px] font-black uppercase tracking-[0.4em]">Customer Orders</p>
+          <h2 className="text-4xl font-black tracking-tighter text-[#1a1a2e]" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
+            Orders
+          </h2>
+          <div className="flex items-center gap-3 text-slate-400">
+            <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
+              {pagination?.total.toLocaleString()} Total Orders
+            </span>
+            <div className="h-3 w-px bg-slate-200" />
+            <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">Sales History</span>
+          </div>
+        </div>
+        <button className="bg-[#1a1a2e] text-white px-7 py-3.5 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#1a1a2e]/20 flex items-center gap-4 hover:bg-slate-800 hover:scale-[1.02] active:scale-95 transition-all group relative overflow-hidden">
+           <span className="material-symbols-outlined text-[18px] group-hover:rotate-180 transition-transform duration-700">add_circle</span>
+           <span className="relative z-10">Create New Order</span>
+        </button>
+      </div>
+
+      {/* ── Sophisticated Filter Rows ── */}
+      <div className="bg-white p-1 pb-4 rounded-[48px] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.08)] border border-slate-50/50 relative overflow-hidden group">
+         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/2 rounded-full -translate-y-16 translate-x-16 blur-2xl group-hover:scale-125 transition-transform duration-1000"></div>
+        <div className="p-8 space-y-8 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+            {/* Search Input Container */}
+            <div className="md:col-span-5 relative group/input">
+              <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors group-focus-within/input:text-[#22c55e] text-xl">search</span>
+              <input
+                className="w-full pl-14 pr-6 py-4.5 bg-slate-50/50 border border-transparent rounded-[24px] text-sm text-[#1a1a2e] font-bold focus:bg-white focus:ring-4 focus:ring-[#22c55e]/10 transition-all placeholder:text-slate-400 placeholder:font-black placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest outline-none shadow-inner"
+                placeholder="Search by ID or name..."
+                type="text"
+                value={q}
+                onChange={(e) => updateParam({ q: e.target.value })}
+              />
+            </div>
+            
+            {/* Action Group Grid */}
+            <div className="md:col-span-7 grid grid-cols-3 gap-4">
+              <select
+                className="py-4 px-6 bg-slate-50 border-none rounded-[20px] text-[10px] font-black uppercase tracking-widest text-[#1a1a2e] focus:ring-4 focus:ring-[#22c55e]/10 transition-all cursor-pointer appearance-none outline-none shadow-sm"
+                value={status}
+                onChange={(e) => updateParam({ status: e.target.value })}
+              >
+                <option value="">Status</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="preparing">Preparing</option>
+                <option value="ready">Ready</option>
+                <option value="dispatched">Dispatched</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <select
+                className="py-4 px-6 bg-slate-50 border-none rounded-[20px] text-[10px] font-black uppercase tracking-widest text-[#1a1a2e] focus:ring-4 focus:ring-[#22c55e]/10 transition-all cursor-pointer appearance-none outline-none shadow-sm"
+                value={paymentStatus}
+                onChange={(e) => updateParam({ payment_status: e.target.value })}
+              >
+                <option value="">Payments</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="failed">Failed</option>
+                <option value="refunded">Refunded</option>
+              </select>
+               <select
+                className="py-4 px-6 bg-slate-50 border-none rounded-[20px] text-[10px] font-black uppercase tracking-widest text-[#1a1a2e] focus:ring-4 focus:ring-[#22c55e]/10 transition-all cursor-pointer appearance-none outline-none shadow-sm"
+                value={deliveryType}
+                onChange={(e) => updateParam({ delivery_type: e.target.value })}
+              >
+                <option value="">Order Type</option>
+                <option value="delivery">Delivery</option>
+                <option value="pickup">Pickup</option>
+                <option value="shipping">Shipping</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-center bg-[#fcf8ff] p-4 rounded-[32px] border border-slate-100 gap-4">
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2 group cursor-pointer">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-[#22c55e] transition-colors">Today's Orders</span>
+              </div>
+              <div className="w-px h-4 bg-slate-200 self-center" />
+              <div className="flex items-center gap-2 group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#1a1a2e]" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Live Orders</span>
+              </div>
+            </div>
+            <button
+              onClick={clearFilters}
+              className="text-[#1a1a2e] text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3 hover:bg-white px-6 py-2.5 rounded-full transition-all border border-transparent hover:border-slate-100 shadow-sm hover:shadow-lg active:scale-95"
+            >
+              <span className="material-symbols-outlined text-lg leading-none">close</span>
+              Reset Filters
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 flex flex-wrap gap-3">
-        <input
-          type="text"
-          placeholder="Search order #, customer..."
-          value={q}
-          onChange={(e) => updateParam({ q: e.target.value })}
-          className={FILTER_INPUT_CLASS + " min-w-[200px]"}
-        />
-
-        <select
-          value={status}
-          onChange={(e) => updateParam({ status: e.target.value })}
-          className={FILTER_INPUT_CLASS}
-        >
-          <option value="">All statuses</option>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="preparing">Preparing</option>
-          <option value="ready">Ready</option>
-          <option value="dispatched">Dispatched</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-
-        <select
-          value={paymentStatus}
-          onChange={(e) => updateParam({ payment_status: e.target.value })}
-          className={FILTER_INPUT_CLASS}
-        >
-          <option value="">All payments</option>
-          <option value="pending">Pending</option>
-          <option value="processing">Processing</option>
-          <option value="completed">Completed</option>
-          <option value="failed">Failed</option>
-          <option value="refunded">Refunded</option>
-        </select>
-
-        <select
-          value={deliveryType}
-          onChange={(e) => updateParam({ delivery_type: e.target.value })}
-          className={FILTER_INPUT_CLASS}
-        >
-          <option value="">All delivery types</option>
-          <option value="delivery">Delivery</option>
-          <option value="pickup">Pickup</option>
-          <option value="shipping">Shipping</option>
-        </select>
-
-        <input
-          type="date"
-          value={from}
-          onChange={(e) => updateParam({ from: e.target.value })}
-          className={FILTER_INPUT_CLASS}
-          title="From date"
-        />
-
-        <input
-          type="date"
-          value={to}
-          onChange={(e) => updateParam({ to: e.target.value })}
-          className={FILTER_INPUT_CLASS}
-          title="To date"
-        />
-
-        {(q || status || paymentStatus || deliveryType || from || to) && (
-          <button
-            onClick={clearFilters}
-            className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 px-2 py-1.5 rounded-md hover:bg-gray-100 transition-colors"
-          >
-            <X size={14} />
-            Clear
-          </button>
-        )}
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+      {/* ── Data Catalog Grid ── */}
+      <div className="bg-white rounded-[60px] overflow-hidden shadow-[0_20px_80px_-20px_rgba(26,26,46,0.06)] border border-slate-50/50">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-4 py-3 text-left w-10">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    onChange={toggleAll}
-                    className="rounded border-gray-300 text-orange-500 focus:ring-orange-400"
-                  />
+              <tr className="bg-slate-50/40 border-b border-slate-100/50">
+                <th className="p-10 w-12 text-center">
+                  <div className="flex items-center justify-center">
+                     <input
+                      className="w-5 h-5 rounded-lg border-slate-300 text-[#22c55e] focus:ring-[#22c55e]/20 transition-all"
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleAll}
+                    />
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Order #</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Customer</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Items</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Total</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Delivery</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Payment</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Date</th>
+                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Order Information</th>
+                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Customer</th>
+                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Items</th>
+                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Total Price</th>
+                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Status</th>
+                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-slate-50">
               {loading
-                ? Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="px-4 py-3">
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-4 w-4 rounded" />
+                ? Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="p-10 text-center"><Skeleton className="h-5 w-5 mx-auto rounded-lg" /></td>
+                      <td className="p-8"><Skeleton className="h-6 w-24 rounded-lg" /></td>
+                      <td className="p-8">
+                        <Skeleton className="h-5 w-32 mb-2" />
+                        <Skeleton className="h-3 w-40" />
                       </td>
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-4 w-24" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-4 w-32" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-4 w-10" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-4 w-20" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-5 w-16 rounded-full" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-5 w-20 rounded-full" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-5 w-20 rounded-full" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-4 w-24" />
-                      </td>
+                      <td className="p-8 text-center"><Skeleton className="h-6 w-10 mx-auto rounded-lg" /></td>
+                      <td className="p-8"><Skeleton className="h-6 w-24 rounded-lg" /></td>
+                      <td className="p-8"><Skeleton className="h-8 w-32 rounded-full" /></td>
+                      <td className="p-8 text-right"><Skeleton className="h-4 w-28 ml-auto" /></td>
                     </tr>
                   ))
                 : orders.map((order) => (
                     <tr
                       key={order.id}
-                      className={`hover:bg-gray-50 transition-colors ${selectedIds.has(order.id) ? "bg-orange-50" : ""}`}
+                      className={`hover:bg-[#fcf8ff] transition-all duration-300 group border-b border-slate-50 last:border-0 relative ${
+                        selectedIds.has(order.id) ? "bg-[#22c55e]/5" : ""
+                      }`}
                     >
-                      <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(order.id)}
-                          onChange={() => toggleRow(order.id)}
-                          className="rounded border-gray-300 text-orange-500 focus:ring-orange-400"
-                        />
+                      <td className="p-10 text-center">
+                        <div className="flex items-center justify-center">
+                          <input
+                            checked={selectedIds.has(order.id)}
+                            onChange={() => toggleRow(order.id)}
+                            className="w-5 h-5 rounded-lg border-slate-300 text-[#22c55e] focus:ring-[#22c55e]/20 cursor-pointer shadow-sm"
+                            type="checkbox"
+                          />
+                        </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="p-8">
                         <Link
                           href={`/admin/orders/${order.id}`}
-                          className="font-mono text-sm text-orange-600 hover:text-orange-700 hover:underline"
+                          className="font-black text-[#006e2f] bg-[#22c55e]/5 px-4 py-2.5 rounded-2xl hover:bg-[#006e2f] hover:text-white transition-all text-sm shadow-sm inline-block group-hover:scale-105 active:scale-95"
                         >
                           {order.order_number}
                         </Link>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">{order.customer_name}</div>
-                        <div className="text-gray-500 text-xs">{order.customer_phone}</div>
+                      <td className="p-8">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-[#1a1a2e] text-[10px] font-black shadow-inner border border-slate-200">
+                             {order.customer_name?.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-black text-sm text-[#1a1a2e] tracking-tight">{order.customer_name}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{order.customer_phone}</p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{order.item_count}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">
-                        {formatKES(order.total)}
+                      <td className="p-8 text-center">
+                         <div className="inline-flex items-center justify-center w-10 h-10 bg-slate-50 rounded-2xl font-black text-[#1a1a2e] text-xs">
+                          {order.item_count}
+                         </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="p-8 font-black text-[#1a1a2e] text-lg tracking-tighter">{formatKES(order.total)}</td>
+                      <td className="p-8 space-y-2">
                         <StatusBadge status={order.delivery_type} type="delivery" />
-                      </td>
-                      <td className="px-4 py-3">
                         <StatusBadge status={order.status} type="order" />
                       </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={order.payment_status} type="payment" />
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
-                        <span title={formatDate(order.created_at)}>
-                          {formatRelativeTime(order.created_at)}
-                        </span>
+                      <td className="p-8 text-right">
+                        <p className="text-[11px] font-black text-[#1a1a2e] uppercase tracking-tighter">{formatDate(order.created_at)}</p>
+                        <p className="text-[10px] font-bold text-slate-400 mt-1 opacity-60">{formatRelativeTime(order.created_at)}</p>
                       </td>
                     </tr>
                   ))}
@@ -375,127 +397,183 @@ export default function OrdersPage() {
           </table>
         </div>
 
-        {/* Empty state */}
+        {/* ── Empty Catalog Feedback ── */}
         {!loading && orders.length === 0 && (
-          <div className="py-16 text-center">
-            <p className="text-gray-900 font-medium">No orders found</p>
-            <p className="text-gray-500 text-sm mt-1">
-              Try adjusting your filters or check back later.
+          <div className="flex flex-col items-center justify-center py-40 text-center">
+            <div className="w-32 h-32 bg-slate-50/50 rounded-full flex items-center justify-center mb-8 text-5xl animate-in zoom-in duration-700">📦</div>
+            <h3 className="text-3xl font-black text-[#1a1a2e] mb-3 tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>No orders found</h3>
+            <p className="text-slate-400 max-w-sm mx-auto text-sm font-medium leading-relaxed opacity-60">
+              We couldn't find any orders matching your current filters. Try expanding your search.
             </p>
+          </div>
+        )}
+
+        {/* ── Precision Pagination Control ── */}
+        {pagination && pagination.total_pages > 1 && (
+          <div className="p-10 flex flex-col md:flex-row items-center justify-between border-t border-slate-50 bg-[#fcf8ff]/30 gap-8">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              Showing <span className="text-[#1a1a2e]">{orders.length}</span> / <span className="text-[#1a1a2e]">{pagination.total.toLocaleString()}</span> orders
+            </p>
+            <div className="flex items-center gap-6">
+              <button
+                onClick={() => goToPage(page - 1)}
+                disabled={page <= 1}
+                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-20 transition-all duration-300"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <div className="flex gap-3 p-2 bg-white border border-slate-100 rounded-[28px] shadow-sm">
+                {getPageNumbers().map((p, i) =>
+                  p === "..." ? (
+                    <span key={`ellipsis-${i}`} className="w-12 h-12 flex items-center justify-center text-slate-300 font-bold">...</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => goToPage(p as number)}
+                      className={`w-12 h-12 rounded-2xl font-black text-[11px] flex items-center justify-center transition-all ${
+                        p === page ? "bg-[#1a1a2e] text-white shadow-xl shadow-[#1a1a2e]/20 scale-110" : "hover:bg-slate-50 text-slate-400"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+              </div>
+              <button
+                onClick={() => goToPage(page + 1)}
+                disabled={page >= pagination.total_pages}
+                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-20 transition-all duration-300"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Pagination */}
-      {pagination && pagination.total_pages > 1 && (
-        <div className="flex items-center justify-center gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => goToPage(page - 1)}
-            disabled={page <= 1}
-            className="gap-1"
-          >
-            <ChevronLeft size={14} />
-            Previous
-          </Button>
-          {pageNumbers.map((p) => (
-            <Button
-              key={p}
-              variant={p === page ? "default" : "outline"}
-              size="sm"
-              onClick={() => goToPage(p)}
-              className={p === page ? "bg-orange-500 hover:bg-orange-600 text-white border-orange-500" : ""}
-            >
-              {p}
-            </Button>
-          ))}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => goToPage(page + 1)}
-            disabled={!pagination || page >= pagination.total_pages}
-            className="gap-1"
-          >
-            Next
-            <ChevronRight size={14} />
-          </Button>
+      {/* ── Analytical Footer Grid ── */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="bg-white p-10 rounded-[48px] shadow-[0_4px_40px_rgba(0,0,0,0.02)] border border-slate-50 flex flex-col justify-between min-h-[180px] hover:translate-y-[-4px] transition-transform group">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">Total Revenue</p>
+              <div className="p-2 bg-green-50 rounded-lg text-[#006e2f] opacity-0 group-hover:opacity-100 transition-opacity">
+                <TrendingUp size={16} />
+              </div>
+            </div>
+            <h3 className="text-4xl font-black text-[#1a1a2e] tracking-tighter leading-none" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>{formatKES(stats.totalRevenue)}</h3>
+          </div>
+          <div className="pt-4 border-t border-slate-50 mt-4">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">Sales Summary (Current Page)</span>
+          </div>
         </div>
-      )}
 
-      {/* Bulk action bar */}
+        <div className="bg-[#1a1a2e] p-10 rounded-[48px] shadow-2xl flex flex-col justify-between min-h-[180px] relative overflow-hidden group">
+          <ShoppingBag size={180} className="absolute -right-12 -bottom-12 text-white/5 rotate-12 group-hover:scale-110 transition-transform duration-700" />
+          <div className="relative z-10 space-y-4">
+             <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] leading-none mb-1">Needs Attention</p>
+             <h3 className="text-4xl font-black text-white tracking-tighter leading-none">{stats.pendingCount} Pending</h3>
+          </div>
+          <div className="relative z-10 pt-4 border-t border-white/10 mt-4 flex justify-between items-center">
+            <span className="text-[10px] font-black text-white opacity-60 uppercase tracking-widest">Orders awaiting fulfillment</span>
+            <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse" />
+          </div>
+        </div>
+
+        <div className="bg-white p-10 rounded-[48px] shadow-[0_4px_40px_rgba(0,0,0,0.02)] border border-slate-50 flex flex-col justify-between min-h-[180px] hover:translate-y-[-4px] transition-transform group">
+          <div className="space-y-4">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">Order Processing</p>
+            <h3 className="text-4xl font-black text-[#1a1a2e] tracking-tighter leading-none">Healthy</h3>
+          </div>
+          <div className="pt-4 border-t border-slate-50 mt-4 flex items-center gap-3">
+            <span className="material-symbols-outlined text-[#22c55e] text-sm font-black">sync_check</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">System status: Online</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Floating Curator Bar ── */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-gray-900 text-white rounded-xl shadow-xl px-5 py-3">
-          <span className="text-sm font-medium">
-            {selectedIds.size} order{selectedIds.size !== 1 ? "s" : ""} selected
-          </span>
-          <div className="w-px h-5 bg-gray-700" />
-          <Button
-            size="sm"
-            onClick={handleBulkConfirm}
-            disabled={bulkLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
-          >
-            Mark Confirmed
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setShowCancelDialog(true)}
-            disabled={bulkLoading}
-            className="border-red-400 text-red-400 hover:bg-red-900/20 text-xs"
-          >
-            Cancel Orders
-          </Button>
+        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a2e]/90 backdrop-blur-2xl px-10 py-6 rounded-[32px] shadow-[0_40px_100px_rgba(0,0,0,0.4)] flex items-center gap-10 border border-white/20 animate-in fade-in slide-in-from-bottom-10">
+          <div className="flex items-center gap-5">
+            <div className="w-12 h-12 rounded-2xl bg-[#22c55e] text-white font-black text-sm flex items-center justify-center shadow-[0_10px_30px_rgba(34,197,94,0.4)] rotate-3">
+              {selectedIds.size}
+            </div>
+            <div className="text-left">
+              <span className="text-white text-xs font-black uppercase tracking-widest block">Batch Actions</span>
+              <span className="text-white/40 text-[10px] font-bold uppercase tracking-tighter">Manage multiple orders</span>
+            </div>
+          </div>
+          <div className="h-10 w-px bg-white/10 self-center"></div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBulkConfirm}
+              disabled={bulkLoading}
+              className="bg-white text-[#1a1a2e] px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#22c55e] hover:text-white hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-50"
+            >
+              Confirm Orders
+            </button>
+            <button
+              onClick={() => setShowCancelDialog(true)}
+              disabled={bulkLoading}
+              className="bg-transparent border border-red-500/40 text-red-400 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
+            >
+              Cancel Orders
+            </button>
+          </div>
           <button
             onClick={() => setSelectedIds(new Set())}
-            className="text-gray-400 hover:text-white ml-1"
-            aria-label="Clear selection"
+            className="w-10 h-10 flex items-center justify-center text-white/20 hover:text-white transition-all hover:bg-white/10 rounded-full"
           >
-            <X size={14} />
+            <span className="material-symbols-outlined text-2xl">close</span>
           </button>
         </div>
       )}
 
-      {/* Bulk cancel dialog */}
+      {/* ── Dialog Refinement ── */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cancel {selectedIds.size} order{selectedIds.size !== 1 ? "s" : ""}?</DialogTitle>
+        <DialogContent className="rounded-[40px] p-12 max-w-lg border-none shadow-[0_60px_120px_rgba(0,0,0,0.5)] bg-white animate-in zoom-in-95">
+          <DialogHeader className="space-y-6">
+            <div className="w-24 h-24 bg-red-50 rounded-[32px] flex items-center justify-center text-red-500 mx-auto shadow-inner">
+              <span className="material-symbols-outlined text-5xl">warning</span>
+            </div>
+            <div className="text-center space-y-2">
+              <DialogTitle className="text-4xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
+                Confirm Cancellation
+              </DialogTitle>
+              <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-sm mx-auto">
+                Are you sure you want to cancel <span className="text-[#1a1a2e] font-black">{selectedIds.size} selected orders</span>?
+              </p>
+            </div>
           </DialogHeader>
-          <p className="text-sm text-gray-600">
-            This will cancel all selected orders. This action cannot be undone.
-          </p>
-          <div className="mt-2">
-            <label className="text-sm font-medium text-gray-700 block mb-1">
-              Reason (optional)
-            </label>
+          <div className="mt-10 space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 ml-1">Reason for Cancellation</label>
             <textarea
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
-              placeholder="e.g. Customer requested cancellation"
-              rows={3}
-              className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+              placeholder="Enter a reason for cancelling these orders..."
+              rows={4}
+              className="w-full bg-slate-50/50 border border-slate-100 rounded-[24px] px-6 py-5 text-sm font-bold text-[#1a1a2e] focus:bg-white focus:ring-4 focus:ring-red-500/5 focus:border-red-500/50 outline-none resize-none transition-all shadow-inner"
             />
           </div>
-          <DialogFooter className="mt-4 gap-2">
-            <Button
-              variant="outline"
+          <DialogFooter className="mt-10 flex-row gap-4">
+            <button
               onClick={() => {
                 setShowCancelDialog(false)
                 setCancelReason("")
               }}
               disabled={bulkLoading}
+              className="flex-1 px-4 py-5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-[24px] text-xs font-black uppercase tracking-widest transition-all active:scale-95"
             >
-              Keep Orders
-            </Button>
-            <Button
+              Go Back
+            </button>
+            <button
               onClick={handleBulkCancel}
               disabled={bulkLoading}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="flex-1 px-4 py-5 bg-red-600 hover:bg-red-700 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-[0_20px_40px_rgba(220,38,38,0.3)] transition-all active:scale-95"
             >
-              {bulkLoading ? "Cancelling..." : "Cancel Orders"}
-            </Button>
+              {bulkLoading ? "Processing..." : "Cancel Orders"}
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

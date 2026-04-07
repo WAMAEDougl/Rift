@@ -15,8 +15,8 @@ export default async function SettingsPage() {
 
   return (
     <SettingsPageClient
-      initialSettings={settings}
-      adminUsers={adminUsers ?? []}
+      settings={settings}
+      users={adminUsers ?? []}
       mpesaEnv={process.env.MPESA_ENVIRONMENT === "production" ? "production" : "sandbox"}
     />
   );

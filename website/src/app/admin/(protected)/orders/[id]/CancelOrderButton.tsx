@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { AlertTriangle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -51,40 +52,48 @@ export function CancelOrderButton({ orderId, orderNumber }: Props) {
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-red-200 p-6">
-        <h3 className="text-sm font-semibold text-red-700 uppercase tracking-wide mb-3">
+      {/* ── Danger Zone Card ── */}
+      <div className="bg-red-50/60 rounded-3xl p-8 border border-red-100">
+        <h3
+          className="font-bold text-lg text-red-600 mb-4 flex items-center gap-2"
+          style={{ fontFamily: "var(--font-manrope, sans-serif)" }}
+        >
+          <AlertTriangle size={18} />
           Danger Zone
         </h3>
-        <p className="text-sm text-gray-500 mb-4">
-          Cancelling an order cannot be undone. The customer will need to place a new order.
+        <p className="text-xs text-red-400/80 mb-6 leading-relaxed">
+          Cancelling this order will notify the customer. This action cannot be
+          undone.
         </p>
-        <Button
-          variant="outline"
+        <button
           onClick={() => setOpen(true)}
-          className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 text-sm"
+          className="w-full border-2 border-red-500 text-red-600 py-3 rounded-xl font-bold text-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2"
         >
+          <X size={16} />
           Cancel Order
-        </Button>
+        </button>
       </div>
 
+      {/* ── Confirmation Dialog ── */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Cancel order {orderNumber}?</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-gray-600">
-            Are you sure you want to cancel this order? This action cannot be undone.
+          <p className="text-sm text-slate-600">
+            Are you sure you want to cancel this order? This action cannot be
+            undone.
           </p>
           <div className="mt-2">
-            <label className="text-sm font-medium text-gray-700 block mb-1">
+            <label className="text-sm font-medium text-slate-600 block mb-1">
               Reason (optional)
             </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g. Out of stock, customer request..."
+              placeholder="e.g. Out of stock, customer request…"
               rows={3}
-              className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-[#1a1a2e] focus:outline-none focus:ring-2 focus:ring-[#22c55e]/40 resize-none"
             />
           </div>
           <DialogFooter className="mt-4 gap-2">
@@ -103,7 +112,7 @@ export function CancelOrderButton({ orderId, orderNumber }: Props) {
               disabled={loading}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              {loading ? "Cancelling..." : "Cancel Order"}
+              {loading ? "Cancelling…" : "Cancel Order"}
             </Button>
           </DialogFooter>
         </DialogContent>

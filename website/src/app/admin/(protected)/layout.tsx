@@ -2,7 +2,6 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getAdminClient } from "@/lib/admin/supabase"
 import AdminSidebar from "@/components/admin/AdminSidebar"
-import AdminTopbar from "@/components/admin/AdminTopbar"
 
 export default async function AdminProtectedLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -21,17 +20,19 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
 
   if (!profile || !["admin", "kitchen"].includes(profile.role)) redirect("/admin/login")
 
+  const userName = profile.full_name ?? profile.email ?? "Admin"
+
   return (
-    <div className="flex h-full">
-      <AdminSidebar role={profile.role as "admin" | "kitchen"} />
-      <div className="flex flex-col flex-1 min-w-0">
-        <AdminTopbar
-          user={{
-            name: profile.full_name ?? profile.email ?? "Admin",
-            role: profile.role as "admin" | "kitchen",
-          }}
-        />
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">{children}</main>
+    <div className="flex h-screen overflow-hidden bg-[#fcf8ff]">
+      <AdminSidebar
+        role={profile.role as "admin" | "kitchen"}
+        userName={userName}
+        userRole={profile.role}
+      />
+      <div className="flex-1 flex flex-col min-w-0 ml-64 h-screen overflow-hidden">
+        <main className="flex-1 overflow-y-auto p-8 lg:p-10 custom-scrollbar">
+          {children}
+        </main>
       </div>
     </div>
   )
