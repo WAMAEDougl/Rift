@@ -179,35 +179,35 @@ function StoreTab({
     <div className="grid grid-cols-12 gap-10">
       <div className="col-span-12 lg:col-span-8">
         <Card>
-          <SectionTitle icon={<Store size={22} />}>Global Marketplace Configuration</SectionTitle>
+          <SectionTitle icon={<Store size={22} />}>Store info</SectionTitle>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-1">
-              <FieldLabel>Organization Identity</FieldLabel>
+              <FieldLabel>Store Name</FieldLabel>
               <input className={INPUT_CLS} value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Store Name" />
             </div>
             <div className="space-y-1">
-              <FieldLabel>Primary Support Node</FieldLabel>
+              <FieldLabel>Support Email</FieldLabel>
               <input type="email" className={INPUT_CLS} value={supportEmail} onChange={(e) => setSupportEmail(e.target.value)} placeholder="Email" />
             </div>
             <div className="space-y-1">
-              <FieldLabel>Verification Hotline</FieldLabel>
+              <FieldLabel>Support Phone</FieldLabel>
               <input className={INPUT_CLS} value={supportPhone} onChange={(e) => setSupportPhone(e.target.value)} placeholder="Phone" />
             </div>
             <div className="space-y-1">
-              <FieldLabel>Logistics Base Fee (KES)</FieldLabel>
+              <FieldLabel>Default Delivery Fee (KES)</FieldLabel>
               <input type="number" className={INPUT_CLS} value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} placeholder="Amount" />
             </div>
           </div>
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-1">
-              <FieldLabel>Operational Jurisdiction</FieldLabel>
-              <TagInput value={cities} onChange={setCities} placeholder="Inject city node…" />
+              <FieldLabel>Delivery Cities</FieldLabel>
+              <TagInput value={cities} onChange={setCities} placeholder="Add city…" />
             </div>
             <div className="space-y-1">
-              <FieldLabel>Critical Alert Channels</FieldLabel>
-              <TagInput value={notifEmails} onChange={setNotifEmails} placeholder="Inject email node…" />
+              <FieldLabel>Order Notifications</FieldLabel>
+              <TagInput value={notifEmails} onChange={setNotifEmails} placeholder="Add email…" />
             </div>
           </div>
 
@@ -218,7 +218,7 @@ function StoreTab({
               className="bg-[#1a1a2e] text-white px-10 py-5 rounded-[28px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-[#1a1a2e]/20 flex items-center gap-4 hover:bg-slate-800 hover:scale-[1.02] active:scale-95 transition-all group overflow-hidden relative"
             >
                <span className="material-symbols-outlined text-[20px] group-hover:rotate-12 transition-transform">cloud_upload</span>
-               <span className="relative z-10">{saving ? "Synchronizing..." : "Synchronize Repository"}</span>
+               <span className="relative z-10">{saving ? "Saving..." : "Save Settings"}</span>
             </button>
           </div>
         </Card>
@@ -232,9 +232,9 @@ function StoreTab({
                </div>
             </div>
             <div className="relative z-10 space-y-4">
-               <p className="text-[10px] font-black text-[#22c55e] uppercase tracking-[0.4em]">Global Node System</p>
-               <h3 className="text-3xl font-black text-white tracking-tighter leading-tight" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Distributed Operational Infrastructure</h3>
-               <p className="text-sm font-medium text-white/50 leading-relaxed">Your store architecture directly impacts the logistics and verification latency of the culinary ecosystem.</p>
+               <p className="text-[10px] font-black text-[#22c55e] uppercase tracking-[0.4em]">Infrastructure</p>
+               <h3 className="text-3xl font-black text-white tracking-tighter leading-tight" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>System Architecture</h3>
+               <p className="text-sm font-medium text-white/50 leading-relaxed">Your settings ensure that orders are processed and delivered efficiently to your customers.</p>
             </div>
             <div className="absolute -bottom-10 -right-10 opacity-5 group-hover:opacity-10 transition-opacity">
                <Settings2 size={240} className="rotate-12" />
@@ -246,8 +246,8 @@ function StoreTab({
                <ShieldCheck size={28} />
             </div>
             <div className="flex-1">
-               <p className="text-[10px] font-black text-[#1a1a2e] uppercase tracking-widest leading-none mb-1">Security Status</p>
-               <p className="text-sm font-bold text-slate-400 tracking-tight">Repository Encrypted & Verified</p>
+               <p className="text-[10px] font-black text-[#1a1a2e] uppercase tracking-widest leading-none mb-1">Security</p>
+               <p className="text-sm font-bold text-slate-400 tracking-tight">Settings are securely saved</p>
             </div>
          </div>
       </div>
@@ -313,9 +313,9 @@ function MpesaCard({ environment }: { environment: "sandbox" | "production" }) {
             <div className="absolute top-0 right-0 w-48 h-48 bg-primary/2 rounded-full -translate-y-24 translate-x-24 blur-3xl pointer-events-none" />
             
             <div className="flex justify-between items-start mb-10">
-              <SectionTitle icon={<CreditCard size={22} />}>M-Pesa API Ecosystem</SectionTitle>
+              <SectionTitle icon={<CreditCard size={22} />}>M-Pesa Integration</SectionTitle>
               <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border ${isProd ? "bg-red-50 text-red-600 border-red-100" : "bg-blue-50 text-blue-600 border-blue-100"}`}>
-                {isProd ? "Production Logic" : "Sandbox Protocol"}
+                {isProd ? "Live" : "Development"}
               </div>
             </div>
 
@@ -325,7 +325,7 @@ function MpesaCard({ environment }: { environment: "sandbox" | "production" }) {
                      <span className="material-symbols-outlined text-2xl">barcode</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">C2B Shortcode</span>
+                    <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Shortcode</span>
                     <p className="font-black text-2xl tracking-tighter text-[#1a1a2e]" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
                       {process.env.NEXT_PUBLIC_MPESA_SHORTCODE ?? "174379"}
                     </p>
@@ -334,13 +334,13 @@ function MpesaCard({ environment }: { environment: "sandbox" | "production" }) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <MaskedField
-                  label="Auth Key"
+                  label="Consumer Key"
                   value={process.env.NEXT_PUBLIC_MPESA_CONSUMER_KEY ?? "A9z...Node"}
                   show={showKey}
                   onToggle={() => setShowKey((s) => !s)}
                 />
                 <MaskedField
-                  label="Auth Secret"
+                  label="Consumer Secret"
                   value="X2k...Secret"
                   show={showSecret}
                   onToggle={() => setShowSecret((s) => !s)}
@@ -353,7 +353,7 @@ function MpesaCard({ environment }: { environment: "sandbox" | "production" }) {
                   <AlertTriangle size={20} />
                </div>
                <p className="text-xs font-medium text-slate-500 leading-relaxed">
-                  Financial authentication parameters are strictly locked to environment variables. Modification requires system-level authorization.
+                  These keys are managed securely in your server environment. Contact support to change them if needed.
                </p>
             </div>
 
@@ -363,17 +363,17 @@ function MpesaCard({ environment }: { environment: "sandbox" | "production" }) {
               className="w-full py-5 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-4 border-2 border-slate-100 hover:border-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all duration-500 disabled:opacity-40 group"
             >
               <RefreshCw size={18} className={testLoading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-700"} />
-              {testLoading ? "Authenticating Node..." : "Test Connection Protocol"}
+              {testLoading ? "Testing..." : "Test Connection"}
             </button>
           </Card>
        </div>
        <div className="col-span-12 lg:col-span-6">
           <div className="bg-[#fcf8ff] p-12 rounded-[60px] border border-white shadow-inner flex flex-col justify-center h-full relative overflow-hidden">
              <div className="relative z-10 space-y-6">
-                <h4 className="text-2xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Financial Security Notice</h4>
-                <p className="text-sm font-medium text-[#1a1a2e]/50 leading-relaxed max-w-sm">Every payment node interaction is logged and verified through the Safaricom Daraja gateway. Ensure your encryption keys are rotated periodically according to the Ayola Security Protocol.</p>
+                <h4 className="text-2xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Security Notice</h4>
+                <p className="text-sm font-medium text-[#1a1a2e]/50 leading-relaxed max-w-sm">All transactions are securely processed through Safaricom. Make sure your credentials are up to date.</p>
                 <Link href="#" className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-[#22c55e] group/link">
-                   Documentation Portal 
+                   Help Center 
                    <span className="material-symbols-outlined text-[16px] group-hover:translate-x-2 transition-transform">arrow_forward</span>
                 </Link>
              </div>
@@ -448,7 +448,7 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
   return (
     <Card className="!p-0 overflow-hidden">
       <div className="p-10 flex justify-between items-center border-b border-slate-50">
-        <SectionTitle icon={<Users size={22} />}>Administrative Core</SectionTitle>
+        <SectionTitle icon={<Users size={22} />}>Admin Users</SectionTitle>
         <button
           onClick={() => setOpen(true)}
           className="bg-[#1a1a2e] text-white px-8 py-4 rounded-[28px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-[#1a1a2e]/20 flex items-center gap-3 hover:bg-slate-800 hover:scale-[1.02] transition-all group"
@@ -461,15 +461,15 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
       <div className="overflow-x-auto">
         {users.length === 0 ? (
           <div className="py-24 text-center text-sm font-bold text-slate-300 uppercase tracking-widest">
-            Critical Failure: No internal nodes detected.
+            No admin users found.
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/40 border-b border-slate-100/50">
-                <th className="p-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Node Profile</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Authorization Level</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Commission Date</th>
+                <th className="p-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">User Profile</th>
+                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Role</th>
+                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Joined Date</th>
                 <th className="p-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Actions</th>
               </tr>
             </thead>
@@ -497,7 +497,7 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
                   <td className="p-8">
                     <span className={`inline-flex items-center px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${user.role === "admin" ? "bg-red-50/50 text-red-600 border-red-100/50" : "bg-amber-50/50 text-amber-600 border-amber-100/50"}`}>
                        <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 animate-pulse" />
-                       {user.role} tier
+                       {user.role}
                     </span>
                   </td>
                   <td className="p-8">
@@ -514,7 +514,7 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
                       onClick={() => handleRemove(user.id, user.full_name ?? user.email ?? "Node")}
                       disabled={removing === user.id}
                       className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm border border-slate-100 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0"
-                      title="Deauthorize Node"
+                      title="Remove Access"
                     >
                        <span className="material-symbols-outlined text-xl">delete_forever</span>
                     </button>
@@ -535,15 +535,15 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
             </div>
             <div className="space-y-2">
               <DialogTitle className="text-3xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
-                Authorize Member
+                Add Admin User
               </DialogTitle>
-              <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-xs mx-auto">Identify the node email and assign a specific hierarchical authorization tier.</p>
+              <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-xs mx-auto">Enter the email of the person you want to invite and assign their role.</p>
             </div>
           </DialogHeader>
 
           <div className="space-y-8 py-4">
             <div className="space-y-1">
-              <FieldLabel>Identity Email</FieldLabel>
+              <FieldLabel>Email Address</FieldLabel>
               <input
                 type="email"
                 value={inviteEmail}
@@ -553,7 +553,7 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
               />
             </div>
             <div className="space-y-1">
-              <FieldLabel>Authorization Tier</FieldLabel>
+              <FieldLabel>Select Role</FieldLabel>
               <div className="flex bg-slate-50 p-2 rounded-[24px] border border-slate-100">
                 {(["admin", "kitchen"] as const).map((r) => (
                   <button 
@@ -561,7 +561,7 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
                     onClick={() => setInviteRole(r)}
                     className={`flex-1 py-4 rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${inviteRole === r ? "bg-[#1a1a2e] text-white shadow-xl" : "text-slate-400 hover:text-slate-600"}`}
                   >
-                    {r} Tier
+                    {r}
                   </button>
                 ))}
               </div>
@@ -580,7 +580,7 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
               disabled={inviting || !inviteEmail.trim()}
               className="flex-1 px-4 py-5 bg-[#1a1a2e] text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95 disabled:opacity-50"
             >
-              {inviting ? "Broadcasting..." : "Authorize Node"}
+              {inviting ? "Inviting..." : "Invite User"}
             </button>
           </DialogFooter>
         </DialogContent>
@@ -595,9 +595,9 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
 type Tab = "store" | "mpesa" | "accounts"
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "store", label: "Store Configuration", icon: "storefront" },
-  { id: "mpesa", label: "Financial Systems", icon: "payments" },
-  { id: "accounts", label: "Administrative Core", icon: "shield_person" },
+  { id: "store", label: "General", icon: "storefront" },
+  { id: "mpesa", label: "Payments", icon: "payments" },
+  { id: "accounts", label: "Team", icon: "shield_person" },
 ]
 
 export default function SettingsPageClient({
@@ -616,16 +616,16 @@ export default function SettingsPageClient({
       {/* ── High-Premium Header ── */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 pb-4 border-b border-slate-50/50">
         <div className="space-y-1">
-          <p className="text-[#22c55e] text-[10px] font-black uppercase tracking-[0.4em] animate-in slide-in-from-left duration-500">Configuration Stream</p>
+          <p className="text-[#22c55e] text-[10px] font-black uppercase tracking-[0.4em] animate-in slide-in-from-left duration-500">Settings</p>
           <h2 className="text-4xl font-black tracking-tighter text-[#1a1a2e]" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
-            Repository Settings
+            Admin Settings
           </h2>
           <div className="flex items-center gap-3 text-slate-400">
              <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full text-slate-500">
-               Kernel Version 3.4.1
+               Version 1.0.0
              </span>
              <div className="h-3 w-px bg-slate-200" />
-             <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Manage your culinary digital infrastructure</p>
+             <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Manage your store and team settings</p>
           </div>
         </div>
       </div>
@@ -663,13 +663,13 @@ export default function SettingsPageClient({
         <div className="flex items-center gap-3">
           <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse"></span>
           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-            Kernel Status: Optimal & Verified
+            System Status: Online
           </span>
         </div>
         <div className="flex gap-10 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-          <Link href="#" className="hover:text-[#22c55e] transition-colors">Core API Docs</Link>
-          <Link href="#" className="hover:text-[#1a1a2e] transition-colors">Security Protocol</Link>
-          <span>© 2026 Ayola Systems Core</span>
+          <Link href="#" className="hover:text-[#22c55e] transition-colors">API Help</Link>
+          <Link href="#" className="hover:text-[#1a1a2e] transition-colors">Privacy Policy</Link>
+          <span>© 2026 Ayola Foods Admin</span>
         </div>
       </footer>
     </div>
