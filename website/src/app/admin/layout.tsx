@@ -16,7 +16,7 @@ export default function AdminRootLayout({ children }: { children: React.ReactNod
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet"
       />
-      <div className={`${inter.variable} fixed inset-0 z-50 bg-[#fcf8ff] overflow-auto`}>
+      <div className={`${inter.variable} fixed inset-0 z-50 bg-[#faf7f2] overflow-auto`}>
         {children}
       </div>
     </>

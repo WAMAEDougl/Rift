@@ -23,7 +23,7 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
   const userName = profile.full_name ?? profile.email ?? "Admin"
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#fcf8ff]">
+    <div className="flex h-screen overflow-hidden bg-[#faf7f2]">
       <AdminSidebar
         role={profile.role as "admin" | "kitchen"}
         userName={userName}

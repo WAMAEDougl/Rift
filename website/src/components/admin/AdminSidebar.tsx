@@ -2,7 +2,10 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { LogOut } from "lucide-react"
+import {
+  LayoutDashboard, ShoppingCart, Users, Package, Tag,
+  CreditCard, Bell, Settings, LogOut, Leaf,
+} from "lucide-react"
 
 interface AdminSidebarProps {
   role: "admin" | "kitchen"
@@ -11,14 +14,14 @@ interface AdminSidebarProps {
 }
 
 const allNavItems = [
-  { label: "Dashboard", href: "/admin", icon: "dashboard", exact: true },
-  { label: "Orders", href: "/admin/orders", icon: "shopping_cart", exact: false },
-  { label: "Customers", href: "/admin/customers", icon: "groups", exact: false },
-  { label: "Products", href: "/admin/products", icon: "inventory_2", exact: false },
-  { label: "Categories", href: "/admin/categories", icon: "category", exact: false },
-  { label: "Payments", href: "/admin/payments", icon: "payments", exact: false },
-  { label: "Notifications", href: "/admin/notifications", icon: "notifications", exact: false },
-  { label: "Settings", href: "/admin/settings", icon: "settings", exact: false },
+  { label: "Dashboard",     href: "/admin",                icon: LayoutDashboard, exact: true },
+  { label: "Orders",        href: "/admin/orders",         icon: ShoppingCart,    exact: false },
+  { label: "Customers",     href: "/admin/customers",      icon: Users,           exact: false },
+  { label: "Products",      href: "/admin/products",       icon: Package,         exact: false },
+  { label: "Categories",    href: "/admin/categories",     icon: Tag,             exact: false },
+  { label: "Payments",      href: "/admin/payments",       icon: CreditCard,      exact: false },
+  { label: "Notifications", href: "/admin/notifications",  icon: Bell,            exact: false },
+  { label: "Settings",      href: "/admin/settings",       icon: Settings,        exact: false },
 ]
 
 const kitchenNavItems = ["/admin", "/admin/orders"]
@@ -51,63 +54,68 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
     .toUpperCase()
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-[#1a1a2e] shadow-2xl shadow-black/40 flex flex-col py-8 z-50 animate-in slide-in-from-left duration-700">
-      {/* Branding */}
-      <div className="px-8 mb-12">
-        <h1 className="text-xl font-extrabold text-white tracking-tight leading-none" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
-          Ayola Foods
-        </h1>
-        <p className="text-[10px] text-slate-400 font-black tracking-[0.2em] uppercase opacity-50 mt-1.5">
-          The Culinary Curator
-        </p>
+    <aside className="fixed left-0 top-0 h-full w-64 flex flex-col z-50"
+      style={{ background: "linear-gradient(180deg, #78350F 0%, #92400E 60%, #78350F 100%)" }}>
+
+      {/* Brand */}
+      <div className="px-6 py-6 border-b border-white/10">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-amber-400/20 border border-amber-400/30 flex items-center justify-center">
+            <Leaf className="w-4 h-4 text-amber-300" />
+          </div>
+          <div>
+            <p className="text-white font-bold text-sm leading-none" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+              Ayola Foods
+            </p>
+            <p className="text-amber-300/60 text-[10px] uppercase tracking-widest mt-0.5">
+              Admin Portal
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Navigation Grid */}
-      <nav className="flex-1 space-y-1.5 px-3">
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
+          const Icon = item.icon
           const active = isActive(item)
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-4 px-6 py-4 text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 rounded-full relative group ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                 active
-                  ? "bg-gradient-to-r from-white/10 to-transparent text-white shadow-xl shadow-black/20 translate-x-2"
-                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                  ? "bg-white/15 text-white shadow-sm"
+                  : "text-amber-100/70 hover:bg-white/10 hover:text-white"
               }`}
             >
               {active && (
-                <div className="absolute left-1 top-2 bottom-2 w-1.5 bg-[#22c55e] rounded-full shadow-[0_0_15px_rgba(34,197,94,0.8)] animate-in zoom-in" />
+                <span className="absolute left-3 w-0.5 h-5 bg-amber-400 rounded-full" />
               )}
-              <span className={`material-symbols-outlined text-[20px] transition-all duration-300 ${active ? "text-[#22c55e] scale-110" : "group-hover:scale-110"}`}>
-                {item.icon}
-              </span>
-              <span style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
-                {item.label}
-              </span>
+              <Icon size={16} className={active ? "text-amber-300" : ""} />
+              {item.label}
             </Link>
           )
         })}
       </nav>
 
-      {/* Profile Container */}
-      <div className="px-4 mt-auto space-y-4">
+      {/* User + Logout */}
+      <div className="px-3 py-4 border-t border-white/10 space-y-2">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-error hover:bg-error/5 rounded-2xl transition-all group"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-amber-100/60 hover:bg-white/10 hover:text-white transition-all"
         >
-          <LogOut size={16} className="group-hover:rotate-12 transition-transform" />
+          <LogOut size={16} />
           Sign Out
         </button>
 
-        <div className="flex items-center gap-4 bg-white/5 rounded-3xl p-4 border border-white/5 backdrop-blur-xl relative overflow-hidden group hover:bg-white/10 transition-colors cursor-pointer">
-          <div className="absolute -right-4 -bottom-4 w-16 h-16 bg-white/5 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#006e2f] to-[#22c55e] border-2 border-white/10 flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-black/20 shrink-0 relative z-10">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/10">
+          <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center text-earth text-xs font-bold shrink-0">
             {initials}
           </div>
-          <div className="overflow-hidden relative z-10">
-            <p className="text-white text-xs font-black truncate tracking-tight">{displayName}</p>
-            <p className="text-slate-400 text-[10px] font-black capitalize truncate tracking-widest opacity-60 uppercase">{displayRole}</p>
+          <div className="overflow-hidden">
+            <p className="text-white text-xs font-semibold truncate">{displayName}</p>
+            <p className="text-amber-300/60 text-[10px] capitalize truncate">{displayRole}</p>
           </div>
         </div>
       </div>
