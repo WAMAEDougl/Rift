@@ -4,10 +4,12 @@ import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Eye, EyeOff } from "lucide-react"
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -37,17 +39,36 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center px-4">
-      <div className="mb-6 text-center">
-        <p className="text-2xl font-bold text-orange-500">🥗 Ayola Foods</p>
-        <p className="text-sm text-gray-400 mt-1">Admin Portal</p>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)" }}
+    >
+      {/* Logo */}
+      <div className="mb-8 text-center">
+        <h1
+          className="text-3xl font-extrabold text-white tracking-tight"
+          style={{ fontFamily: "var(--font-manrope, sans-serif)" }}
+        >
+          Ayola Foods
+        </h1>
+        <p className="text-slate-400 text-sm mt-1 tracking-wide uppercase font-medium">
+          Admin Portal
+        </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm mx-auto">
+      {/* Card */}
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
+        <h2
+          className="text-lg font-bold text-[#1a1a2e] mb-6"
+          style={{ fontFamily: "var(--font-manrope, sans-serif)" }}
+        >
+          Sign in to continue
+        </h2>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Email
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="email" className="text-sm font-medium text-slate-700">
+              Email address
             </label>
             <Input
               id="email"
@@ -57,26 +78,38 @@ export default function AdminLoginPage() {
               required
               disabled={loading}
               placeholder="admin@ayolafoods.com"
+              className="border-slate-200 focus-visible:ring-[#22c55e] focus-visible:ring-offset-0"
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="password" className="text-sm font-medium text-gray-700">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="password" className="text-sm font-medium text-slate-700">
               Password
             </label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                placeholder="••••••••"
+                className="border-slate-200 focus-visible:ring-[#22c55e] focus-visible:ring-offset-0 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md px-4 py-3 text-sm text-red-700">
+            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
@@ -84,7 +117,7 @@ export default function AdminLoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium mt-2"
+            className="w-full bg-[#006e2f] hover:bg-[#005a26] text-white font-semibold mt-1 h-10"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -116,6 +149,10 @@ export default function AdminLoginPage() {
           </Button>
         </form>
       </div>
+
+      <p className="mt-6 text-slate-500 text-xs">
+        Ayola Foods &copy; {new Date().getFullYear()} — Internal use only
+      </p>
     </div>
   )
 }

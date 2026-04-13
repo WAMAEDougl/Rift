@@ -37,75 +37,83 @@ export default async function PaymentLogPage({ params }: Props) {
       {/* Back link */}
       <Link
         href={`/admin/orders/${orderId}`}
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800"
+        className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-[#1a1a2e]"
       >
         ← Back to Order #{order.order_number}
       </Link>
 
-      <h1 className="text-xl font-semibold text-gray-900">
+      <h1
+        className="text-xl font-bold text-[#1a1a2e]"
+        style={{ fontFamily: "var(--font-manrope, sans-serif)" }}
+      >
         Payment Log — #{order.order_number}
       </h1>
 
       {/* Order summary */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-sm font-medium text-gray-700 mb-3">Order Summary</h2>
+      <div className="bg-white rounded-2xl shadow-sm p-6">
+        <h2 className="text-sm font-medium text-slate-600 mb-3">Order Summary</h2>
         <div className="flex flex-wrap gap-6 text-sm">
           <div>
-            <span className="text-gray-500">Customer: </span>
-            <span className="font-medium text-gray-900">{order.customer_name}</span>
+            <span className="text-slate-500">Customer: </span>
+            <span className="font-medium text-[#1a1a2e]">{order.customer_name}</span>
           </div>
           <div>
-            <span className="text-gray-500">Total: </span>
-            <span className="font-medium text-gray-900">{formatKES(order.total)}</span>
+            <span className="text-slate-500">Total: </span>
+            <span className="font-medium text-[#1a1a2e]">{formatKES(order.total)}</span>
           </div>
           <div>
-            <span className="text-gray-500">Method: </span>
-            <span className="font-medium text-gray-900">{methodLabel}</span>
+            <span className="text-slate-500">Method: </span>
+            <span className="font-medium text-[#1a1a2e]">{methodLabel}</span>
           </div>
           <div>
-            <span className="text-gray-500">Status: </span>
+            <span className="text-slate-500">Status: </span>
             <StatusBadge status={order.payment_status} type="payment" />
           </div>
         </div>
       </div>
 
       {/* Payment logs table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-gray-900">Payment Logs</h2>
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200">
+          <h2
+            className="text-base font-bold text-[#1a1a2e]"
+            style={{ fontFamily: "var(--font-manrope, sans-serif)" }}
+          >
+            Payment Logs
+          </h2>
         </div>
 
         {logList.length === 0 ? (
-          <div className="py-12 text-center text-gray-500 text-sm">
+          <div className="py-12 text-center text-slate-500 text-sm">
             No payment logs found for this order.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <tr className="bg-slate-50/70">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">
                     Timestamp
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">
                     Provider
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">
                     Event Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">
                     Raw Payload
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {logList.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50 border-b border-gray-100 last:border-0">
-                    <td className="px-6 py-4 text-gray-500 text-xs whitespace-nowrap">
+                  <tr key={log.id} className="hover:bg-slate-50/60 transition-colors border-b border-slate-100 last:border-0">
+                    <td className="px-6 py-4 text-slate-500 text-xs whitespace-nowrap">
                       {formatDate(log.created_at)}
                     </td>
-                    <td className="px-6 py-4 text-gray-700 capitalize">{log.provider}</td>
-                    <td className="px-6 py-4 text-gray-700 font-mono text-xs">
+                    <td className="px-6 py-4 text-slate-500 capitalize">{log.provider}</td>
+                    <td className="px-6 py-4 text-slate-500 font-mono text-xs">
                       {log.event_type}
                     </td>
                     <td className="px-6 py-4">
@@ -124,12 +132,12 @@ export default async function PaymentLogPage({ params }: Props) {
 
 function PayloadCell({ payload }: { payload: Json | null }) {
   if (payload === null || payload === undefined) {
-    return <span className="text-gray-400 text-xs">—</span>
+    return <span className="text-slate-400 text-xs">—</span>
   }
   return (
     <details className="text-xs">
       <summary className="cursor-pointer text-blue-600 hover:underline">View payload</summary>
-      <pre className="mt-2 bg-gray-50 rounded p-3 overflow-auto max-h-64 text-gray-700">
+      <pre className="mt-2 bg-slate-50 rounded p-3 overflow-auto max-h-64 text-slate-500">
         {JSON.stringify(payload, null, 2)}
       </pre>
     </details>
