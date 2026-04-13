@@ -10,6 +10,8 @@ import {
   TrendingUp,
   AlertCircle,
   ChevronLeft,
+  Pencil,
+  Plus,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -52,13 +54,13 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: () =>
   return (
     <button
       onClick={onChange}
-      className={`relative inline-flex h-6 w-12 items-center rounded-full transition-all duration-500 shadow-inner group ${
-        checked ? "bg-[#22c55e] shadow-[0_0_12px_rgba(34,197,94,0.4)]" : "bg-slate-200"
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+        checked ? "bg-amber-600" : "bg-gray-200"
       }`}
     >
       <span
-        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-xl transition-all duration-500 ${
-          checked ? "translate-x-6 scale-110" : "translate-x-1"
+        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+          checked ? "translate-x-6" : "translate-x-1"
         }`}
       />
     </button>
@@ -177,147 +179,116 @@ export default function ProductsPage() {
   const showingTo = pagination ? Math.min(pagination.page * pagination.per_page, pagination.total) : 0
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full">
-      {/* ── High-Premium Header ── */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 pb-4 border-b border-slate-50/50">
-        <div className="space-y-1">
-          <p className="text-[#22c55e] text-[10px] font-black uppercase tracking-[0.4em] animate-in slide-in-from-left duration-500">Catalog</p>
-          <h2 className="text-4xl font-black tracking-tighter text-[#1a1a2e]" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
+    <div className="space-y-6 w-full">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h1
+            className="text-3xl font-bold text-gray-900"
+            style={{ fontFamily: "var(--font-playfair, serif)" }}
+          >
             Products
-          </h2>
-          <div className="flex items-center gap-3 text-slate-400">
-             <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full text-slate-500">
-               {pagination?.total.toLocaleString()} Total Products
-             </span>
-             <div className="h-3 w-px bg-slate-200" />
-             <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">View and manage all products</p>
-          </div>
+          </h1>
+          <p className="text-xs text-gray-400 mt-1">
+            {pagination?.total.toLocaleString()} total &middot; View and manage all products
+          </p>
         </div>
         <Link
           href="/admin/products/new"
-          className="bg-[#1a1a2e] text-white px-8 py-4 rounded-[28px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-[#1a1a2e]/20 flex items-center gap-3 hover:bg-slate-800 hover:scale-[1.02] active:scale-95 transition-all group overflow-hidden relative"
+          className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
         >
-           <span className="material-symbols-outlined text-[20px] group-hover:rotate-180 transition-transform duration-700">add_circle</span>
-           <span className="relative z-10">Add New Product</span>
+          <Plus size={16} />
+          Add Product
         </Link>
       </div>
 
-      {/* ── Sophisticated Filter Rows ── */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="md:col-span-12 lg:col-span-8 bg-white p-2 rounded-[32px] border border-slate-50 shadow-[0_10px_40px_-10px_rgba(26,26,46,0.04)] flex flex-col md:flex-row items-center divide-y md:divide-y-0 md:divide-x divide-slate-50 relative group">
-           <div className="absolute top-0 right-0 w-24 h-24 bg-primary/2 rounded-full -translate-y-12 translate-x-12 blur-2xl group-hover:scale-150 transition-transform duration-1000"></div>
-          
-          <div className="flex-1 flex items-center gap-4 px-6 py-4 relative z-10">
-            <span className="material-symbols-outlined text-slate-300 text-lg">search</span>
-             <div className="flex flex-col w-full">
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Search Products</span>
-              <input
-                type="text"
-                placeholder="Product name, slug..."
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                className="bg-transparent border-none p-0 text-sm font-bold text-[#1a1a2e] focus:ring-0 w-full placeholder:text-slate-200 outline-none leading-none"
-              />
-            </div>
-          </div>
-
-          <div className="flex-1 flex items-center gap-4 px-6 py-4 relative z-10">
-            <span className="material-symbols-outlined text-slate-300 text-lg">category</span>
-            <div className="flex flex-col w-full">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#22c55e] mb-1">Category</span>
-              <select
-                value={categoryFilter}
-                onChange={(e) => { setCategoryFilter(e.target.value); setPage(1) }}
-                className="bg-transparent border-none p-0 text-sm font-black text-[#1a1a2e] focus:ring-0 cursor-pointer outline-none capitalize leading-none w-full"
-              >
-                <option value="">All Categories</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center px-6 py-4 relative z-10">
+      {/* Filter bar */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
+        <div className="flex items-center gap-2 flex-1 min-w-[180px]">
+          <Search size={15} className="text-gray-300 shrink-0" />
+          <input
+            type="text"
+            placeholder="Product name, slug..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+            className="flex-1 bg-transparent border-none p-0 text-sm text-gray-700 focus:ring-0 placeholder:text-gray-300 outline-none"
+          />
+        </div>
+        <select
+          value={categoryFilter}
+          onChange={(e) => { setCategoryFilter(e.target.value); setPage(1) }}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-amber-600 focus:border-amber-600 outline-none text-gray-700"
+        >
+          <option value="">All Categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+        {/* Stock filter toggle */}
+        <div className="flex items-center bg-gray-50 rounded-xl p-1 gap-1">
+          {(["", "in_stock", "out_of_stock"] as const).map((v) => (
             <button
-              onClick={clearFilters}
-              className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-50 text-slate-300 hover:text-[#1a1a2e] transition-all group/reset"
+              key={v}
+              onClick={() => { setStockFilter(v); setPage(1) }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                stockFilter === v
+                  ? v === "out_of_stock"
+                    ? "bg-red-500 text-white"
+                    : "bg-amber-700 text-white"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
             >
-              <span className="material-symbols-outlined group-active/reset:rotate-180 transition-transform duration-500">restart_alt</span>
+              {v === "" ? "All" : v === "in_stock" ? "In Stock" : "Out"}
             </button>
-          </div>
+          ))}
         </div>
+        <button
+          onClick={clearFilters}
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1"
+        >
+          Clear
+        </button>
+      </div>
 
-        {/* Dynamic Availability Toggles */}
-        <div className="md:col-span-12 lg:col-span-4 bg-[#fcf8ff] p-2 rounded-[32px] border border-white shadow-sm flex items-center">
-           <div className="flex w-full bg-white/50 p-1 rounded-[24px] shadow-inner">
-             <button
-               onClick={() => setStockFilter("")}
-               className={`flex-1 text-[10px] font-black uppercase tracking-widest py-3 px-4 rounded-[20px] transition-all ${
-                 stockFilter === "" ? "bg-[#1a1a2e] text-white shadow-lg" : "text-slate-400 hover:text-slate-600"
-               }`}
-             >
-               All
-             </button>
-             <button
-               onClick={() => setStockFilter("in_stock")}
-               className={`flex-1 text-[10px] font-black uppercase tracking-widest py-3 px-4 rounded-[20px] transition-all ${
-                 stockFilter === "in_stock" ? "bg-[#22c55e] text-white shadow-lg" : "text-slate-400 hover:text-slate-600"
-               }`}
-             >
-               In Stock
-             </button>
-             <button
-               onClick={() => setStockFilter("out_of_stock")}
-               className={`flex-1 text-[10px] font-black uppercase tracking-widest py-3 px-4 rounded-[20px] transition-all ${
-                 stockFilter === "out_of_stock" ? "bg-red-500 text-white shadow-lg" : "text-slate-400 hover:text-slate-600"
-               }`}
-             >
-               Out
-             </button>
-           </div>
-        </div>
-      </section>
-
-      {/* ── Products Data Catalog ── */}
-      <section className="bg-white rounded-[60px] overflow-hidden shadow-[0_20px_80px_-20px_rgba(26,26,46,0.06)] border border-slate-50/50">
-        <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left border-collapse">
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50/40 border-b border-slate-100/50">
-                <th className="p-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Product Details</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Category</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Price</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">In Stock</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Live Status</th>
-                <th className="p-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Actions</th>
+              <tr className="bg-gray-50/60">
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Product</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Category</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Price</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">In Stock</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">Active</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-gray-50">
               {loading
                 ? Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="p-10">
-                         <div className="flex items-center gap-6">
-                            <Skeleton className="w-20 h-20 rounded-[28px]" />
-                            <div className="space-y-3">
-                               <Skeleton className="h-5 w-40 rounded-lg" />
-                               <Skeleton className="h-3 w-56 rounded-lg opacity-40" />
-                            </div>
-                         </div>
+                    <tr key={i}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+                          <div className="space-y-1.5">
+                            <Skeleton className="h-4 w-36 rounded" />
+                            <Skeleton className="h-3 w-24 rounded opacity-50" />
+                          </div>
+                        </div>
                       </td>
-                      <td className="p-8"><Skeleton className="h-6 w-24 rounded-full" /></td>
-                      <td className="p-8"><Skeleton className="h-6 w-20 rounded-lg" /></td>
-                      <td className="p-8"><Skeleton className="h-6 w-12 mx-auto rounded-full" /></td>
-                      <td className="p-8"><Skeleton className="h-6 w-12 mx-auto rounded-full" /></td>
-                      <td className="p-10 text-right"><Skeleton className="h-10 w-24 ml-auto rounded-2xl" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-5 w-20 rounded" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-6 w-10 mx-auto rounded-full" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-6 w-10 mx-auto rounded-full" /></td>
+                      <td className="px-6 py-4 text-right"><Skeleton className="h-8 w-20 ml-auto rounded-xl" /></td>
                     </tr>
                   ))
                 : products.map((product) => (
-                    <tr key={product.id} className="hover:bg-[#fcf8ff] transition-all duration-300 group border-b border-slate-50 last:border-0 relative">
-                      <td className="p-10">
-                        <div className="flex items-center gap-6 transition-transform group-hover:translate-x-2 duration-500">
-                          <div className="w-20 h-20 rounded-[28px] overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0 flex items-center justify-center transition-all duration-500 group-hover:scale-105 group-hover:rotate-2 shadow-inner">
+                    <tr key={product.id} className="hover:bg-amber-50/30 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0 flex items-center justify-center">
                             {product.image_url ? (
                               <img
                                 src={product.image_url}
@@ -325,28 +296,25 @@ export default function ProductsPage() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <span className="material-symbols-outlined text-slate-200 text-3xl">package_2</span>
+                              <Package size={20} className="text-gray-300" />
                             )}
                           </div>
                           <div>
-                            <p className="font-black text-lg text-[#1a1a2e] tracking-tight">{product.name}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                               <span className="text-[9px] font-black uppercase tracking-widest text-[#22c55e] bg-[#22c55e]/5 px-2 py-0.5 rounded-md">SKU</span>
-                               <p className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">{product.slug}</p>
-                            </div>
+                            <p className="font-semibold text-gray-900 text-sm">{product.name}</p>
+                            <p className="text-xs text-gray-400 mt-0.5 font-mono">{product.slug}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-8">
-                        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] bg-blue-50/50 text-blue-600 border border-blue-100/50">
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100">
                           {product.category_name ?? "General"}
                         </span>
                       </td>
-                      <td className="p-8">
-                        <p className="font-black text-[#1a1a2e] text-lg tracking-tighter">{formatKES(product.price)}</p>
-                        <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest opacity-60">{product.size ?? "Default Unit"}</p>
+                      <td className="px-6 py-4">
+                        <p className="font-semibold text-gray-800 text-sm">{formatKES(product.price)}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{product.size ?? "Default"}</p>
                       </td>
-                      <td className="p-8">
+                      <td className="px-6 py-4">
                         <div className="flex justify-center">
                           <ToggleSwitch
                             checked={product.in_stock}
@@ -354,7 +322,7 @@ export default function ProductsPage() {
                           />
                         </div>
                       </td>
-                      <td className="p-8">
+                      <td className="px-6 py-4">
                         <div className="flex justify-center">
                           <ToggleSwitch
                             checked={product.is_active}
@@ -362,19 +330,19 @@ export default function ProductsPage() {
                           />
                         </div>
                       </td>
-                      <td className="p-10 text-right">
-                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0">
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Link
                             href={`/admin/products/${product.id}/edit`}
-                            className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl text-slate-400 hover:text-[#22c55e] hover:bg-[#22c55e]/5 transition-all shadow-sm border border-slate-50"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
                           >
-                             <span className="material-symbols-outlined text-xl">edit</span>
+                            <Pencil size={15} />
                           </Link>
                           <button
                             onClick={() => setDeleteTarget(product)}
-                            className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm border border-slate-50"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                           >
-                             <span className="material-symbols-outlined text-xl">delete</span>
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </td>
@@ -384,129 +352,129 @@ export default function ProductsPage() {
           </table>
         </div>
 
-        {/* Empty Catalog State */}
         {!loading && products.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-40 text-center">
-            <div className="w-32 h-32 bg-slate-50/50 rounded-full flex items-center justify-center mb-8 text-5xl animate-in zoom-in duration-700">📦</div>
-            <h3 className="text-3xl font-black text-[#1a1a2e] mb-3 tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>No products found</h3>
-            <p className="text-slate-400 max-w-sm mx-auto text-sm font-medium leading-relaxed opacity-60">
-              We couldn't find any products matching your current search or filters.
-            </p>
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <Package size={36} className="text-gray-200 mb-3" />
+            <p className="text-sm font-medium text-gray-500">No products found</p>
+            <p className="text-xs text-gray-400 mt-1">Try adjusting your search or filters</p>
           </div>
         )}
 
-        {/* Precision Pagination Control */}
+        {/* Pagination */}
         {pagination && pagination.total_pages > 1 && (
-          <div className="p-10 bg-[#fcf8ff]/30 border-t border-slate-50 flex flex-col md:flex-row items-center justify-between gap-10">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              Showing <span className="text-[#1a1a2e]">{showingFrom}-{showingTo}</span> / <span className="text-[#1a1a2e]">{pagination.total.toLocaleString()}</span> products
+          <div className="px-6 py-4 border-t border-gray-50 bg-gray-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-gray-400">
+              Showing <span className="text-gray-700 font-medium">{showingFrom}–{showingTo}</span> of{" "}
+              <span className="text-gray-700 font-medium">{pagination.total.toLocaleString()}</span> products
             </p>
-
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-20 duration-300"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={15} />
               </button>
-
-              <div className="flex gap-3 p-2 bg-white border border-slate-100 rounded-[28px] shadow-sm">
-                {getPageNumbers().map((p, i) =>
-                  p === "..." ? (
-                    <span key={`ellipsis-${i}`} className="w-12 h-12 flex items-center justify-center text-slate-200 font-bold">...</span>
-                  ) : (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p as number)}
-                      className={`w-12 h-12 rounded-2xl font-black text-[11px] transition-all ${
-                        p === page
-                          ? "bg-[#1a1a2e] text-white shadow-xl shadow-[#1a1a2e]/20 scale-110"
-                          : "text-slate-400 hover:bg-slate-50"
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  )
-                )}
-              </div>
-
+              {getPageNumbers().map((p, i) =>
+                p === "..." ? (
+                  <span key={`ellipsis-${i}`} className="w-8 h-8 flex items-center justify-center text-gray-300 text-sm">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                      p === page
+                        ? "bg-amber-700 text-white"
+                        : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
               <button
                 onClick={() => setPage((p) => Math.min(pagination.total_pages, p + 1))}
                 disabled={page >= pagination.total_pages}
-                 className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-20 duration-300"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={15} />
               </button>
             </div>
           </div>
         )}
-      </section>
+      </div>
 
-      {/* ── Analytical Summary Hub ── */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="bg-white p-10 rounded-[48px] shadow-[0_4px_40px_rgba(0,0,0,0.02)] border border-slate-50 flex flex-col justify-between min-h-[180px] hover:translate-y-[-4px] transition-transform group">
-          <div className="space-y-4">
-             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">Total Catalog Value</p>
-             <h3 className="text-4xl font-black text-[#1a1a2e] tracking-tighter leading-none" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>{formatKES(totalValuation)}</h3>
+      {/* Summary stat cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
+              <TrendingUp size={16} className="text-green-700" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Catalog Value</p>
           </div>
-          <div className="pt-4 border-t border-slate-50 mt-4 flex items-center gap-3">
-             <TrendingUp size={16} className="text-[#22c55e]" />
-             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">Calculated from listed prices</span>
-          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {formatKES(totalValuation)}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Calculated from listed prices</p>
         </div>
 
-        <div className="bg-[#1a1a2e] p-10 rounded-[48px] shadow-2xl flex flex-col justify-between min-h-[180px] relative overflow-hidden group border border-white/5">
-          <Package size={180} className="absolute -right-12 -bottom-12 text-white/5 rotate-12 group-hover:scale-110 transition-transform duration-700" />
-          <div className="relative z-10 space-y-4">
-             <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] leading-none mb-1">Live Products</p>
-             <h3 className="text-4xl font-black text-white tracking-tighter leading-none">{products.length} Products</h3>
+        <div className="bg-amber-50 rounded-2xl border border-amber-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+              <Package size={16} className="text-amber-700" />
+            </div>
+            <p className="text-xs text-amber-700 font-medium uppercase tracking-wide">Live Products</p>
           </div>
-          <div className="relative z-10 pt-4 border-t border-white/10 mt-4 flex justify-between items-center">
-            <span className="text-[10px] font-black text-white opacity-60 uppercase tracking-widest">Availability: Healthy</span>
-            <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse" />
-          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {products.length}
+          </p>
+          <p className="text-xs text-amber-600 mt-1">On this page</p>
         </div>
 
-        <div className="bg-white p-10 rounded-[48px] shadow-[0_4px_40px_rgba(0,0,0,0.02)] border border-slate-50 flex flex-col justify-between min-h-[180px] hover:translate-y-[-4px] transition-transform group text-red-600">
-          <div className="space-y-4">
-             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">Stock Alerts</p>
-             <h3 className="text-4xl font-black tracking-tighter leading-none" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>{stockAlerts} Out of Stock</h3>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
+              <AlertCircle size={16} className="text-red-500" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Stock Alerts</p>
           </div>
-          <div className="pt-4 border-t border-slate-50 mt-4 flex items-center gap-3">
-            <AlertCircle size={16} className={stockAlerts > 0 ? "animate-bounce" : "opacity-30"} />
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">Items needing attention</span>
-          </div>
+          <p className="text-2xl font-bold text-red-600" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {stockAlerts}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Items out of stock</p>
         </div>
-      </section>
+      </div>
 
       {/* Delete confirmation dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
-        <DialogContent className="max-w-lg rounded-[40px] p-12 border-none shadow-[0_60px_120px_rgba(0,0,0,0.5)] bg-white animate-in zoom-in-95">
-          <DialogHeader className="space-y-6 text-center">
-            <div className="w-24 h-24 bg-red-50 rounded-[32px] flex items-center justify-center text-red-500 mx-auto shadow-inner">
-               <span className="material-symbols-outlined text-5xl">delete_forever</span>
+        <DialogContent className="max-w-md rounded-2xl p-6 bg-white">
+          <DialogHeader className="space-y-3">
+            <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-red-500 mx-auto">
+              <Trash2 size={22} />
             </div>
-            <div className="space-y-2">
-              <DialogTitle className="text-3xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
+            <div className="text-center space-y-1">
+              <DialogTitle className="text-lg font-bold text-gray-900">
                 Delete Product?
               </DialogTitle>
-              <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-xs mx-auto">
-                Are you sure you want to delete <span className="text-[#1a1a2e] font-black">&ldquo;{deleteTarget?.name}&rdquo;</span>? This action cannot be undone.
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Are you sure you want to delete{" "}
+                <span className="font-semibold text-gray-800">&ldquo;{deleteTarget?.name}&rdquo;</span>?
+                This action cannot be undone.
               </p>
             </div>
           </DialogHeader>
-          <DialogFooter className="mt-10 flex-row gap-4">
+          <DialogFooter className="mt-6 flex-row gap-3">
             <button
               onClick={() => setDeleteTarget(null)}
-              className="flex-1 px-4 py-5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-[24px] text-xs font-black uppercase tracking-widest transition-all active:scale-95"
+              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-semibold transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleDelete}
               disabled={deleteLoading}
-              className="flex-1 px-4 py-5 bg-red-600 hover:bg-red-700 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-[0_20px_40px_rgba(220,38,38,0.3)] transition-all active:scale-95 disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
             >
               {deleteLoading ? "Deleting..." : "Delete Product"}
             </button>

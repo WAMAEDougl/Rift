@@ -8,7 +8,8 @@ import {
   TrendingUp,
   Users,
   Search,
-  Filter,
+  MapPin,
+  Eye,
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatRelativeTime } from "@/lib/admin/formatters"
@@ -43,15 +44,15 @@ interface CustomersResponse {
 function StatusBadge({ role }: { role: string }) {
   const styles: Record<string, string> = {
     admin: "bg-red-50 text-red-600 border border-red-100",
-    kitchen: "bg-amber-50 text-amber-700 border border-amber-100",
-    customer: "bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20",
+    kitchen: "bg-amber-100 text-amber-700 border border-amber-200",
+    customer: "bg-green-50 text-green-700 border border-green-100",
   }
 
   const label = role === "customer" ? "Regular" : role
 
   return (
     <span
-      className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${styles[role] ?? styles.customer}`}
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium capitalize ${styles[role] ?? styles.customer}`}
     >
       {label}
     </span>
@@ -120,174 +121,148 @@ export default function CustomersPage() {
   }, [customers])
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full">
-      {/* ── High-Premium Header ── */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 pb-4 border-b border-slate-50/50">
-        <div className="space-y-1">
-          <p className="text-[#22c55e] text-[10px] font-black uppercase tracking-[0.4em] animate-in slide-in-from-left duration-500">Audience</p>
-          <h2 className="text-4xl font-black tracking-tighter text-[#1a1a2e]" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
+    <div className="space-y-6 w-full">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h1
+            className="text-3xl font-bold text-gray-900"
+            style={{ fontFamily: "var(--font-playfair, serif)" }}
+          >
             Customers
-          </h2>
-          <div className="flex items-center gap-3 text-slate-400">
-             <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full text-slate-500">
-               {pagination?.total.toLocaleString()} Accounts
-             </span>
-             <div className="h-3 w-px bg-slate-200" />
-             <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">View and manage your customers</p>
-          </div>
+          </h1>
+          <p className="text-xs text-gray-400 mt-1">
+            {pagination?.total.toLocaleString()} accounts &middot; View and manage your customers
+          </p>
         </div>
-        <button className="bg-[#1a1a2e] text-white px-8 py-4 rounded-[28px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-[#1a1a2e]/20 flex items-center gap-3 hover:bg-slate-800 hover:scale-[1.02] active:scale-95 transition-all group overflow-hidden relative">
-           <span className="material-symbols-outlined text-[20px] group-hover:rotate-180 transition-transform duration-700">person_add</span>
-           <span className="relative z-10">Add New Customer</span>
-        </button>
       </div>
 
-      {/* ── Analytical Bento Grid ── */}
-      <section className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Advanced Filters Pillar */}
-        <div className="md:col-span-12 lg:col-span-6 bg-white p-2 rounded-[32px] border border-slate-50 shadow-[0_10px_40px_-10px_rgba(26,26,46,0.04)] flex flex-col md:flex-row items-center divide-y md:divide-y-0 md:divide-x divide-slate-50 relative group">
-           <div className="absolute top-0 right-0 w-24 h-24 bg-primary/2 rounded-full -translate-y-12 translate-x-12 blur-2xl group-hover:scale-150 transition-transform duration-1000"></div>
-          <div className="flex-1 flex items-center gap-4 px-6 py-4 relative z-10">
-            <span className="material-symbols-outlined text-slate-300 text-lg">filter_list</span>
-            <div className="flex flex-col">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#22c55e] mb-1">Filter by Role</span>
-              <select
-                value={role}
-                onChange={(e) => handleRoleFilter(e.target.value)}
-                className="bg-transparent border-none p-0 text-sm font-black text-[#1a1a2e] focus:ring-0 cursor-pointer outline-none capitalize leading-none"
-              >
-                <option value="">All Roles</option>
-                <option value="customer">Regular</option>
-                <option value="kitchen">Kitchen</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
+      {/* Stat mini-cards + filter bar */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Filter bar */}
+        <div className="md:col-span-2 bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
+          <div className="flex items-center gap-2 flex-1 min-w-[180px]">
+            <Search size={15} className="text-gray-300 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search by name, email or phone..."
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="flex-1 bg-transparent border-none p-0 text-sm text-gray-700 focus:ring-0 placeholder:text-gray-300 outline-none"
+            />
           </div>
-          <div className="flex-[2] flex items-center gap-4 px-6 py-4 relative z-10">
-            <span className="material-symbols-outlined text-slate-300 text-lg">search</span>
-             <div className="flex flex-col w-full">
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Search Customers</span>
-              <input
-                type="text"
-                placeholder="Search by name, email or phone..."
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="bg-transparent border-none p-0 text-sm font-bold text-[#1a1a2e] focus:ring-0 w-full placeholder:text-slate-300 outline-none leading-none"
-              />
+          <select
+            value={role}
+            onChange={(e) => handleRoleFilter(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-amber-600 focus:border-amber-600 outline-none text-gray-700"
+          >
+            <option value="">All Roles</option>
+            <option value="customer">Regular</option>
+            <option value="kitchen">Kitchen</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-1 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400 font-medium">Total</p>
+              <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                <Users size={14} className="text-amber-700" />
+              </div>
             </div>
+            <p className="text-xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+              {pagination?.total.toLocaleString() ?? "—"}
+            </p>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-1 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400 font-medium">Avg Orders</p>
+              <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center">
+                <TrendingUp size={14} className="text-green-700" />
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+              {stats.avgOrder}
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Global Volume Stat Card */}
-        <div className="md:col-span-6 lg:col-span-3 bg-[#fcf8ff] p-8 rounded-[32px] border border-white shadow-sm flex flex-col justify-between group hover:shadow-xl hover:-translate-y-1 transition-all h-32">
-           <div className="flex items-center justify-between">
-              <p className="text-[10px] font-black text-[#22c55e] uppercase tracking-widest">Total Customers</p>
-              <div className="p-2 bg-white rounded-xl shadow-sm text-slate-400 group-hover:text-[#1a1a2e] transition-colors">
-                 <Users size={16} />
-              </div>
-           </div>
-           <h3 className="text-3xl font-black text-[#1a1a2e] tracking-tight">{pagination?.total.toLocaleString() ?? "—"}</h3>
-        </div>
-
-        {/* Efficiency Metric Stat Card */}
-        <div className="md:col-span-6 lg:col-span-3 bg-white p-8 rounded-[32px] border border-slate-50 shadow-sm flex flex-col justify-between group hover:shadow-xl hover:-translate-y-1 transition-all h-32">
-           <div className="flex items-center justify-between">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Average Engagement</p>
-              <div className="p-2 bg-slate-50 rounded-xl text-slate-300 group-hover:text-[#22c55e] transition-colors">
-                 <TrendingUp size={16} />
-              </div>
-           </div>
-           <div className="flex items-end gap-2">
-              <h3 className="text-3xl font-black text-[#1a1a2e] tracking-tight">{stats.avgOrder}</h3>
-              <span className="text-[10px] font-black text-slate-300 uppercase mb-1.5 tracking-tighter">Orders / Customer</span>
-           </div>
-        </div>
-      </section>
-
-      {/* ── Data Catalog Grid ── */}
-      <section className="bg-white rounded-[60px] overflow-hidden shadow-[0_20px_80px_-20px_rgba(26,26,46,0.06)] border border-slate-50/50">
-        <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left border-collapse">
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50/40 border-b border-slate-100/50">
-                <th className="p-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Customer Details</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Orders</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Total Spent</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Location</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Role</th>
-                <th className="p-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Actions</th>
+              <tr className="bg-gray-50/60">
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">Orders</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Spent</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Location</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-gray-50">
               {loading
                 ? Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="p-10">
-                        <div className="flex items-center gap-6">
-                           <Skeleton className="w-16 h-16 rounded-full" />
-                           <div className="space-y-3">
-                              <Skeleton className="h-5 w-40 rounded-lg" />
-                              <Skeleton className="h-3 w-56 rounded-lg opacity-40" />
-                           </div>
+                    <tr key={i}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="w-9 h-9 rounded-full shrink-0" />
+                          <div className="space-y-1.5">
+                            <Skeleton className="h-4 w-36 rounded" />
+                            <Skeleton className="h-3 w-48 rounded opacity-50" />
+                          </div>
                         </div>
                       </td>
-                      <td className="p-8"><Skeleton className="h-8 w-12 mx-auto rounded-2xl" /></td>
-                      <td className="p-8"><Skeleton className="h-6 w-28 rounded-lg" /></td>
-                      <td className="p-8"><Skeleton className="h-4 w-20" /></td>
-                      <td className="p-8"><Skeleton className="h-10 w-28 rounded-full" /></td>
-                      <td className="p-10 text-right"><Skeleton className="h-10 w-24 ml-auto rounded-2xl" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-5 w-10 mx-auto rounded" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-5 w-24 rounded" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-4 w-20 rounded" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                      <td className="px-6 py-4 text-right"><Skeleton className="h-8 w-16 ml-auto rounded-xl" /></td>
                     </tr>
                   ))
                 : customers.map((c) => (
-                    <tr
-                      key={c.id}
-                      className="hover:bg-[#fcf8ff] transition-all duration-300 group border-b border-slate-50 last:border-0 relative"
-                    >
-                      <td className="p-10">
-                        <div className="flex items-center gap-6 transition-transform group-hover:translate-x-2 duration-500">
-                          <div className="w-16 h-16 rounded-[28px] overflow-hidden bg-[#fcf8ff]/50 flex-shrink-0 flex items-center justify-center text-[#1a1a2e] text-xl font-black border border-slate-100 shadow-inner group-hover:scale-110 transition-transform">
-                             {c.full_name ? c.full_name.charAt(0).toUpperCase() : <Users size={24} />}
+                    <tr key={c.id} className="hover:bg-amber-50/30 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 text-sm font-bold shrink-0">
+                            {c.full_name ? c.full_name.charAt(0).toUpperCase() : <Users size={16} />}
                           </div>
                           <div>
-                            <p className="font-black text-lg text-[#1a1a2e] tracking-tight">{c.full_name ?? "—"}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 opacity-60">{c.email ?? "—"}</p>
+                            <p className="font-semibold text-gray-900 text-sm">{c.full_name ?? "—"}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{c.email ?? "—"}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-8 text-center text-sm font-black text-[#1a1a2e]">
-                         <div className="inline-flex items-center justify-center w-12 h-12 bg-slate-50 rounded-[20px] shadow-sm">
-                           {c.order_count}
-                         </div>
+                      <td className="px-6 py-4 text-center text-sm font-semibold text-gray-700">
+                        {c.order_count}
                       </td>
-                      <td className="p-8">
-                        <p className="font-black text-slate-800 text-lg tracking-tighter">
+                      <td className="px-6 py-4">
+                        <p className="font-semibold text-gray-800 text-sm">
                           KSh {c.total_spent.toLocaleString()}
                         </p>
                       </td>
-                      <td className="p-8">
-                        <div className="flex items-center gap-2 group/loc">
-                           <span className="material-symbols-outlined text-[16px] text-slate-200 group-hover/loc:text-[#22c55e] transition-colors">location_on</span>
-                           <span className="text-[11px] font-black uppercase text-[#1a1a2e] tracking-tighter">{c.default_city ?? "Global"}</span>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                          <MapPin size={12} className="text-gray-300" />
+                          {c.default_city ?? "—"}
                         </div>
                       </td>
-                      <td className="p-8">
+                      <td className="px-6 py-4">
                         <StatusBadge role={c.role} />
                       </td>
-                      <td className="p-10 text-right">
-                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0">
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Link
                             href={`/admin/customers/${c.id}`}
-                            className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl text-slate-400 hover:text-[#22c55e] hover:bg-[#22c55e]/5 transition-all shadow-sm border border-slate-50"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
                             title="View Details"
                           >
-                             <span className="material-symbols-outlined text-xl">monitoring</span>
+                            <Eye size={15} />
                           </Link>
-                          <button
-                            className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl text-slate-400 hover:text-[#1a1a2e] hover:bg-slate-50 transition-all shadow-sm border border-slate-50"
-                            title="Edit Customer"
-                          >
-                             <span className="material-symbols-outlined text-xl">edit</span>
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -296,79 +271,57 @@ export default function CustomersPage() {
           </table>
         </div>
 
-        {/* Empty Catalog State */}
         {!loading && customers.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-40 text-center">
-            <div className="w-32 h-32 bg-slate-50/50 rounded-full flex items-center justify-center mb-8 text-5xl animate-in zoom-in duration-700">👥</div>
-            <h3 className="text-3xl font-black text-[#1a1a2e] mb-3 tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>No customers found</h3>
-            <p className="text-slate-400 max-w-sm mx-auto text-sm font-medium leading-relaxed opacity-60">
-              We couldn't find any customers matching your current search or filters.
-            </p>
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <Users size={36} className="text-gray-200 mb-3" />
+            <p className="text-sm font-medium text-gray-500">No customers found</p>
+            <p className="text-xs text-gray-400 mt-1">Try adjusting your search or filters</p>
           </div>
         )}
 
-        {/* Performance-Optimized Pagination */}
+        {/* Pagination */}
         {pagination && pagination.total_pages > 1 && (
-          <div className="p-10 bg-[#fcf8ff]/30 border-t border-slate-50 flex flex-col md:flex-row items-center justify-between gap-10">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              Showing <span className="text-[#1a1a2e]">{showingFrom}-{showingTo}</span> / <span className="text-[#1a1a2e]">{pagination.total.toLocaleString()}</span> entries
+          <div className="px-6 py-4 border-t border-gray-50 bg-gray-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-gray-400">
+              Showing <span className="text-gray-700 font-medium">{showingFrom}–{showingTo}</span> of{" "}
+              <span className="text-gray-700 font-medium">{pagination.total.toLocaleString()}</span> customers
             </p>
-
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-20 duration-300"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={15} />
               </button>
-
-              <div className="flex items-center bg-white rounded-[28px] p-2 border border-slate-100 shadow-sm gap-3">
-                {getPageNumbers().map((p, i) =>
-                  p === "..." ? (
-                    <span key={`ellipsis-${i}`} className="w-12 h-12 flex items-center justify-center text-slate-200 font-bold">...</span>
-                  ) : (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p as number)}
-                      className={`w-12 h-12 flex items-center justify-center rounded-2xl font-black text-[11px] transition-all ${
-                        p === page
-                          ? "bg-[#1a1a2e] text-white shadow-xl shadow-[#1a1a2e]/20 scale-110"
-                          : "text-slate-400 hover:bg-slate-50"
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  )
-                )}
-              </div>
-
+              {getPageNumbers().map((p, i) =>
+                p === "..." ? (
+                  <span key={`ellipsis-${i}`} className="w-8 h-8 flex items-center justify-center text-gray-300 text-sm">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                      p === page
+                        ? "bg-amber-700 text-white"
+                        : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
               <button
                 onClick={() => setPage((p) => Math.min(pagination.total_pages, p + 1))}
                 disabled={page >= pagination.total_pages}
-                 className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-20 duration-300"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={15} />
               </button>
             </div>
           </div>
         )}
-      </section>
-
-      {/* ── Analytical Ledger Footer ── */}
-      <footer className="pt-10 flex flex-col md:flex-row items-center justify-between gap-6 opacity-60">
-        <div className="flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse"></span>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-            Audience Sync: Up to date
-          </span>
-        </div>
-        <div className="flex gap-10 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-          <Link href="#" className="hover:text-[#22c55e] transition-colors">Data Privacy</Link>
-          <Link href="#" className="hover:text-[#1a1a2e] transition-colors">Help Center</Link>
-          <span>© 2026 Ayola Foods Admin</span>
-        </div>
-      </footer>
+      </div>
     </div>
   )
 }

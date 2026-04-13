@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Download, Search, SlidersHorizontal, Calculator } from "lucide-react"
+import { ChevronLeft, ChevronRight, Download, Search, Smartphone, Banknote, CreditCard, RotateCcw, CreditCard as CardIcon } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatKES, formatRelativeTime } from "@/lib/admin/formatters"
 
@@ -38,21 +38,21 @@ interface PaymentsResponse {
 function MethodBadge({ method }: { method: string }) {
   if (method === "mpesa") {
     return (
-      <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50/50 text-blue-700 text-[9px] font-black uppercase tracking-widest border border-blue-100/50">
-        <span className="material-symbols-outlined text-[14px]">smartphone</span> M-Pesa
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+        <Smartphone size={12} /> M-Pesa
       </span>
     )
   }
   if (method === "cash_on_delivery") {
     return (
-      <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-50 text-slate-600 text-[9px] font-black uppercase tracking-widest border border-slate-200/50">
-        <span className="material-symbols-outlined text-[14px]">payments</span> Cash
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium border border-gray-200">
+        <Banknote size={12} /> Cash
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-50/50 text-purple-700 text-[9px] font-black uppercase tracking-widest border border-purple-100/50 capitalize">
-      <span className="material-symbols-outlined text-[14px]">account_balance</span> {method.replace(/_/g, " ")}
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium border border-gray-200 capitalize">
+      <CreditCard size={12} /> {method.replace(/_/g, " ")}
     </span>
   )
 }
@@ -60,18 +60,16 @@ function MethodBadge({ method }: { method: string }) {
 /* ── Payment Status Badge ── */
 function PaymentStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    completed: "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20",
-    pending:    "bg-blue-50 text-blue-600 border-blue-100",
+    completed: "bg-green-50 text-green-700 border-green-100",
+    pending:    "bg-gray-100 text-gray-600 border-gray-200",
     processing: "bg-amber-50 text-amber-700 border-amber-100",
     failed:     "bg-red-50 text-red-600 border-red-100",
     cancelled:  "bg-red-50 text-red-600 border-red-100",
-    refunded:   "bg-slate-50 text-slate-400 border-slate-200",
+    refunded:   "bg-gray-100 text-gray-400 border-gray-200",
   }
-  const cls = styles[status] ?? "bg-slate-100 text-slate-600 border-slate-200"
+  const cls = styles[status] ?? "bg-gray-100 text-gray-600 border-gray-200"
   return (
-    <span
-      className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border ${cls}`}
-    >
+    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${cls}`}>
       {status}
     </span>
   )
@@ -136,191 +134,145 @@ export default function PaymentsPage() {
   const showingTo   = pagination ? Math.min(pagination.page * pagination.per_page, pagination.total) : 0
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full">
-      {/* ── High-Premium Header ── */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 pb-4 border-b border-slate-50/50">
-        <div className="space-y-1">
-          <p className="text-[#22c55e] text-[10px] font-black uppercase tracking-[0.4em] animate-in slide-in-from-left duration-500">Finance</p>
-          <h2 className="text-4xl font-black tracking-tighter text-[#1a1a2e]" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
+    <div className="space-y-6 w-full">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h1
+            className="text-3xl font-bold text-gray-900"
+            style={{ fontFamily: "var(--font-playfair, serif)" }}
+          >
             Payments
-          </h2>
-          <div className="flex items-center gap-3 text-slate-400">
-             <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full text-slate-500">
-               {pagination?.total.toLocaleString() ?? "0"} Transactions
-             </span>
-             <div className="h-3 w-px bg-slate-200" />
-             <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Monitor and manage all customer payments</p>
-          </div>
+          </h1>
+          <p className="text-xs text-gray-400 mt-1">
+            {pagination?.total.toLocaleString() ?? "0"} transactions &middot; Monitor and manage all customer payments
+          </p>
         </div>
-        <button className="bg-[#1a1a2e] text-white px-8 py-4 rounded-[28px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-[#1a1a2e]/20 flex items-center gap-3 hover:bg-slate-800 hover:scale-[1.02] active:scale-95 transition-all group overflow-hidden relative">
-           <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform">download</span>
-           <span className="relative z-10">Download Report</span>
+        <button className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors">
+          <Download size={16} />
+          Download Report
         </button>
       </div>
 
-      {/* ── Integrated Filter Bento Row ── */}
-      <section className="bg-white p-2 rounded-[40px] border border-slate-50 shadow-[0_10px_40px_-5px_rgba(26,26,46,0.04)] flex flex-col xl:flex-row items-center divide-y xl:divide-y-0 xl:divide-x divide-slate-50 relative group">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/2 rounded-full -translate-y-16 translate-x-16 blur-2xl group-hover:scale-150 transition-transform duration-1000"></div>
-
-        {/* Search */}
-        <div className="flex-[2] w-full flex items-center gap-4 px-8 py-6 relative z-10">
-          <span className="material-symbols-outlined text-slate-300">search</span>
-          <div className="flex flex-col w-full">
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#22c55e] mb-1">Search Payments</span>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); resetPage() }}
-              placeholder="Order # or Receipt ID..."
-              className="bg-transparent border-none p-0 text-sm font-bold text-[#1a1a2e] focus:ring-0 w-full placeholder:text-slate-200 outline-none leading-none"
-            />
-          </div>
+      {/* Filter bar */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
+        <div className="flex items-center gap-2 flex-1 min-w-[180px]">
+          <Search size={15} className="text-gray-300 shrink-0" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); resetPage() }}
+            placeholder="Order # or receipt ID..."
+            className="flex-1 bg-transparent border-none p-0 text-sm text-gray-700 focus:ring-0 placeholder:text-gray-300 outline-none"
+          />
         </div>
+        <select
+          value={method}
+          onChange={(e) => { setMethod(e.target.value); resetPage() }}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-amber-600 focus:border-amber-600 outline-none text-gray-700"
+        >
+          <option value="">All Methods</option>
+          <option value="mpesa">M-Pesa</option>
+          <option value="cash_on_delivery">Cash</option>
+        </select>
+        <select
+          value={status}
+          onChange={(e) => { setStatus(e.target.value); resetPage() }}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-amber-600 focus:border-amber-600 outline-none text-gray-700"
+        >
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="completed">Completed</option>
+          <option value="failed">Failed</option>
+        </select>
+        <input
+          type="date"
+          value={from}
+          onChange={(e) => { setFrom(e.target.value); resetPage() }}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-amber-600 focus:border-amber-600 outline-none text-gray-700"
+        />
+        <input
+          type="date"
+          value={to}
+          onChange={(e) => { setTo(e.target.value); resetPage() }}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-amber-600 focus:border-amber-600 outline-none text-gray-700"
+        />
+        <button
+          onClick={clearFilters}
+          className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors"
+          title="Clear filters"
+        >
+          <RotateCcw size={14} />
+        </button>
+      </div>
 
-        {/* Method */}
-        <div className="flex-1 w-full flex items-center gap-4 px-8 py-6 relative z-10">
-          <span className="material-symbols-outlined text-slate-300">payments</span>
-          <div className="flex flex-col w-full">
-            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Payment Method</span>
-            <select
-              value={method}
-              onChange={(e) => { setMethod(e.target.value); resetPage() }}
-              className="bg-transparent border-none p-0 text-sm font-black text-[#1a1a2e] focus:ring-0 cursor-pointer outline-none capitalize leading-none w-full"
-            >
-              <option value="">All Methods</option>
-              <option value="mpesa">M-Pesa</option>
-              <option value="cash_on_delivery">Cash</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Status */}
-        <div className="flex-1 w-full flex items-center gap-4 px-8 py-6 relative z-10">
-          <span className="material-symbols-outlined text-slate-300">verified</span>
-          <div className="flex flex-col w-full">
-            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Status</span>
-            <select
-              value={status}
-              onChange={(e) => { setStatus(e.target.value); resetPage() }}
-              className="bg-transparent border-none p-0 text-sm font-black text-[#1a1a2e] focus:ring-0 cursor-pointer outline-none capitalize leading-none w-full"
-            >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Date Range */}
-        <div className="flex-[2] w-full flex items-center gap-6 px-8 py-6 relative z-10">
-           <span className="material-symbols-outlined text-slate-300">calendar_today</span>
-           <div className="flex items-center gap-4 flex-1">
-              <div className="flex flex-col flex-1">
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Start Date</span>
-                <input
-                  type="date"
-                  value={from}
-                  onChange={(e) => { setFrom(e.target.value); resetPage() }}
-                  className="bg-transparent border-none p-0 text-[11px] font-black text-[#1a1a2e] focus:ring-0 cursor-pointer outline-none uppercase"
-                />
-              </div>
-              <div className="h-4 w-px bg-slate-100" />
-              <div className="flex flex-col flex-1">
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">End Date</span>
-                <input
-                  type="date"
-                  value={to}
-                  onChange={(e) => { setTo(e.target.value); resetPage() }}
-                  className="bg-transparent border-none p-0 text-[11px] font-black text-[#1a1a2e] focus:ring-0 cursor-pointer outline-none uppercase"
-                />
-              </div>
-           </div>
-           <button 
-             onClick={clearFilters}
-             className="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-slate-50 text-slate-200 hover:text-red-500 transition-all group/clear"
-           >
-             <span className="material-symbols-outlined text-[20px] group-active/clear:rotate-180 transition-transform duration-500">restart_alt</span>
-           </button>
-        </div>
-      </section>
-
-      {/* ── Transaction Catalog ── */}
-      <section className="bg-white rounded-[60px] overflow-hidden shadow-[0_20px_80px_-20px_rgba(26,26,46,0.06)] border border-slate-50/50">
-        <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left border-collapse">
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50/40 border-b border-slate-100/50">
-                <th className="p-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Order #</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Customer</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Amount</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Method</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Status</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Transaction ID</th>
-                <th className="p-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Date & Time</th>
+              <tr className="bg-gray-50/60">
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Order #</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Amount</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">Method</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">Status</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Transaction ID</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-gray-50">
               {loading
                 ? Array.from({ length: 10 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="p-10"><Skeleton className="h-6 w-24 rounded-lg" /></td>
-                      <td className="p-8">
-                        <div className="space-y-2">
-                           <Skeleton className="h-5 w-40 rounded-lg" />
-                           <Skeleton className="h-3 w-28 rounded-lg opacity-40" />
+                    <tr key={i}>
+                      <td className="px-6 py-4"><Skeleton className="h-5 w-24 rounded" /></td>
+                      <td className="px-6 py-4">
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-36 rounded" />
+                          <Skeleton className="h-3 w-24 rounded opacity-50" />
                         </div>
                       </td>
-                      <td className="p-8"><Skeleton className="h-6 w-20 ml-auto rounded-lg" /></td>
-                      <td className="p-8"><Skeleton className="h-8 w-24 mx-auto rounded-full" /></td>
-                      <td className="p-8"><Skeleton className="h-8 w-24 mx-auto rounded-full" /></td>
-                      <td className="p-8"><Skeleton className="h-4 w-32 rounded-lg opacity-30" /></td>
-                      <td className="p-10 text-right"><Skeleton className="h-4 w-20 ml-auto rounded-lg opacity-30" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-5 w-20 ml-auto rounded" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-6 w-20 mx-auto rounded-full" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-6 w-20 mx-auto rounded-full" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-4 w-28 rounded opacity-40" /></td>
+                      <td className="px-6 py-4 text-right"><Skeleton className="h-4 w-20 ml-auto rounded opacity-40" /></td>
                     </tr>
                   ))
                 : payments.map((p, i) => (
                     <tr
                       key={p.order_id ?? i}
-                      className="hover:bg-[#fcf8ff] transition-all duration-300 group border-b border-slate-50 last:border-0"
+                      className="hover:bg-amber-50/30 transition-colors group"
                     >
-                      <td className="p-10">
+                      <td className="px-6 py-4">
                         <Link
                           href={`/admin/orders/${p.id}`}
-                          className="text-[#22c55e] font-black hover:text-[#1a1a2e] transition-colors font-mono text-sm tracking-tighter"
+                          className="text-sm font-semibold text-amber-700 hover:text-amber-800 hover:underline"
                         >
                           {p.order_number}
                         </Link>
                       </td>
-                      <td className="p-8">
-                        <div className="flex flex-col transition-transform group-hover:translate-x-2 duration-500">
-                          <span className="font-extrabold text-[#1a1a2e] text-base tracking-tight">{p.customer_name}</span>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 opacity-60">{p.customer_phone}</span>
-                        </div>
+                      <td className="px-6 py-4">
+                        <p className="font-semibold text-gray-800 text-sm">{p.customer_name}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{p.customer_phone}</p>
                       </td>
-                      <td className="p-8 text-right font-black text-[#1a1a2e] text-lg tracking-tighter">
+                      <td className="px-6 py-4 text-right font-semibold text-gray-800 text-sm">
                         {formatKES(p.total)}
                       </td>
-                      <td className="p-8 text-center">
+                      <td className="px-6 py-4 text-center">
                         <MethodBadge method={p.payment_method} />
                       </td>
-                      <td className="p-8 text-center transition-transform group-hover:scale-110 duration-500">
+                      <td className="px-6 py-4 text-center">
                         <PaymentStatusBadge status={p.payment_status} />
                       </td>
-                      <td className="p-8">
-                        <span className="font-mono text-[10px] font-bold text-slate-300 uppercase tracking-tighter select-all">
-                          {p.mpesa_receipt_number ?? "EMPTY"}
+                      <td className="px-6 py-4">
+                        <span className="font-mono text-xs text-gray-400 select-all">
+                          {p.mpesa_receipt_number ?? "—"}
                         </span>
                       </td>
-                      <td className="p-10 text-right">
-                        <div className="flex flex-col items-end">
-                           <span className="text-[11px] font-black text-[#1a1a2e] uppercase tracking-tighter">
-                              {formatRelativeTime(p.created_at)}
-                           </span>
-                           <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest opacity-60 mt-1">
-                              Verified
-                           </span>
-                        </div>
+                      <td className="px-6 py-4 text-right text-xs text-gray-400">
+                        {formatRelativeTime(p.created_at)}
                       </td>
                     </tr>
                   ))}
@@ -328,79 +280,57 @@ export default function PaymentsPage() {
           </table>
         </div>
 
-        {/* Empty Catalog State */}
         {!loading && payments.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-40 text-center">
-            <div className="w-32 h-32 bg-slate-50/50 rounded-full flex items-center justify-center mb-8 text-5xl animate-in zoom-in duration-700">💳</div>
-            <h3 className="text-3xl font-black text-[#1a1a2e] mb-3 tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>No results found</h3>
-            <p className="text-slate-400 max-w-sm mx-auto text-sm font-medium leading-relaxed opacity-60">
-              We couldn't find any payments matching your selected filters.
-            </p>
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <CardIcon size={36} className="text-gray-200 mb-3" />
+            <p className="text-sm font-medium text-gray-500">No payments found</p>
+            <p className="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
           </div>
         )}
 
-        {/* Precision Pagination Control */}
+        {/* Pagination */}
         {pagination && pagination.total_pages > 1 && (
-          <div className="p-10 bg-[#fcf8ff]/30 border-t border-slate-50 flex flex-col md:flex-row items-center justify-between gap-10">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              Showing <span className="text-[#1a1a2e]">{showingFrom}-{showingTo}</span> / <span className="text-[#1a1a2e]">{pagination.total.toLocaleString()}</span> transactions
+          <div className="px-6 py-4 border-t border-gray-50 bg-gray-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-gray-400">
+              Showing <span className="text-gray-700 font-medium">{showingFrom}–{showingTo}</span> of{" "}
+              <span className="text-gray-700 font-medium">{pagination.total.toLocaleString()}</span> transactions
             </p>
-
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-20 duration-300"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={15} />
               </button>
-
-              <div className="flex items-center bg-white rounded-[28px] p-2 border border-slate-100 shadow-sm gap-3">
-                {getPageNumbers().map((p, i) =>
-                  p === "..." ? (
-                    <span key={`ellipsis-${i}`} className="w-12 h-12 flex items-center justify-center text-slate-200 font-bold">...</span>
-                  ) : (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p as number)}
-                      className={`w-12 h-12 flex items-center justify-center rounded-2xl font-black text-[11px] transition-all ${
-                        p === page
-                          ? "bg-[#1a1a2e] text-white shadow-xl shadow-[#1a1a2e]/20 scale-110"
-                          : "text-slate-400 hover:bg-slate-50"
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  )
-                )}
-              </div>
-
+              {getPageNumbers().map((p, i) =>
+                p === "..." ? (
+                  <span key={`ellipsis-${i}`} className="w-8 h-8 flex items-center justify-center text-gray-300 text-sm">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                      p === page
+                        ? "bg-amber-700 text-white"
+                        : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
               <button
                 onClick={() => setPage((p) => Math.min(pagination.total_pages, p + 1))}
                 disabled={page >= pagination.total_pages}
-                 className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-20 duration-300"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={15} />
               </button>
             </div>
           </div>
         )}
-      </section>
-
-      {/* ── Analytical Ledger Footer ── */}
-      <footer className="pt-10 flex flex-col md:flex-row items-center justify-between gap-6 opacity-60">
-        <div className="flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse"></span>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-            Payments are securely processed and verified
-          </span>
-        </div>
-        <div className="flex gap-10 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-          <Link href="#" className="hover:text-[#22c55e] transition-colors">Payment Terms</Link>
-          <Link href="#" className="hover:text-[#1a1a2e] transition-colors">Financial Help</Link>
-          <span>© 2026 Ayola Foods Admin</span>
-        </div>
-      </footer>
+      </div>
     </div>
   )
 }

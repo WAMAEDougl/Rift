@@ -6,11 +6,12 @@ import Link from "next/link"
 import {
   TrendingUp,
   Clock,
-  ArrowUpRight,
   ShoppingBag,
   ChevronLeft,
   ChevronRight,
-  Filter,
+  Plus,
+  X,
+  AlertTriangle,
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -198,198 +199,166 @@ export default function OrdersPage() {
   }, [orders])
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 w-full px-4">
-      {/* ── High-Premium Header ── */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 pb-2">
-        <div className="space-y-1">
-          <p className="text-[#22c55e] text-[10px] font-black uppercase tracking-[0.4em]">Customer Orders</p>
-          <h2 className="text-4xl font-black tracking-tighter text-[#1a1a2e]" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
+    <div className="space-y-6 w-full">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h1
+            className="text-3xl font-bold text-gray-900"
+            style={{ fontFamily: "var(--font-playfair, serif)" }}
+          >
             Orders
-          </h2>
-          <div className="flex items-center gap-3 text-slate-400">
-            <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
-              {pagination?.total.toLocaleString()} Total Orders
-            </span>
-            <div className="h-3 w-px bg-slate-200" />
-            <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">Sales History</span>
-          </div>
+          </h1>
+          <p className="text-xs text-gray-400 mt-1">
+            {pagination?.total.toLocaleString()} total &middot; Sales history
+          </p>
         </div>
-        <button className="bg-[#1a1a2e] text-white px-7 py-3.5 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#1a1a2e]/20 flex items-center gap-4 hover:bg-slate-800 hover:scale-[1.02] active:scale-95 transition-all group relative overflow-hidden">
-           <span className="material-symbols-outlined text-[18px] group-hover:rotate-180 transition-transform duration-700">add_circle</span>
-           <span className="relative z-10">Create New Order</span>
+        <button className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors">
+          <Plus size={16} />
+          Create Order
         </button>
       </div>
 
-      {/* ── Sophisticated Filter Rows ── */}
-      <div className="bg-white p-1 pb-4 rounded-[48px] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.08)] border border-slate-50/50 relative overflow-hidden group">
-         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/2 rounded-full -translate-y-16 translate-x-16 blur-2xl group-hover:scale-125 transition-transform duration-1000"></div>
-        <div className="p-8 space-y-8 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-            {/* Search Input Container */}
-            <div className="md:col-span-5 relative group/input">
-              <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors group-focus-within/input:text-[#22c55e] text-xl">search</span>
-              <input
-                className="w-full pl-14 pr-6 py-4.5 bg-slate-50/50 border border-transparent rounded-[24px] text-sm text-[#1a1a2e] font-bold focus:bg-white focus:ring-4 focus:ring-[#22c55e]/10 transition-all placeholder:text-slate-400 placeholder:font-black placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest outline-none shadow-inner"
-                placeholder="Search by ID or name..."
-                type="text"
-                value={q}
-                onChange={(e) => updateParam({ q: e.target.value })}
-              />
-            </div>
-            
-            {/* Action Group Grid */}
-            <div className="md:col-span-7 grid grid-cols-3 gap-4">
-              <select
-                className="py-4 px-6 bg-slate-50 border-none rounded-[20px] text-[10px] font-black uppercase tracking-widest text-[#1a1a2e] focus:ring-4 focus:ring-[#22c55e]/10 transition-all cursor-pointer appearance-none outline-none shadow-sm"
-                value={status}
-                onChange={(e) => updateParam({ status: e.target.value })}
-              >
-                <option value="">Status</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="preparing">Preparing</option>
-                <option value="ready">Ready</option>
-                <option value="dispatched">Dispatched</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-              <select
-                className="py-4 px-6 bg-slate-50 border-none rounded-[20px] text-[10px] font-black uppercase tracking-widest text-[#1a1a2e] focus:ring-4 focus:ring-[#22c55e]/10 transition-all cursor-pointer appearance-none outline-none shadow-sm"
-                value={paymentStatus}
-                onChange={(e) => updateParam({ payment_status: e.target.value })}
-              >
-                <option value="">Payments</option>
-                <option value="completed">Completed</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="failed">Failed</option>
-                <option value="refunded">Refunded</option>
-              </select>
-               <select
-                className="py-4 px-6 bg-slate-50 border-none rounded-[20px] text-[10px] font-black uppercase tracking-widest text-[#1a1a2e] focus:ring-4 focus:ring-[#22c55e]/10 transition-all cursor-pointer appearance-none outline-none shadow-sm"
-                value={deliveryType}
-                onChange={(e) => updateParam({ delivery_type: e.target.value })}
-              >
-                <option value="">Order Type</option>
-                <option value="delivery">Delivery</option>
-                <option value="pickup">Pickup</option>
-                <option value="shipping">Shipping</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row justify-between items-center bg-[#fcf8ff] p-4 rounded-[32px] border border-slate-100 gap-4">
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2 group cursor-pointer">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-[#22c55e] transition-colors">Today's Orders</span>
-              </div>
-              <div className="w-px h-4 bg-slate-200 self-center" />
-              <div className="flex items-center gap-2 group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#1a1a2e]" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Live Orders</span>
-              </div>
-            </div>
-            <button
-              onClick={clearFilters}
-              className="text-[#1a1a2e] text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3 hover:bg-white px-6 py-2.5 rounded-full transition-all border border-transparent hover:border-slate-100 shadow-sm hover:shadow-lg active:scale-95"
-            >
-              <span className="material-symbols-outlined text-lg leading-none">close</span>
-              Reset Filters
-            </button>
-          </div>
-        </div>
+      {/* Filter bar */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
+        <input
+          className="flex-1 min-w-[180px] border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-amber-600 focus:border-amber-600 outline-none text-gray-700 placeholder:text-gray-300"
+          placeholder="Search by ID or name..."
+          type="text"
+          value={q}
+          onChange={(e) => updateParam({ q: e.target.value })}
+        />
+        <select
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-amber-600 focus:border-amber-600 outline-none text-gray-700"
+          value={status}
+          onChange={(e) => updateParam({ status: e.target.value })}
+        >
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="preparing">Preparing</option>
+          <option value="ready">Ready</option>
+          <option value="dispatched">Dispatched</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-amber-600 focus:border-amber-600 outline-none text-gray-700"
+          value={paymentStatus}
+          onChange={(e) => updateParam({ payment_status: e.target.value })}
+        >
+          <option value="">All Payments</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="failed">Failed</option>
+          <option value="refunded">Refunded</option>
+        </select>
+        <select
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-amber-600 focus:border-amber-600 outline-none text-gray-700"
+          value={deliveryType}
+          onChange={(e) => updateParam({ delivery_type: e.target.value })}
+        >
+          <option value="">All Types</option>
+          <option value="delivery">Delivery</option>
+          <option value="pickup">Pickup</option>
+          <option value="shipping">Shipping</option>
+        </select>
+        <button
+          onClick={clearFilters}
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1"
+        >
+          Clear
+        </button>
       </div>
 
-      {/* ── Data Catalog Grid ── */}
-      <div className="bg-white rounded-[60px] overflow-hidden shadow-[0_20px_80px_-20px_rgba(26,26,46,0.06)] border border-slate-50/50">
-        <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left border-collapse">
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50/40 border-b border-slate-100/50">
-                <th className="p-10 w-12 text-center">
-                  <div className="flex items-center justify-center">
-                     <input
-                      className="w-5 h-5 rounded-lg border-slate-300 text-[#22c55e] focus:ring-[#22c55e]/20 transition-all"
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                    />
-                  </div>
+              <tr className="bg-gray-50/60">
+                <th className="px-6 py-3 w-10">
+                  <input
+                    className="w-4 h-4 rounded border-gray-300 text-amber-700 focus:ring-amber-600"
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                  />
                 </th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Order Information</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Customer</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Items</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Total Price</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Status</th>
-                <th className="p-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Date</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Order</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">Items</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-gray-50">
               {loading
                 ? Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="p-10 text-center"><Skeleton className="h-5 w-5 mx-auto rounded-lg" /></td>
-                      <td className="p-8"><Skeleton className="h-6 w-24 rounded-lg" /></td>
-                      <td className="p-8">
-                        <Skeleton className="h-5 w-32 mb-2" />
-                        <Skeleton className="h-3 w-40" />
+                    <tr key={i}>
+                      <td className="px-6 py-4"><Skeleton className="h-4 w-4 rounded" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-5 w-24 rounded" /></td>
+                      <td className="px-6 py-4">
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-32 rounded" />
+                          <Skeleton className="h-3 w-24 rounded opacity-50" />
+                        </div>
                       </td>
-                      <td className="p-8 text-center"><Skeleton className="h-6 w-10 mx-auto rounded-lg" /></td>
-                      <td className="p-8"><Skeleton className="h-6 w-24 rounded-lg" /></td>
-                      <td className="p-8"><Skeleton className="h-8 w-32 rounded-full" /></td>
-                      <td className="p-8 text-right"><Skeleton className="h-4 w-28 ml-auto" /></td>
+                      <td className="px-6 py-4 text-center"><Skeleton className="h-5 w-8 mx-auto rounded" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-5 w-20 rounded" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-6 w-28 rounded-full" /></td>
+                      <td className="px-6 py-4 text-right"><Skeleton className="h-4 w-24 ml-auto rounded" /></td>
                     </tr>
                   ))
                 : orders.map((order) => (
                     <tr
                       key={order.id}
-                      className={`hover:bg-[#fcf8ff] transition-all duration-300 group border-b border-slate-50 last:border-0 relative ${
-                        selectedIds.has(order.id) ? "bg-[#22c55e]/5" : ""
+                      className={`hover:bg-amber-50/30 transition-colors group ${
+                        selectedIds.has(order.id) ? "bg-amber-50/20" : ""
                       }`}
                     >
-                      <td className="p-10 text-center">
-                        <div className="flex items-center justify-center">
-                          <input
-                            checked={selectedIds.has(order.id)}
-                            onChange={() => toggleRow(order.id)}
-                            className="w-5 h-5 rounded-lg border-slate-300 text-[#22c55e] focus:ring-[#22c55e]/20 cursor-pointer shadow-sm"
-                            type="checkbox"
-                          />
-                        </div>
+                      <td className="px-6 py-4">
+                        <input
+                          checked={selectedIds.has(order.id)}
+                          onChange={() => toggleRow(order.id)}
+                          className="w-4 h-4 rounded border-gray-300 text-amber-700 focus:ring-amber-600 cursor-pointer"
+                          type="checkbox"
+                        />
                       </td>
-                      <td className="p-8">
+                      <td className="px-6 py-4">
                         <Link
                           href={`/admin/orders/${order.id}`}
-                          className="font-black text-[#006e2f] bg-[#22c55e]/5 px-4 py-2.5 rounded-2xl hover:bg-[#006e2f] hover:text-white transition-all text-sm shadow-sm inline-block group-hover:scale-105 active:scale-95"
+                          className="text-sm font-semibold text-amber-700 hover:text-amber-800 hover:underline"
                         >
                           {order.order_number}
                         </Link>
                       </td>
-                      <td className="p-8">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-[#1a1a2e] text-[10px] font-black shadow-inner border border-slate-200">
-                             {order.customer_name?.charAt(0).toUpperCase()}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 text-xs font-bold shrink-0">
+                            {order.customer_name?.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-black text-sm text-[#1a1a2e] tracking-tight">{order.customer_name}</p>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{order.customer_phone}</p>
+                            <p className="font-medium text-sm text-gray-800">{order.customer_name}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{order.customer_phone}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-8 text-center">
-                         <div className="inline-flex items-center justify-center w-10 h-10 bg-slate-50 rounded-2xl font-black text-[#1a1a2e] text-xs">
-                          {order.item_count}
-                         </div>
+                      <td className="px-6 py-4 text-center text-sm text-gray-600">
+                        {order.item_count}
                       </td>
-                      <td className="p-8 font-black text-[#1a1a2e] text-lg tracking-tighter">{formatKES(order.total)}</td>
-                      <td className="p-8 space-y-2">
+                      <td className="px-6 py-4 font-semibold text-gray-800 text-sm">
+                        {formatKES(order.total)}
+                      </td>
+                      <td className="px-6 py-4 space-y-1">
                         <StatusBadge status={order.delivery_type} type="delivery" />
                         <StatusBadge status={order.status} type="order" />
                       </td>
-                      <td className="p-8 text-right">
-                        <p className="text-[11px] font-black text-[#1a1a2e] uppercase tracking-tighter">{formatDate(order.created_at)}</p>
-                        <p className="text-[10px] font-bold text-slate-400 mt-1 opacity-60">{formatRelativeTime(order.created_at)}</p>
+                      <td className="px-6 py-4 text-right">
+                        <p className="text-xs text-gray-600">{formatDate(order.created_at)}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{formatRelativeTime(order.created_at)}</p>
                       </td>
                     </tr>
                   ))}
@@ -397,180 +366,177 @@ export default function OrdersPage() {
           </table>
         </div>
 
-        {/* ── Empty Catalog Feedback ── */}
         {!loading && orders.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-40 text-center">
-            <div className="w-32 h-32 bg-slate-50/50 rounded-full flex items-center justify-center mb-8 text-5xl animate-in zoom-in duration-700">📦</div>
-            <h3 className="text-3xl font-black text-[#1a1a2e] mb-3 tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>No orders found</h3>
-            <p className="text-slate-400 max-w-sm mx-auto text-sm font-medium leading-relaxed opacity-60">
-              We couldn't find any orders matching your current filters. Try expanding your search.
-            </p>
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <ShoppingBag size={36} className="text-gray-200 mb-3" />
+            <p className="text-sm font-medium text-gray-500">No orders found</p>
+            <p className="text-xs text-gray-400 mt-1">Try expanding your search or filters</p>
           </div>
         )}
 
-        {/* ── Precision Pagination Control ── */}
+        {/* Pagination */}
         {pagination && pagination.total_pages > 1 && (
-          <div className="p-10 flex flex-col md:flex-row items-center justify-between border-t border-slate-50 bg-[#fcf8ff]/30 gap-8">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              Showing <span className="text-[#1a1a2e]">{orders.length}</span> / <span className="text-[#1a1a2e]">{pagination.total.toLocaleString()}</span> orders
+          <div className="px-6 py-4 border-t border-gray-50 bg-gray-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-gray-400">
+              Showing <span className="text-gray-700 font-medium">{orders.length}</span> of{" "}
+              <span className="text-gray-700 font-medium">{pagination.total.toLocaleString()}</span> orders
             </p>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => goToPage(page - 1)}
                 disabled={page <= 1}
-                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-20 transition-all duration-300"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={15} />
               </button>
-              <div className="flex gap-3 p-2 bg-white border border-slate-100 rounded-[28px] shadow-sm">
-                {getPageNumbers().map((p, i) =>
-                  p === "..." ? (
-                    <span key={`ellipsis-${i}`} className="w-12 h-12 flex items-center justify-center text-slate-300 font-bold">...</span>
-                  ) : (
-                    <button
-                      key={p}
-                      onClick={() => goToPage(p as number)}
-                      className={`w-12 h-12 rounded-2xl font-black text-[11px] flex items-center justify-center transition-all ${
-                        p === page ? "bg-[#1a1a2e] text-white shadow-xl shadow-[#1a1a2e]/20 scale-110" : "hover:bg-slate-50 text-slate-400"
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  )
-                )}
-              </div>
+              {getPageNumbers().map((p, i) =>
+                p === "..." ? (
+                  <span key={`ellipsis-${i}`} className="w-8 h-8 flex items-center justify-center text-gray-300 text-sm">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => goToPage(p as number)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                      p === page
+                        ? "bg-amber-700 text-white"
+                        : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
               <button
                 onClick={() => goToPage(page + 1)}
                 disabled={page >= pagination.total_pages}
-                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm active:scale-90 disabled:opacity-20 transition-all duration-300"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={15} />
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* ── Analytical Footer Grid ── */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="bg-white p-10 rounded-[48px] shadow-[0_4px_40px_rgba(0,0,0,0.02)] border border-slate-50 flex flex-col justify-between min-h-[180px] hover:translate-y-[-4px] transition-transform group">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">Total Revenue</p>
-              <div className="p-2 bg-green-50 rounded-lg text-[#006e2f] opacity-0 group-hover:opacity-100 transition-opacity">
-                <TrendingUp size={16} />
-              </div>
+      {/* Summary stat cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
+              <TrendingUp size={16} className="text-green-700" />
             </div>
-            <h3 className="text-4xl font-black text-[#1a1a2e] tracking-tighter leading-none" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>{formatKES(stats.totalRevenue)}</h3>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Total Revenue</p>
           </div>
-          <div className="pt-4 border-t border-slate-50 mt-4">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">Sales Summary (Current Page)</span>
-          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {formatKES(stats.totalRevenue)}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Sales summary (current page)</p>
         </div>
 
-        <div className="bg-[#1a1a2e] p-10 rounded-[48px] shadow-2xl flex flex-col justify-between min-h-[180px] relative overflow-hidden group">
-          <ShoppingBag size={180} className="absolute -right-12 -bottom-12 text-white/5 rotate-12 group-hover:scale-110 transition-transform duration-700" />
-          <div className="relative z-10 space-y-4">
-             <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] leading-none mb-1">Needs Attention</p>
-             <h3 className="text-4xl font-black text-white tracking-tighter leading-none">{stats.pendingCount} Pending</h3>
+        <div className="bg-amber-50 rounded-2xl border border-amber-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+              <Clock size={16} className="text-amber-700" />
+            </div>
+            <p className="text-xs text-amber-700 font-medium uppercase tracking-wide">Needs Attention</p>
           </div>
-          <div className="relative z-10 pt-4 border-t border-white/10 mt-4 flex justify-between items-center">
-            <span className="text-[10px] font-black text-white opacity-60 uppercase tracking-widest">Orders awaiting fulfillment</span>
-            <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse" />
-          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {stats.pendingCount} Pending
+          </p>
+          <p className="text-xs text-amber-600 mt-1">Orders awaiting fulfillment</p>
         </div>
 
-        <div className="bg-white p-10 rounded-[48px] shadow-[0_4px_40px_rgba(0,0,0,0.02)] border border-slate-50 flex flex-col justify-between min-h-[180px] hover:translate-y-[-4px] transition-transform group">
-          <div className="space-y-4">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">Order Processing</p>
-            <h3 className="text-4xl font-black text-[#1a1a2e] tracking-tighter leading-none">Healthy</h3>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
+              <ShoppingBag size={16} className="text-blue-700" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Processing</p>
           </div>
-          <div className="pt-4 border-t border-slate-50 mt-4 flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#22c55e] text-sm font-black">sync_check</span>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">System status: Online</span>
-          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            Healthy
+          </p>
+          <p className="text-xs text-gray-400 mt-1">System status: Online</p>
         </div>
-      </section>
+      </div>
 
-      {/* ── Floating Curator Bar ── */}
+      {/* Bulk action bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a2e]/90 backdrop-blur-2xl px-10 py-6 rounded-[32px] shadow-[0_40px_100px_rgba(0,0,0,0.4)] flex items-center gap-10 border border-white/20 animate-in fade-in slide-in-from-bottom-10">
-          <div className="flex items-center gap-5">
-            <div className="w-12 h-12 rounded-2xl bg-[#22c55e] text-white font-black text-sm flex items-center justify-center shadow-[0_10px_30px_rgba(34,197,94,0.4)] rotate-3">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 shadow-xl px-6 py-4 rounded-2xl flex items-center gap-6 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 font-bold text-sm flex items-center justify-center">
               {selectedIds.size}
             </div>
-            <div className="text-left">
-              <span className="text-white text-xs font-black uppercase tracking-widest block">Batch Actions</span>
-              <span className="text-white/40 text-[10px] font-bold uppercase tracking-tighter">Manage multiple orders</span>
-            </div>
+            <span className="text-sm font-semibold text-gray-700">orders selected</span>
           </div>
-          <div className="h-10 w-px bg-white/10 self-center"></div>
-          <div className="flex items-center gap-4">
+          <div className="h-6 w-px bg-gray-200" />
+          <div className="flex items-center gap-3">
             <button
               onClick={handleBulkConfirm}
               disabled={bulkLoading}
-              className="bg-white text-[#1a1a2e] px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#22c55e] hover:text-white hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-50"
+              className="bg-amber-700 hover:bg-amber-800 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
             >
               Confirm Orders
             </button>
             <button
               onClick={() => setShowCancelDialog(true)}
               disabled={bulkLoading}
-              className="bg-transparent border border-red-500/40 text-red-400 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
             >
               Cancel Orders
             </button>
           </div>
           <button
             onClick={() => setSelectedIds(new Set())}
-            className="w-10 h-10 flex items-center justify-center text-white/20 hover:text-white transition-all hover:bg-white/10 rounded-full"
+            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <span className="material-symbols-outlined text-2xl">close</span>
+            <X size={16} />
           </button>
         </div>
       )}
 
-      {/* ── Dialog Refinement ── */}
+      {/* Cancel dialog */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent className="rounded-[40px] p-12 max-w-lg border-none shadow-[0_60px_120px_rgba(0,0,0,0.5)] bg-white animate-in zoom-in-95">
-          <DialogHeader className="space-y-6">
-            <div className="w-24 h-24 bg-red-50 rounded-[32px] flex items-center justify-center text-red-500 mx-auto shadow-inner">
-              <span className="material-symbols-outlined text-5xl">warning</span>
+        <DialogContent className="rounded-2xl p-6 max-w-md bg-white">
+          <DialogHeader className="space-y-3">
+            <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-red-500 mx-auto">
+              <AlertTriangle size={22} />
             </div>
-            <div className="text-center space-y-2">
-              <DialogTitle className="text-4xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
-                Confirm Cancellation
+            <div className="text-center space-y-1">
+              <DialogTitle className="text-lg font-bold text-gray-900">
+                Cancel Orders?
               </DialogTitle>
-              <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-sm mx-auto">
-                Are you sure you want to cancel <span className="text-[#1a1a2e] font-black">{selectedIds.size} selected orders</span>?
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Are you sure you want to cancel{" "}
+                <span className="font-semibold text-gray-800">{selectedIds.size} selected orders</span>?
               </p>
             </div>
           </DialogHeader>
-          <div className="mt-10 space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 ml-1">Reason for Cancellation</label>
+          <div className="mt-4 space-y-1.5">
+            <label className="text-xs font-medium text-gray-500">Reason (optional)</label>
             <textarea
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
               placeholder="Enter a reason for cancelling these orders..."
-              rows={4}
-              className="w-full bg-slate-50/50 border border-slate-100 rounded-[24px] px-6 py-5 text-sm font-bold text-[#1a1a2e] focus:bg-white focus:ring-4 focus:ring-red-500/5 focus:border-red-500/50 outline-none resize-none transition-all shadow-inner"
+              rows={3}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none resize-none transition-colors"
             />
           </div>
-          <DialogFooter className="mt-10 flex-row gap-4">
+          <DialogFooter className="mt-6 flex-row gap-3">
             <button
               onClick={() => {
                 setShowCancelDialog(false)
                 setCancelReason("")
               }}
               disabled={bulkLoading}
-              className="flex-1 px-4 py-5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-[24px] text-xs font-black uppercase tracking-widest transition-all active:scale-95"
+              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-semibold transition-colors"
             >
               Go Back
             </button>
             <button
               onClick={handleBulkCancel}
               disabled={bulkLoading}
-              className="flex-1 px-4 py-5 bg-red-600 hover:bg-red-700 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-[0_20px_40px_rgba(220,38,38,0.3)] transition-all active:scale-95"
+              className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
             >
               {bulkLoading ? "Processing..." : "Cancel Orders"}
             </button>
