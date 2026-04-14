@@ -37,7 +37,7 @@ export default function ProductDetailPage() {
     fetch("/api/products")
       .then(async (r) => {
         const json = await r.json();
-        const dbProducts = json.data?.products ?? [];
+        const dbProducts = json.products ?? [];
         const found = dbProducts.find((p: any) => p.slug === slug);
         if (found) {
           return {

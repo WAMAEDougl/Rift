@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ChevronLeft, ChevronRight, Download, Search, Smartphone, Banknote, CreditCard, RotateCcw, CreditCard as CardIcon } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatKES, formatRelativeTime } from "@/lib/admin/formatters"
+import { toast } from "sonner"
 
 interface PaymentRow {
   id: any
@@ -86,6 +87,60 @@ export default function PaymentsPage() {
   const [from, setFrom]             = useState("")
   const [to, setTo]                 = useState("")
   const [page, setPage]             = useState(1)
+  const [downloading, setDownloading] = useState(false)
+
+  async function downloadReport() {
+    setDownloading(true)
+    try {
+      // Fetch all payments matching current filters (up to 1000)
+      const params = new URLSearchParams()
+      if (search) params.set("q", search)
+      if (method) params.set("payment_method", method)
+      if (status) params.set("payment_status", status)
+      if (from)   params.set("from", from)
+      if (to)     params.set("to", to)
+      params.set("page", "1")
+      params.set("per_page", "1000")
+
+      const res = await fetch(`/api/admin/payments?${params.toString()}`)
+      const json: PaymentsResponse = await res.json()
+      const rows = json.data?.items ?? []
+
+      if (rows.length === 0) {
+        toast.error("No payments to export")
+        return
+      }
+
+      const headers = ["Order #", "Customer Name", "Phone", "Amount (KES)", "Payment Method", "Status", "M-Pesa Receipt", "Date"]
+      const csvRows = [
+        headers,
+        ...rows.map((p) => [
+          p.order_number,
+          p.customer_name,
+          p.customer_phone,
+          String(p.total),
+          p.payment_method === "cash_on_delivery" ? "Cash on Delivery" : "M-Pesa",
+          p.payment_status,
+          p.mpesa_receipt_number ?? "",
+          new Date(p.created_at).toLocaleDateString("en-KE", { year: "numeric", month: "short", day: "numeric" }),
+        ]),
+      ]
+
+      const csv = csvRows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n")
+      const blob = new Blob([csv], { type: "text/csv" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `payments-report-${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success(`Downloaded ${rows.length} payment records`)
+    } catch {
+      toast.error("Failed to download report")
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   const fetchPayments = useCallback(async () => {
     setLoading(true)
@@ -148,9 +203,13 @@ export default function PaymentsPage() {
             {pagination?.total.toLocaleString() ?? "0"} transactions &middot; Monitor and manage all customer payments
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors">
+        <button
+          onClick={downloadReport}
+          disabled={downloading}
+          className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+        >
           <Download size={16} />
-          Download Report
+          {downloading ? "Downloading…" : "Download Report"}
         </button>
       </div>
 
