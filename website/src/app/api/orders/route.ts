@@ -1,6 +1,7 @@
 import { createOrderSchema } from "@/lib/utils/validation";
 import { getServiceClient, apiError, apiSuccess, checkRateLimit } from "@/lib/utils/api";
 import { generateOrderNumber, calculateDeliveryFee, validateOrderItems } from "@/lib/order-utils";
+import { createNotification } from "@/lib/admin/notifications";
 
 export async function POST(request: Request) {
   // Rate limit by IP
@@ -75,6 +76,13 @@ export async function POST(request: Request) {
       await supabase.from("orders").delete().eq("id", order.id);
       return apiError("Failed to create order items", 500);
     }
+
+    createNotification(
+      "new_order",
+      `New Order #${order.order_number}`,
+      `New order placed by ${data.customer_name}`,
+      order.id
+    );
 
     return apiSuccess({
       order: {

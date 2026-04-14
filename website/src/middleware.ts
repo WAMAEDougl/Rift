@@ -8,6 +8,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Match admin and account routes, skip static files and API routes
+    "/admin",
     "/admin/:path*",
     "/account/:path*",
   ],

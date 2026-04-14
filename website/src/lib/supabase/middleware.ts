@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
@@ -28,33 +29,43 @@ export async function updateSession(request: NextRequest) {
   // Refresh session if expired
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  // Protect admin routes — /admin/login stays public
+  console.log("[middleware] path:", request.nextUrl.pathname, "user:", user?.id ?? null, "err:", userError?.message ?? null);
+
+  // For profile lookups that bypass RLS, use bare client with service_role key
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  // Protect admin routes
   if (request.nextUrl.pathname.startsWith("/admin")) {
     const isLoginPage = request.nextUrl.pathname === "/admin/login";
 
-    if (!user && !isLoginPage) {
-      // Unauthenticated: send to admin login
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
-      return NextResponse.redirect(url);
+    if (!user) {
+      if (isLoginPage) return supabaseResponse;
+      return NextResponse.redirect(new URL("/admin/login", request.url));
     }
 
-    if (user && !isLoginPage) {
-      // Authenticated: verify the user has admin or kitchen role
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
+    // Check admin/kitchen role bypassing RLS
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
 
-      if (!profile || !["admin", "kitchen"].includes(profile.role)) {
-        // Valid session but wrong role — bounce to home
-        const url = request.nextUrl.clone();
-        url.pathname = "/";
-        return NextResponse.redirect(url);
-      }
+    console.log("[middleware] profile:", profile?.role ?? null, "err:", profileError?.message ?? null);
+
+    if (!profile || !["admin", "kitchen"].includes(profile.role)) {
+      if (isLoginPage) return supabaseResponse;
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    // Already authenticated admin hitting login page → redirect to dashboard
+    if (isLoginPage) {
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
   }
 

@@ -3,13 +3,14 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, ShoppingCart, Plus, Minus, Check, Heart, Share2,
   Truck, ShieldCheck, Beaker, Clock, ChefHat, Package,
 } from "lucide-react";
-import { getProductBySlug, getCategoryBySlug, formatPrice } from "@/lib/products";
+import { getProductBySlug, getCategoryBySlug, formatPrice, products as fallbackProducts, categories as fallbackCategories } from "@/lib/products";
+import type { Product, Category as FallbackCategory } from "@/lib/products";
 import { nutritionData } from "@/lib/nutrition";
 import { recipes } from "@/lib/recipes";
 import { useCart } from "@/lib/cart-context";
@@ -21,11 +22,58 @@ import VideoEmbed from "@/components/recipes/VideoEmbed";
 export default function ProductDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const product = getProductBySlug(slug);
+  const fallbackProduct = getProductBySlug(slug);
+
+  const [product, setProduct] = useState<Product | undefined>(fallbackProduct);
+  const [loading, setLoading] = useState(!fallbackProduct);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [activeTab, setActiveTab] = useState<"details" | "nutrition" | "preparation">("details");
   const { addItem } = useCart();
+
+  useEffect(() => {
+    if (fallbackProduct) return; // Already have it from hardcoded data
+    setLoading(true);
+    fetch("/api/products")
+      .then(async (r) => {
+        const json = await r.json();
+        const dbProducts = json.data?.products ?? [];
+        const found = dbProducts.find((p: any) => p.slug === slug);
+        if (found) {
+          return {
+            id: String(found.legacy_id || found.id),
+            name: found.name,
+            slug: found.slug,
+            category: found.category?.name ?? "",
+            categorySlug: found.category?.slug ?? "",
+            description: found.description ?? "",
+            longDescription: found.long_description ?? "",
+            price: found.price,
+            size: found.size ?? "",
+            image: found.image_url ?? "/images/products/placeholder.jpg",
+            features: found.features ?? [],
+            ingredients: found.ingredients ?? "",
+            nutritionHighlights: found.nutrition_highlights ?? [],
+            badge: found.badge ?? undefined,
+            inStock: found.in_stock ?? true,
+          };
+        }
+        return null;
+      })
+      .then((p) => {
+        setProduct(p ?? undefined);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [slug, fallbackProduct]);
+
+  if (loading) {
+    return (
+      <div className="pt-32 pb-20 text-center">
+        <p className="text-muted-foreground/60 text-lg">Loading product...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -38,7 +86,8 @@ export default function ProductDetailPage() {
     );
   }
 
-  const category = getCategoryBySlug(product.categorySlug);
+  const fallbackCategory = getCategoryBySlug(product.categorySlug);
+  const category = fallbackCategory;
   const nutrition = nutritionData[slug];
   const relatedRecipe = recipes.find((r) => r.relatedProduct === slug);
 

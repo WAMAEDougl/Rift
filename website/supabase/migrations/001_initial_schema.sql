@@ -20,21 +20,6 @@ CREATE TABLE public.categories (
   updated_at timestamptz DEFAULT now()
 );
 
-ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can read categories"
-  ON public.categories FOR SELECT
-  USING (true);
-
-CREATE POLICY "Admins can manage categories"
-  ON public.categories FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
-    )
-  );
-
 -- ============================================
 -- PRODUCTS
 -- ============================================
@@ -60,21 +45,6 @@ CREATE TABLE public.products (
   updated_at timestamptz DEFAULT now()
 );
 
-ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can read active products"
-  ON public.products FOR SELECT
-  USING (is_active = true);
-
-CREATE POLICY "Admins can manage products"
-  ON public.products FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
-    )
-  );
-
 -- ============================================
 -- PROFILES (extends auth.users)
 -- ============================================
@@ -89,43 +59,6 @@ CREATE TABLE public.profiles (
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
-
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can read own profile"
-  ON public.profiles FOR SELECT
-  USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile"
-  ON public.profiles FOR UPDATE
-  USING (auth.uid() = id);
-
-CREATE POLICY "Admins can read all profiles"
-  ON public.profiles FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() AND p.role = 'admin'
-    )
-  );
-
--- Auto-create profile on signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger AS $$
-BEGIN
-  INSERT INTO public.profiles (id, email, full_name)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', '')
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================
 -- ORDERS (Phase 1 - created now for types)
@@ -158,7 +91,86 @@ CREATE TABLE public.orders (
   completed_at timestamptz
 );
 
+-- ============================================
+-- ORDER ITEMS
+-- ============================================
+CREATE TABLE public.order_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+  product_id uuid NOT NULL REFERENCES public.products(id),
+  product_name text NOT NULL,
+  product_price integer NOT NULL,
+  quantity integer NOT NULL CHECK (quantity > 0),
+  line_total integer NOT NULL
+);
+
+-- ============================================
+-- PAYMENT LOGS
+-- ============================================
+CREATE TABLE public.payment_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id uuid REFERENCES public.orders(id),
+  provider text NOT NULL,
+  event_type text NOT NULL,
+  raw_payload jsonb,
+  created_at timestamptz DEFAULT now()
+);
+
+-- ============================================
+-- ENABLE RLS
+-- ============================================
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payment_logs ENABLE ROW LEVEL SECURITY;
+
+-- ============================================
+-- POLICIES
+-- ============================================
+CREATE POLICY "Anyone can read categories"
+  ON public.categories FOR SELECT
+  USING (true);
+
+CREATE POLICY "Admins can manage categories"
+  ON public.categories FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+    )
+  );
+
+CREATE POLICY "Anyone can read active products"
+  ON public.products FOR SELECT
+  USING (is_active = true);
+
+CREATE POLICY "Admins can manage products"
+  ON public.products FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+    )
+  );
+
+CREATE POLICY "Users can read own profile"
+  ON public.profiles FOR SELECT
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile"
+  ON public.profiles FOR UPDATE
+  USING (auth.uid() = id);
+
+CREATE POLICY "Admins can read all profiles"
+  ON public.profiles FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid() AND p.role = 'admin'
+    )
+  );
 
 CREATE POLICY "Users can read own orders"
   ON public.orders FOR SELECT
@@ -176,21 +188,6 @@ CREATE POLICY "Admins can manage all orders"
 CREATE POLICY "Anyone can create orders (guest checkout)"
   ON public.orders FOR INSERT
   WITH CHECK (true);
-
--- ============================================
--- ORDER ITEMS
--- ============================================
-CREATE TABLE public.order_items (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
-  product_id uuid NOT NULL REFERENCES public.products(id),
-  product_name text NOT NULL,
-  product_price integer NOT NULL,
-  quantity integer NOT NULL CHECK (quantity > 0),
-  line_total integer NOT NULL
-);
-
-ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can read own order items"
   ON public.order_items FOR SELECT
@@ -214,20 +211,6 @@ CREATE POLICY "Anyone can insert order items"
   ON public.order_items FOR INSERT
   WITH CHECK (true);
 
--- ============================================
--- PAYMENT LOGS
--- ============================================
-CREATE TABLE public.payment_logs (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id uuid REFERENCES public.orders(id),
-  provider text NOT NULL,
-  event_type text NOT NULL,
-  raw_payload jsonb,
-  created_at timestamptz DEFAULT now()
-);
-
-ALTER TABLE public.payment_logs ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY "Admins can read payment logs"
   ON public.payment_logs FOR ALL
   USING (
@@ -241,6 +224,27 @@ CREATE POLICY "Admins can read payment logs"
 CREATE POLICY "Service can insert payment logs"
   ON public.payment_logs FOR INSERT
   WITH CHECK (true);
+
+-- ============================================
+-- TRIGGERS AND FUNCTIONS
+-- ============================================
+-- Auto-create profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', '')
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================
 -- INDEXES
