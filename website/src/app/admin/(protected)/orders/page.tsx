@@ -64,19 +64,7 @@ export default function OrdersPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [cancelReason, setCancelReason] = useState("")
   const [bulkLoading, setBulkLoading] = useState(false)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [downloading, setDownloading] = useState(false)
-  const [creating, setCreating] = useState(false)
-  const [createForm, setCreateForm] = useState({
-    customer_name: "",
-    customer_phone: "",
-    customer_email: "",
-    delivery_type: "delivery",
-    delivery_address: "",
-    delivery_city: "Nairobi",
-    order_notes: "",
-    payment_method: "cash_on_delivery",
-  })
 
   const q = searchParams.get("q") ?? ""
   const status = searchParams.get("status") ?? ""
@@ -317,36 +305,6 @@ export default function OrdersPage() {
     return [1, "...", page, "...", total_pages]
   }
 
-  const handleCreateOrder = async () => {
-    if (!createForm.customer_name.trim() || !createForm.customer_phone.trim() || !createForm.delivery_address.trim()) {
-      return
-    }
-    setCreating(true)
-    try {
-      const res = await fetch("/api/admin/orders/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(createForm),
-      })
-      if (res.ok) {
-        setShowCreateDialog(false)
-        setCreateForm({
-          customer_name: "",
-          customer_phone: "",
-          customer_email: "",
-          delivery_type: "delivery",
-          delivery_address: "",
-          delivery_city: "Nairobi",
-          order_notes: "",
-          payment_method: "cash_on_delivery",
-        })
-        fetchOrders()
-      }
-    } finally {
-      setCreating(false)
-    }
-  }
-
   const stats = useMemo(() => {
     const totalRevenue = orders.reduce((acc, o) => acc + o.total, 0)
     const pendingCount = orders.filter((o) => o.status === "pending").length
@@ -376,13 +334,6 @@ export default function OrdersPage() {
           >
             <FileDown size={16} />
             {downloading ? "Generating..." : "Export PDF"}
-          </button>
-          <button 
-            onClick={() => setShowCreateDialog(true)}
-            className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
-          >
-            <Plus size={16} />
-            Create Order
           </button>
         </div>
       </div>
@@ -707,125 +658,6 @@ export default function OrdersPage() {
               className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
             >
               {bulkLoading ? "Processing..." : "Cancel Orders"}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Order dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="rounded-2xl p-6 max-w-md bg-white">
-          <DialogHeader className="space-y-3">
-            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-700 mx-auto">
-              <Plus size={22} />
-            </div>
-            <div className="text-center space-y-1">
-              <DialogTitle className="text-lg font-bold text-gray-900">
-                Create New Order
-              </DialogTitle>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Place an order on behalf of a customer via phone or in-person.
-              </p>
-            </div>
-          </DialogHeader>
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className="text-xs font-medium text-gray-500">Customer Name *</label>
-              <input
-                type="text"
-                placeholder="Enter customer name"
-                value={createForm.customer_name}
-                onChange={(e) => setCreateForm({ ...createForm, customer_name: e.target.value })}
-                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500">Phone Number *</label>
-              <input
-                type="tel"
-                placeholder="712 345 678"
-                value={createForm.customer_phone}
-                onChange={(e) => setCreateForm({ ...createForm, customer_phone: e.target.value })}
-                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500">Email (optional)</label>
-              <input
-                type="email"
-                placeholder="customer@email.com"
-                value={createForm.customer_email}
-                onChange={(e) => setCreateForm({ ...createForm, customer_email: e.target.value })}
-                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500">Delivery Type *</label>
-              <select
-                value={createForm.delivery_type}
-                onChange={(e) => setCreateForm({ ...createForm, delivery_type: e.target.value })}
-                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
-              >
-                <option value="delivery">Delivery</option>
-                <option value="pickup">Pickup</option>
-                <option value="shipping">Shipping</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500">Delivery Address *</label>
-              <textarea
-                placeholder="Enter delivery address"
-                rows={2}
-                value={createForm.delivery_address}
-                onChange={(e) => setCreateForm({ ...createForm, delivery_address: e.target.value })}
-                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors resize-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500">City / Region</label>
-              <input
-                type="text"
-                placeholder="Nairobi"
-                value={createForm.delivery_city}
-                onChange={(e) => setCreateForm({ ...createForm, delivery_city: e.target.value })}
-                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500">Order Notes (optional)</label>
-              <textarea
-                placeholder="Special instructions..."
-                rows={2}
-                value={createForm.order_notes}
-                onChange={(e) => setCreateForm({ ...createForm, order_notes: e.target.value })}
-                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors resize-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500">Payment Method *</label>
-              <select
-                value={createForm.payment_method}
-                onChange={(e) => setCreateForm({ ...createForm, payment_method: e.target.value })}
-                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
-              >
-                <option value="cash_on_delivery">Cash on Delivery</option>
-                <option value="mpesa">M-Pesa</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter className="mt-6 flex-row gap-3">
-            <button
-              onClick={() => setShowCreateDialog(false)}
-              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-semibold transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCreateOrder}
-              disabled={creating || !createForm.customer_name.trim() || !createForm.customer_phone.trim() || !createForm.delivery_address.trim()}
-              className="flex-1 px-4 py-2.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
-            >
-              {creating ? "Creating..." : "Create Order"}
             </button>
           </DialogFooter>
         </DialogContent>

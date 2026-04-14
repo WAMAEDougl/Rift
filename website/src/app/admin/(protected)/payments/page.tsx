@@ -92,7 +92,6 @@ export default function PaymentsPage() {
   async function downloadReport() {
     setDownloading(true)
     try {
-      // Fetch all payments matching current filters (up to 1000)
       const params = new URLSearchParams()
       if (search) params.set("q", search)
       if (method) params.set("payment_method", method)
@@ -111,30 +110,80 @@ export default function PaymentsPage() {
         return
       }
 
-      const headers = ["Order #", "Customer Name", "Phone", "Amount (KES)", "Payment Method", "Status", "M-Pesa Receipt", "Date"]
-      const csvRows = [
-        headers,
-        ...rows.map((p) => [
-          p.order_number,
-          p.customer_name,
-          p.customer_phone,
-          String(p.total),
-          p.payment_method === "cash_on_delivery" ? "Cash on Delivery" : "M-Pesa",
-          p.payment_status,
-          p.mpesa_receipt_number ?? "",
-          new Date(p.created_at).toLocaleDateString("en-KE", { year: "numeric", month: "short", day: "numeric" }),
-        ]),
-      ]
+      const style = `
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; color: #1a1a2e; }
+        .header { text-align: center; margin-bottom: 32px; }
+        .logo { font-size: 28px; font-weight: 800; color: #22c55e; }
+        .title { font-size: 20px; font-weight: 600; margin-top: 8px; }
+        .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 12px; }
+        th { background: #1a1a2e; color: white; padding: 12px 8px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
+        td { padding: 10px 8px; border-bottom: 1px solid #e2e8f0; }
+        tr:nth-child(even) { background: #f8fafc; }
+        .amount { font-weight: 700; }
+        .status { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+        .status-completed { background: #dcfce7; color: #166534; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-processing { background: #dbeafe; color: #1e40af; }
+        .status-failed { background: #fee2e2; color: #991b1b; }
+        .footer { text-align: center; margin-top: 32px; font-size: 11px; color: #94a3b8; }
+        @media print { body { padding: 20px; } }
+      `
 
-      const csv = csvRows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n")
-      const blob = new Blob([csv], { type: "text/csv" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `payments-report-${new Date().toISOString().slice(0, 10)}.csv`
-      a.click()
-      URL.revokeObjectURL(url)
-      toast.success(`Downloaded ${rows.length} payment records`)
+      const tableRows = rows.map((p) => `
+        <tr>
+          <td>${p.order_number}</td>
+          <td>${p.customer_name}</td>
+          <td>${p.customer_phone}</td>
+          <td class="amount">KES ${Number(p.total).toLocaleString()}</td>
+          <td>${p.payment_method === "cash_on_delivery" ? "Cash on Delivery" : "M-Pesa"}</td>
+          <td><span class="status status-${p.payment_status}">${p.payment_status}</span></td>
+          <td>${p.mpesa_receipt_number || "-"}</td>
+          <td>${new Date(p.created_at).toLocaleDateString("en-KE")}</td>
+        </tr>
+      `).join("")
+
+      const printWindow = window.open("", "_blank")
+      if (!printWindow) return
+
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Payments Report - Ayola Foods</title>
+            <style>${style}</style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="logo">Ayola Foods</div>
+              <div class="title">Payments Report</div>
+              <div class="subtitle">Generated on ${new Date().toLocaleString()}</div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  <th>Receipt</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>${tableRows}</tbody>
+            </table>
+            <div class="footer">
+              <p>Ayola Foods KE - www.ayolafoods.com</p>
+              <p>Total Records: ${rows.length}</p>
+            </div>
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
+      setTimeout(() => printWindow.print(), 250)
+      toast.success(`Exported ${rows.length} payment records`)
     } catch {
       toast.error("Failed to download report")
     } finally {
