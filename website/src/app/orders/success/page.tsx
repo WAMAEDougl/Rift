@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Check, MessageCircle, Printer, Download, ArrowRight, Package, MapPin, Phone, Mail } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 interface OrderItem {
   id: string;
@@ -60,34 +59,19 @@ export default function OrderSuccessPage() {
     }
 
     async function fetchOrder() {
-      const supabase = createClient();
-      
-      // First try by UUID
-      let { data, error: fetchError } = await supabase
-        .from("orders")
-        .select("*, order_items(*)")
-        .eq("id", orderId)
-        .single();
-
-      // If not found, try by order number (e.g., "AY-20250414-0001")
-      if (fetchError || !data) {
-        const { data: orderByNumber, error: orderNumError } = await supabase
-          .from("orders")
-          .select("*, order_items(*)")
-          .eq("order_number", orderId)
-          .single();
+      try {
+        const res = await fetch(`/api/public-orders/${orderId}`);
+        const json = await res.json();
         
-        if (!orderNumError && orderByNumber) {
-          data = orderByNumber;
-          fetchError = null;
+        if (!res.ok || json.error) {
+          console.error("Order fetch error:", json.error);
+          setError("Order not found");
+        } else {
+          setOrder(json.order);
         }
-      }
-
-      if (fetchError || !data) {
-        console.error("Order fetch error:", fetchError);
-        setError("Order not found");
-      } else {
-        setOrder(data);
+      } catch (err) {
+        console.error("Network error:", err);
+        setError("Failed to load order");
       }
       setLoading(false);
     }
