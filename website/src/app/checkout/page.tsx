@@ -55,7 +55,7 @@ export default function CheckoutPage() {
       try {
         const res = await fetch(`/api/orders/${orderId}`);
         const json = await res.json();
-        const order = json.data?.order;
+        const order = json.order;
 
         if (order?.payment_status === "completed") {
           clearInterval(pollRef.current!);
