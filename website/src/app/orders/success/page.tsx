@@ -61,13 +61,30 @@ export default function OrderSuccessPage() {
 
     async function fetchOrder() {
       const supabase = createClient();
-      const { data, error: fetchError } = await supabase
+      
+      // First try by UUID
+      let { data, error: fetchError } = await supabase
         .from("orders")
         .select("*, order_items(*)")
         .eq("id", orderId)
         .single();
 
+      // If not found, try by order number (e.g., "AY-20250414-0001")
       if (fetchError || !data) {
+        const { data: orderByNumber, error: orderNumError } = await supabase
+          .from("orders")
+          .select("*, order_items(*)")
+          .eq("order_number", orderId)
+          .single();
+        
+        if (!orderNumError && orderByNumber) {
+          data = orderByNumber;
+          fetchError = null;
+        }
+      }
+
+      if (fetchError || !data) {
+        console.error("Order fetch error:", fetchError);
         setError("Order not found");
       } else {
         setOrder(data);
