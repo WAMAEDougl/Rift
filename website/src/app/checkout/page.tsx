@@ -59,11 +59,8 @@ export default function CheckoutPage() {
 
         if (order?.payment_status === "completed") {
           clearInterval(pollRef.current!);
-          setOrderResult((prev) => prev ? { ...prev } : null);
           setStep("confirmed");
           clearCart();
-          const waMsg = `Hi! I've completed payment for order ${orderResult?.order_number}. Thank you!`;
-          window.open(getWhatsAppOrderLink(waMsg), "_blank");
           return;
         }
 
@@ -233,18 +230,11 @@ export default function CheckoutPage() {
           setStep("awaiting_payment");
           startPolling(orderId);
         } else {
-          // Fallback to cash
-          console.warn("M-Pesa STK push failed:", mpesaData);
-          setForm((prev) => ({ ...prev, payment_method: "cash_on_delivery" }));
-          setOrderResult({
-            order_number: data.order.order_number,
-            order_id: orderId,
-            total: data.order.total,
-          });
-          clearCart();
-          setStep("confirmed");
-          const waMsg = `NEW ORDER ${data.order.order_number}\n\n${items.map((i) => `${i.quantity}x ${i.product.name}`).join("\n")}\n\nTotal: KES ${data.order.total}\nCustomer: ${form.name}\nPhone: ${form.phone}\nPayment: Cash on Delivery\n${form.delivery_type === "pickup" ? "PICKUP" : `Deliver to: ${form.address}, ${form.city}`}`;
-          window.open(getWhatsAppOrderLink(waMsg), "_blank");
+          // STK push failed — show error, do NOT checkout
+          const errMsg = mpesaData.error?.message ?? mpesaData.data?.message ?? "M-Pesa payment could not be initiated. Please try again or use Cash on Delivery.";
+          setError(errMsg);
+          setLoading(false);
+          return;
         }
       } else {
         // Cash on delivery
@@ -259,8 +249,7 @@ export default function CheckoutPage() {
         window.open(getWhatsAppOrderLink(waMsg), "_blank");
       }
     } catch {
-      window.open(getWhatsAppOrderLink(buildWhatsAppMessage()), "_blank");
-      setError("Network issue — we've opened WhatsApp to complete your order.");
+      setError("Network error. Please check your connection and try again.");
     } finally { setLoading(false); }
   };
 
