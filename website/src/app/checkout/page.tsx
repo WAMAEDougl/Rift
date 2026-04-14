@@ -66,14 +66,27 @@ export default function CheckoutPage() {
 
         if (order?.payment_status === "failed") {
           clearInterval(pollRef.current!);
-          setError("M-Pesa payment failed. Please try again or select cash on delivery.");
+          // Cancel the order since payment was not completed
+          await fetch(`/api/orders/${orderId}/cancel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reason: "M-Pesa payment cancelled by user" }),
+          }).catch(() => {});
+          setError("M-Pesa payment was cancelled. Your cart has been kept — you can try again or choose Cash on Delivery.");
           setStep("form");
           return;
         }
 
         if (attempts >= maxAttempts) {
           clearInterval(pollRef.current!);
-          setPollingMsg("Payment not confirmed after 5 minutes. You can wait for manual confirmation or contact us on WhatsApp.");
+          // Cancel the order after timeout
+          await fetch(`/api/orders/${orderId}/cancel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reason: "Payment not confirmed after 5 minutes" }),
+          }).catch(() => {});
+          setError("Payment not confirmed after 5 minutes. Your cart has been kept — please try again or choose Cash on Delivery.");
+          setStep("form");
         } else if (attempts % 6 === 0) {
           setPollingMsg("Still waiting for confirmation... If you haven't received the M-Pesa prompt on your phone, check your phone or try again.");
         }
@@ -136,6 +149,24 @@ export default function CheckoutPage() {
           </div>
 
           <p className="text-sm text-muted-foreground">{pollingMsg}</p>
+
+          <button
+            onClick={async () => {
+              if (pollRef.current) clearInterval(pollRef.current);
+              if (orderResult?.order_id) {
+                await fetch(`/api/orders/${orderResult.order_id}/cancel`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ reason: "Cancelled by customer" }),
+                }).catch(() => {});
+              }
+              setError("Payment cancelled. Your cart has been kept — you can try again or choose Cash on Delivery.");
+              setStep("form");
+            }}
+            className="mt-4 text-sm text-muted-foreground hover:text-red-500 underline transition-colors"
+          >
+            Cancel payment
+          </button>
         </div>
       </div>
     );
