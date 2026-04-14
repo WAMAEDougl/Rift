@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Pencil, Trash2, Plus, FolderOpen } from "lucide-react"
+import { Pencil, Trash2, Plus, FolderOpen, Download } from "lucide-react"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -60,6 +60,27 @@ export default function CategoriesPage() {
     fetchCategories()
   }
 
+  function downloadReport() {
+    if (categories.length === 0) { toast.error("No categories to export"); return }
+    const rows = [
+      ["Name", "Slug", "Tagline", "Icon", "Ships Countrywide", "Product Count", "Sort Order"],
+      ...categories.map((c) => [
+        c.name, c.slug, c.tagline ?? "", c.icon ?? "",
+        c.ships_countrywide ? "Yes" : "No",
+        String(c.product_count), String(c.sort_order),
+      ]),
+    ]
+    const csv = rows.map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `categories-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success("Report downloaded")
+  }
+
   return (
     <div className="space-y-6 w-full">
       {/* Header */}
@@ -75,13 +96,22 @@ export default function CategoriesPage() {
             {categories.length} total &middot; Manage how products are organized on the storefront
           </p>
         </div>
-        <Link
-          href="/admin/categories/new"
-          className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
-        >
-          <Plus size={16} />
-          Add Category
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={downloadReport}
+            className="inline-flex items-center gap-2 border border-gray-200 hover:border-amber-300 hover:bg-amber-50 text-gray-600 hover:text-amber-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <Download size={15} />
+            Download Report
+          </button>
+          <Link
+            href="/admin/categories/new"
+            className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <Plus size={16} />
+            Add Category
+          </Link>
+        </div>
       </div>
 
       {/* Table */}
