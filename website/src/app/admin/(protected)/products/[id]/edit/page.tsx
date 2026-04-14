@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter, useParams } from "next/navigation"
-import { ArrowLeft, Save, X, Package, FileText, Leaf, ImageIcon, Zap, Trash2, AlertTriangle, Upload, Loader2 } from "lucide-react"
+import { ArrowLeft, Save, X, Package, FileText, Leaf, ImageIcon, Zap, Trash2, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
+import ImageUploader from "@/components/admin/ImageUploader"
 import {
   Dialog,
   DialogContent,
@@ -122,91 +123,6 @@ function TagInput({
           Add
         </button>
       </div>
-    </div>
-  )
-}
-
-function ImageUploader({ imageUrl, onImageUrl }: {
-  imageUrl: string
-  onImageUrl: (url: string) => void
-}) {
-  const [uploading, setUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append("file", file)
-      const res = await fetch("/api/admin/upload", { method: "POST", body: formData })
-      const json = await res.json()
-      if (!res.ok) { toast.error(json.error?.message ?? "Upload failed"); return }
-      onImageUrl(json.data.url)
-      toast.success("Image uploaded successfully")
-    } catch {
-      toast.error("Upload failed. Please try again.")
-    } finally {
-      setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ""
-    }
-  }
-
-  return (
-    <div className="space-y-3">
-      <div
-        className="aspect-square rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/30 transition-all group"
-        onClick={() => !uploading && fileInputRef.current?.click()}
-      >
-        {imageUrl ? (
-          <div className="relative w-full h-full">
-            <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <p className="text-white text-xs font-medium">Click to change</p>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center p-6">
-            {uploading ? (
-              <Loader2 size={32} className="text-amber-600 mx-auto mb-2 animate-spin" />
-            ) : (
-              <Upload size={28} className="text-gray-300 mx-auto mb-2 group-hover:text-amber-500 transition-colors" />
-            )}
-            <p className="text-xs text-gray-400 group-hover:text-amber-600 transition-colors">
-              {uploading ? "Uploading…" : "Click to upload"}
-            </p>
-            <p className="text-[10px] text-gray-300 mt-1">JPG, PNG, WebP — max 5MB</p>
-          </div>
-        )}
-      </div>
-      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-      <button
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={uploading}
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 text-sm font-medium transition-colors disabled:opacity-50"
-      >
-        {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-        {uploading ? "Uploading…" : "Upload from computer"}
-      </button>
-      <div className="relative flex items-center gap-2">
-        <div className="flex-1 h-px bg-gray-100" />
-        <span className="text-[10px] text-gray-300 uppercase tracking-wide">or paste URL</span>
-        <div className="flex-1 h-px bg-gray-100" />
-      </div>
-      <input
-        type="text"
-        value={imageUrl}
-        onChange={(e) => onImageUrl(e.target.value)}
-        placeholder="https://example.com/image.jpg"
-        className={INPUT_CLS}
-      />
-      {imageUrl && (
-        <button type="button" onClick={() => onImageUrl("")} className="w-full text-xs text-gray-400 hover:text-red-500 transition-colors py-1">
-          Remove image
-        </button>
-      )}
     </div>
   )
 }
