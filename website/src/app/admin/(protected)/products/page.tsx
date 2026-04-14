@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   Pencil,
   Plus,
+  Eye,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -331,7 +332,13 @@ export default function ProductsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-2 opacity-100 transition-opacity">
+                          {/* <Link
+                            href={`/admin/products/${product.id}/view`}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                          >
+                            <Eye size={15} />
+                          </Link> */}
                           <Link
                             href={`/admin/products/${product.id}/edit`}
                             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
