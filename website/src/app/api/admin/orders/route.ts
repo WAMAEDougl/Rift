@@ -8,6 +8,7 @@ export async function GET(request: Request) {
   if (session instanceof Response) return session;
 
   const url = new URL(request.url);
+  const isExport = url.searchParams.get("export") === "true";
   const { page, per_page, offset } = parsePagination(url.searchParams);
 
   const status = url.searchParams.get("status");
@@ -67,6 +68,31 @@ export async function GET(request: Request) {
       item_count: orderItems?.[0]?.count ?? 0,
     };
   });
+
+  if (isExport) {
+    const exportData = items.map((order: Record<string, unknown>) => ({
+      "Order Number": order.order_number,
+      "Customer Name": order.customer_name,
+      "Customer Phone": order.customer_phone,
+      "Delivery Type": order.delivery_type,
+      "Delivery Address": order.delivery_address,
+      "Delivery City": order.delivery_city,
+      Subtotal: order.subtotal,
+      "Delivery Fee": order.delivery_fee,
+      Total: order.total,
+      "Payment Method": order.payment_method,
+      "Payment Status": order.payment_status,
+      Status: order.status,
+      "Created At": order.created_at,
+    }));
+
+    return new Response(JSON.stringify(exportData), {
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Disposition": `attachment; filename="orders-${new Date().toISOString().slice(0, 10)}.json"`,
+      },
+    });
+  }
 
   return ok(paginatedResponse(items, total, page, per_page));
 }

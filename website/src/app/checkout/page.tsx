@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/products";
 import { getWhatsAppOrderLink } from "@/lib/constants";
@@ -16,6 +17,7 @@ import {
 type Step = "form" | "awaiting_payment" | "confirmed";
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const { items, totalItems, totalPrice, clearCart, updateQuantity } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -59,8 +61,8 @@ export default function CheckoutPage() {
 
         if (order?.payment_status === "completed") {
           clearInterval(pollRef.current!);
-          setStep("confirmed");
           clearCart();
+          router.push(`/orders/success?order_id=${orderId}`);
           return;
         }
 
@@ -172,8 +174,11 @@ export default function CheckoutPage() {
     );
   }
 
-  // Confirmed
+  // Confirmed - redirect to success page
   if (step === "confirmed" && orderResult) {
+    if (typeof window !== "undefined") {
+      router.push(`/orders/success?order_id=${orderResult.order_id}`);
+    }
     return (
       <div className="pt-28 pb-20">
         <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
@@ -181,32 +186,7 @@ export default function CheckoutPage() {
             <Check className="w-10 h-10 text-green-600 dark:text-green-400" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Payment Confirmed!</h1>
-          <p className="text-muted-foreground mb-6">Your M-Pesa payment has been received. We&apos;re preparing your order now.</p>
-
-          <div className="bg-card rounded-2xl p-6 text-left mb-6 space-y-3 border border-border">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Order</span>
-              <span className="font-bold text-foreground font-mono">{orderResult.order_number}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Total</span>
-              <span className="font-bold text-primary">{formatPrice(orderResult.total)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Payment</span>
-              <span className="flex items-center gap-1 text-green-600 font-medium"><Check className="w-4 h-4" /> Paid via M-Pesa</span>
-            </div>
-          </div>
-
-          <div className="flex gap-3 flex-wrap justify-center">
-            <Link href="/products" className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors">
-              Continue Shopping
-            </Link>
-            <a href={getWhatsAppOrderLink(`Hi! My order ${orderResult.order_number} is paid. Just confirming!`)} target="_blank" rel="noopener noreferrer"
-              className="bg-whatsapp text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-colors inline-flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" /> WhatsApp Us
-            </a>
-          </div>
+          <p className="text-muted-foreground mb-6">Redirecting to your order details...</p>
         </div>
       </div>
     );
@@ -275,7 +255,7 @@ export default function CheckoutPage() {
           total: data.order.total,
         });
         clearCart();
-        setStep("confirmed");
+        router.push(`/orders/success?order_id=${orderId}`);
         const waMsg = `NEW ORDER ${data.order.order_number}\n\n${items.map((i) => `${i.quantity}x ${i.product.name}`).join("\n")}\n\nTotal: KES ${data.order.total}\nCustomer: ${form.name}\nPhone: ${form.phone}\nPayment: Cash on Delivery\n${form.delivery_type === "pickup" ? "PICKUP" : `Deliver to: ${form.address}, ${form.city}`}`;
         window.open(getWhatsAppOrderLink(waMsg), "_blank");
       }
@@ -286,8 +266,11 @@ export default function CheckoutPage() {
 
   const inputCls = "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm placeholder:text-muted-foreground/50";
 
-  // Cash confirmation view (when STK push failed and fell back to cash)
+  // Cash confirmation view (when STK push failed and fell back to cash) - redirect to success page
   if (step === "confirmed" && orderResult && form.payment_method === "cash_on_delivery") {
+    if (typeof window !== "undefined") {
+      router.push(`/orders/success?order_id=${orderResult.order_id}`);
+    }
     return (
       <div className="pt-28 pb-20">
         <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
@@ -295,42 +278,7 @@ export default function CheckoutPage() {
             <Check className="w-10 h-10 text-green-600 dark:text-green-400" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Order Placed!</h1>
-          <p className="text-muted-foreground mb-6">We&apos;re preparing your order now.</p>
-
-          <div className="bg-card rounded-2xl p-6 text-left mb-6 space-y-3 border border-border">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Order</span>
-              <span className="font-bold text-foreground font-mono">{orderResult.order_number}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Total</span>
-              <span className="font-bold text-primary">{formatPrice(orderResult.total)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Payment</span>
-              <span className="font-medium text-foreground">Pay on Delivery</span>
-            </div>
-          </div>
-
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6 text-left">
-            <div className="flex items-start gap-3">
-              <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
-              <div>
-                <p className="font-semibold text-green-800 dark:text-green-300 text-sm">We&apos;ll confirm on WhatsApp</p>
-                <p className="text-green-700 dark:text-green-400/70 text-sm mt-1">You&apos;ll receive a confirmation message with payment details shortly.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-3 flex-wrap justify-center">
-            <Link href="/products" className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors">
-              Continue Shopping
-            </Link>
-            <a href={getWhatsAppOrderLink(`Hi! My order number is ${orderResult.order_number}. Just confirming!`)} target="_blank" rel="noopener noreferrer"
-              className="bg-whatsapp text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-colors inline-flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" /> WhatsApp Us
-            </a>
-          </div>
+          <p className="text-muted-foreground mb-6">Redirecting to your order details...</p>
         </div>
       </div>
     );
@@ -368,12 +316,9 @@ export default function CheckoutPage() {
               <div className="space-y-3">
                 <input type="text" placeholder="Your name" value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} />
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 text-sm">+254</span>
-                  <input type="tel" placeholder="712 345 678" value={form.phone}
+                <input type="tel" placeholder="712 345 678" value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className={`${inputCls} pl-14`} />
-                </div>
+                    className={inputCls} />
               </div>
             </div>
 

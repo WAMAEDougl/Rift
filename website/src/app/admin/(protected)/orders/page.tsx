@@ -12,6 +12,7 @@ import {
   Plus,
   X,
   AlertTriangle,
+  FileDown,
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -63,6 +64,19 @@ export default function OrdersPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [cancelReason, setCancelReason] = useState("")
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    customer_name: "",
+    customer_phone: "",
+    customer_email: "",
+    delivery_type: "delivery",
+    delivery_address: "",
+    delivery_city: "Nairobi",
+    order_notes: "",
+    payment_method: "cash_on_delivery",
+  })
 
   const q = searchParams.get("q") ?? ""
   const status = searchParams.get("status") ?? ""
@@ -183,6 +197,117 @@ export default function OrdersPage() {
     }
   }
 
+  const handleDownloadPDF = async () => {
+    setDownloading(true)
+    try {
+      const params = new URLSearchParams()
+      if (q) params.set("q", q)
+      if (status) params.set("status", status)
+      if (paymentStatus) params.set("payment_status", paymentStatus)
+      if (deliveryType) params.set("delivery_type", deliveryType)
+      if (from) params.set("from", from)
+      if (to) params.set("to", to)
+      params.set("per_page", "1000")
+      params.set("export", "true")
+
+      const res = await fetch(`/api/admin/orders?${params.toString()}`)
+      if (!res.ok) throw new Error("Failed to fetch orders")
+
+      const data = await res.json()
+      const orders = data.data?.items || []
+
+      const printContent = document.getElementById("orders-table-print")
+      if (!printContent) {
+        const a = window.document.createElement("a")
+        a.href = URL.createObjectURL(
+          new Blob([JSON.stringify(orders, null, 2)], { type: "application/json" })
+        )
+        a.download = `orders-report-${new Date().toISOString().slice(0, 10)}.json`
+        a.click()
+        return
+      }
+
+      const printWindow = window.open("", "_blank")
+      if (!printWindow) return
+
+      const style = `
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; color: #1a1a2e; }
+        .header { text-align: center; margin-bottom: 32px; }
+        .logo { font-size: 28px; font-weight: 800; color: #22c55e; }
+        .title { font-size: 20px; font-weight: 600; margin-top: 8px; }
+        .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 12px; }
+        th { background: #1a1a2e; color: white; padding: 12px 8px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
+        td { padding: 10px 8px; border-bottom: 1px solid #e2e8f0; }
+        tr:nth-child(even) { background: #f8fafc; }
+        .total-cell { font-weight: 700; }
+        .status { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-confirmed { background: #dbeafe; color: #1e40af; }
+        .status-preparing { background: #dbeafe; color: #1e40af; }
+        .status-ready { background: #dbeafe; color: #1e40af; }
+        .status-dispatched { background: #dbeafe; color: #1e40af; }
+        .status-delivered { background: #dcfce7; color: #166534; }
+        .status-cancelled { background: #f1f5f9; color: #64748b; }
+        .footer { text-align: center; margin-top: 32px; font-size: 11px; color: #94a3b8; }
+        @media print { body { padding: 20px; } }
+      `
+
+      const rows = orders.map((o: OrderRow) => `
+        <tr>
+          <td>${o.order_number}</td>
+          <td>${o.customer_name}</td>
+          <td>${o.customer_phone}</td>
+          <td style="text-align:center">${o.item_count}</td>
+          <td class="total-cell">KES ${o.total.toLocaleString()}</td>
+          <td><span class="status status-${o.status}">${o.status}</span></td>
+          <td style="text-align:right">${new Date(o.created_at).toLocaleDateString()}</td>
+        </tr>
+      `).join("")
+
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Orders Report - Ayola Foods</title>
+            <style>${style}</style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="logo">Ayola Foods</div>
+              <div class="title">Orders Report</div>
+              <div class="subtitle">Generated on ${new Date().toLocaleString()}</div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th style="text-align:center">Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th style="text-align:right">Date</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <div class="footer">
+              <p>Ayola Foods KE - www.ayolafoods.com</p>
+              <p>Total Orders: ${orders.length}</p>
+            </div>
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
+      setTimeout(() => printWindow.print(), 250)
+    } catch (error) {
+      console.error("Download error:", error)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   const getPageNumbers = (): (number | "...")[] => {
     if (!pagination) return []
     const { total_pages } = pagination
@@ -190,6 +315,36 @@ export default function OrdersPage() {
     if (page <= 3) return [1, 2, 3, "...", total_pages]
     if (page >= total_pages - 2) return [1, "...", total_pages - 2, total_pages - 1, total_pages]
     return [1, "...", page, "...", total_pages]
+  }
+
+  const handleCreateOrder = async () => {
+    if (!createForm.customer_name.trim() || !createForm.customer_phone.trim() || !createForm.delivery_address.trim()) {
+      return
+    }
+    setCreating(true)
+    try {
+      const res = await fetch("/api/admin/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(createForm),
+      })
+      if (res.ok) {
+        setShowCreateDialog(false)
+        setCreateForm({
+          customer_name: "",
+          customer_phone: "",
+          customer_email: "",
+          delivery_type: "delivery",
+          delivery_address: "",
+          delivery_city: "Nairobi",
+          order_notes: "",
+          payment_method: "cash_on_delivery",
+        })
+        fetchOrders()
+      }
+    } finally {
+      setCreating(false)
+    }
   }
 
   const stats = useMemo(() => {
@@ -213,10 +368,23 @@ export default function OrdersPage() {
             {pagination?.total.toLocaleString()} total &middot; Sales history
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors">
-          <Plus size={16} />
-          Create Order
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={downloading || orders.length === 0}
+            className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+          >
+            <FileDown size={16} />
+            {downloading ? "Generating..." : "Export PDF"}
+          </button>
+          <button 
+            onClick={() => setShowCreateDialog(true)}
+            className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <Plus size={16} />
+            Create Order
+          </button>
+        </div>
       </div>
 
       {/* Filter bar */}
@@ -539,6 +707,125 @@ export default function OrdersPage() {
               className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
             >
               {bulkLoading ? "Processing..." : "Cancel Orders"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Order dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="rounded-2xl p-6 max-w-md bg-white">
+          <DialogHeader className="space-y-3">
+            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-700 mx-auto">
+              <Plus size={22} />
+            </div>
+            <div className="text-center space-y-1">
+              <DialogTitle className="text-lg font-bold text-gray-900">
+                Create New Order
+              </DialogTitle>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Place an order on behalf of a customer via phone or in-person.
+              </p>
+            </div>
+          </DialogHeader>
+          <div className="mt-4 space-y-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500">Customer Name *</label>
+              <input
+                type="text"
+                placeholder="Enter customer name"
+                value={createForm.customer_name}
+                onChange={(e) => setCreateForm({ ...createForm, customer_name: e.target.value })}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500">Phone Number *</label>
+              <input
+                type="tel"
+                placeholder="712 345 678"
+                value={createForm.customer_phone}
+                onChange={(e) => setCreateForm({ ...createForm, customer_phone: e.target.value })}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500">Email (optional)</label>
+              <input
+                type="email"
+                placeholder="customer@email.com"
+                value={createForm.customer_email}
+                onChange={(e) => setCreateForm({ ...createForm, customer_email: e.target.value })}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500">Delivery Type *</label>
+              <select
+                value={createForm.delivery_type}
+                onChange={(e) => setCreateForm({ ...createForm, delivery_type: e.target.value })}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
+              >
+                <option value="delivery">Delivery</option>
+                <option value="pickup">Pickup</option>
+                <option value="shipping">Shipping</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500">Delivery Address *</label>
+              <textarea
+                placeholder="Enter delivery address"
+                rows={2}
+                value={createForm.delivery_address}
+                onChange={(e) => setCreateForm({ ...createForm, delivery_address: e.target.value })}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors resize-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500">City / Region</label>
+              <input
+                type="text"
+                placeholder="Nairobi"
+                value={createForm.delivery_city}
+                onChange={(e) => setCreateForm({ ...createForm, delivery_city: e.target.value })}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500">Order Notes (optional)</label>
+              <textarea
+                placeholder="Special instructions..."
+                rows={2}
+                value={createForm.order_notes}
+                onChange={(e) => setCreateForm({ ...createForm, order_notes: e.target.value })}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors resize-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500">Payment Method *</label>
+              <select
+                value={createForm.payment_method}
+                onChange={(e) => setCreateForm({ ...createForm, payment_method: e.target.value })}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-amber-600 focus:border-amber-600 outline-none transition-colors"
+              >
+                <option value="cash_on_delivery">Cash on Delivery</option>
+                <option value="mpesa">M-Pesa</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter className="mt-6 flex-row gap-3">
+            <button
+              onClick={() => setShowCreateDialog(false)}
+              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-semibold transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCreateOrder}
+              disabled={creating || !createForm.customer_name.trim() || !createForm.customer_phone.trim() || !createForm.delivery_address.trim()}
+              className="flex-1 px-4 py-2.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+            >
+              {creating ? "Creating..." : "Create Order"}
             </button>
           </DialogFooter>
         </DialogContent>

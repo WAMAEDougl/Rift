@@ -27,6 +27,7 @@ import StatusBadge from "@/components/admin/StatusBadge"
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters"
 import { OrderStatusControl } from "./OrderStatusControl"
 import { CancelOrderButton } from "./CancelOrderButton"
+import { DeliveryEditForm } from "@/components/admin/DeliveryEditForm"
 
 const STEPS = [
   { key: "pending", label: "Pending", icon: Clock },
@@ -377,6 +378,19 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 <User size={160} />
             </div>
           </section>
+
+          {/* Delivery Edit Form */}
+          <DeliveryEditForm
+            orderId={order.id}
+            initialData={{
+              delivery_address: order.delivery_address,
+              delivery_city: order.delivery_city,
+              delivery_type: order.delivery_type,
+              customer_name: order.customer_name,
+              customer_phone: order.customer_phone,
+              customer_email: order.customer_email,
+            }}
+          />
 
           {/* Payment Details */}
           <section className="bg-[#1a1a2e] p-10 rounded-[48px] shadow-2xl relative overflow-hidden group">
