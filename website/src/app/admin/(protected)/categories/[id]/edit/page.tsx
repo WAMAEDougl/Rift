@@ -22,9 +22,7 @@ const INPUT_CLS =
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="block text-xs font-medium text-gray-500 mb-1.5">
-      {children}
-    </label>
+    <label className="block text-xs font-medium text-gray-500 mb-1.5">{children}</label>
   )
 }
 
@@ -54,9 +52,7 @@ function SectionCard({ icon, title, subtitle, children }: {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6">
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 shrink-0">
-          {icon}
-        </div>
+        <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 shrink-0">{icon}</div>
         <div>
           <h3 className="text-base font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>{title}</h3>
           <p className="text-xs text-gray-400">{subtitle}</p>
@@ -92,8 +88,10 @@ export default function EditCategoryPage() {
         if (json.data) {
           const c = json.data
           setCategoryName(c.name)
-          setName(c.name); setSlug(c.slug)
-          setTagline(c.tagline ?? ""); setIcon(c.icon ?? "")
+          setName(c.name)
+          setSlug(c.slug)
+          setTagline(c.tagline ?? "")
+          setIcon(c.icon ?? "")
           setShipsCountrywide(c.ships_countrywide)
           setSortOrder(String(c.sort_order))
         }
@@ -122,7 +120,10 @@ export default function EditCategoryPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim() || !slug.trim()) { toast.error("Name and slug are required."); return }
+    if (!name.trim() || !slug.trim()) {
+      toast.error("Name and slug are required.")
+      return
+    }
     setSubmitting(true)
     const res = await fetch(`/api/admin/categories/${id}`, {
       method: "PUT",
@@ -160,8 +161,8 @@ export default function EditCategoryPage() {
         <div className="h-16 bg-gray-100 rounded-2xl w-1/3" />
         <div className="grid grid-cols-12 gap-5">
           <div className="col-span-8 space-y-5">
-            <div className="h-64 bg-gray-100 rounded-2xl" />
-            <div className="h-48 bg-gray-100 rounded-2xl" />
+            <div className="h-56 bg-gray-100 rounded-2xl" />
+            <div className="h-40 bg-gray-100 rounded-2xl" />
           </div>
           <div className="col-span-4 space-y-5">
             <div className="h-48 bg-gray-100 rounded-2xl" />
@@ -183,16 +184,16 @@ export default function EditCategoryPage() {
           <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
             Edit Category
           </h1>
-          <p className="text-xs text-gray-400 mt-0.5">Editing: <span className="text-amber-700 font-medium">{categoryName}</span></p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Editing: <span className="text-amber-700 font-medium">{categoryName}</span>
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/admin/categories" className="px-4 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-100 transition-colors">
             Cancel
           </Link>
           <button
-            type="submit"
-            form="edit-category-form"
-            disabled={submitting}
+            type="submit" form="edit-category-form" disabled={submitting}
             className="flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
           >
             <Save size={15} />
@@ -205,14 +206,12 @@ export default function EditCategoryPage() {
 
         {/* Main Column */}
         <div className="lg:col-span-8 space-y-5">
-
           <SectionCard icon={<Tag size={17} />} title="Category Information" subtitle="Name, slug and tagline">
             <div className="space-y-4">
               <div>
                 <FieldLabel>Category Name *</FieldLabel>
-                <input type="text" value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="e.g. Beverages, Packaged Foods" className={INPUT_CLS} />
+                <input type="text" value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="e.g. Beverages, Flour Blends" className={INPUT_CLS} />
               </div>
-
               <div>
                 <FieldLabel>URL Slug *</FieldLabel>
                 <div className="flex items-center gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-amber-600/20 focus-within:border-amber-600/40">
@@ -220,23 +219,22 @@ export default function EditCategoryPage() {
                   <input type="text" value={slug} onChange={(e) => handleSlugChange(e.target.value)} className="flex-1 px-3 py-2.5 text-sm text-gray-800 bg-transparent outline-none" placeholder="category-slug" />
                 </div>
               </div>
-
               <div>
                 <FieldLabel>Tagline</FieldLabel>
-                <input type="text" value={tagline} onChange={(e) => { setTagline(e.target.value); markDirty() }} placeholder="A short description shown on the storefront" className={INPUT_CLS} />
+                <input type="text" value={tagline} onChange={(e) => { setTagline(e.target.value); markDirty() }} placeholder="Short description shown on the storefront" className={INPUT_CLS} />
               </div>
             </div>
           </SectionCard>
 
-          <SectionCard icon={<span className="text-lg">🎨</span>} title="Category Icon" subtitle="Choose an emoji to represent this category">
+          <SectionCard icon={<Globe size={17} />} title="Category Icon" subtitle="Emoji displayed on category cards">
             <div className="flex items-start gap-6">
-              <div className="w-24 h-24 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-4xl shrink-0">
+              <div className="w-20 h-20 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-4xl shrink-0">
                 {icon || "📦"}
               </div>
               <div className="flex-1">
                 <FieldLabel>Emoji Icon</FieldLabel>
-                <input type="text" value={icon} onChange={(e) => { setIcon(e.target.value); markDirty() }} placeholder="Paste an emoji e.g. 🥤, 🌾, 🍽️" className={INPUT_CLS} />
-                <p className="text-xs text-gray-400 mt-2">This icon appears on category cards and filters on the storefront.</p>
+                <input type="text" value={icon} onChange={(e) => { setIcon(e.target.value); markDirty() }} placeholder="Paste an emoji e.g. 🥛, 🌾, 🍵" className={INPUT_CLS} />
+                <p className="text-xs text-gray-400 mt-2">This emoji appears on category cards and pills on the storefront.</p>
               </div>
             </div>
           </SectionCard>
@@ -244,32 +242,21 @@ export default function EditCategoryPage() {
 
         {/* Sidebar */}
         <aside className="lg:col-span-4 space-y-5">
-
-          <SectionCard icon={<Zap size={17} />} title="Settings" subtitle="Shipping and display order">
-            <div className="space-y-4">
+          <SectionCard icon={<Zap size={17} />} title="Shipping & Display" subtitle="Availability and sort order">
+            <div className="space-y-3">
               <ToggleSwitch
                 checked={shipsCountrywide}
                 onChange={() => { setShipsCountrywide(!shipsCountrywide); markDirty() }}
                 label="Ships countrywide"
-                description="Products in this category can be shipped to all 47 counties"
+                description="Products in this category ship to all 47 counties"
               />
               <div>
                 <FieldLabel>Sort Order</FieldLabel>
                 <input type="number" value={sortOrder} onChange={(e) => { setSortOrder(e.target.value); markDirty() }} className={INPUT_CLS} />
-                <p className="text-xs text-gray-400 mt-1.5">Lower numbers appear first</p>
+                <p className="text-xs text-gray-400 mt-1">Lower numbers appear first</p>
               </div>
             </div>
           </SectionCard>
-
-          <div className="bg-amber-50 rounded-2xl border border-amber-100 p-5">
-            <div className="flex items-center gap-2.5 mb-2">
-              <Globe size={16} className="text-amber-700" />
-              <h3 className="text-sm font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>Storefront Visibility</h3>
-            </div>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              Categories are always visible on the storefront. Products within them can be individually toggled active or inactive.
-            </p>
-          </div>
 
           {/* Danger Zone */}
           <div className="bg-red-50 rounded-2xl border border-red-100 p-5">
@@ -280,7 +267,7 @@ export default function EditCategoryPage() {
               <h3 className="text-sm font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>Danger Zone</h3>
             </div>
             <p className="text-xs text-red-700/60 leading-relaxed mb-4">
-              You cannot delete a category that has products. Move all products first.
+              You cannot delete a category that still has products. Move all products first.
             </p>
             <button
               type="button"
@@ -301,8 +288,7 @@ export default function EditCategoryPage() {
               Discard Changes
             </Link>
             <button
-              type="submit"
-              disabled={submitting}
+              type="submit" disabled={submitting}
               className="flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
             >
               <Save size={15} />
