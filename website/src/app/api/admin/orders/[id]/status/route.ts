@@ -2,6 +2,7 @@ import { requireAdminSession } from "@/lib/admin/auth";
 import { getAdminClient } from "@/lib/admin/supabase";
 import { ok, err } from "@/lib/admin/response";
 import { isValidStatusTransition } from "@/lib/admin/status";
+import { OrderStatus } from "@/lib/admin/types";
 import { z } from "zod";
 
 const orderStatusSchema = z.object({
@@ -59,7 +60,7 @@ export async function PATCH(
   }
 
   // Validate transition
-  if (!isValidStatusTransition(order.status as never, newStatus)) {
+  if (!isValidStatusTransition(order.status as OrderStatus, newStatus)) {
     return err(
       `Order is already ${order.status} and cannot be updated.`,
       "CONFLICT",

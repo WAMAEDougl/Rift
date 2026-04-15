@@ -35,7 +35,7 @@ export function CancelOrderButton({ orderId, orderNumber }: Props) {
       toast.success(`Order ${orderNumber} cancelled`)
       setOpen(false)
       setReason("")
-      router.refresh()
+      window.location.reload()
     } catch {
       toast.error("An error occurred. Please try again.")
     } finally {
