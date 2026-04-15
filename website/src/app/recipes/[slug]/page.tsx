@@ -78,7 +78,7 @@ export default async function RecipePage({
                 {recipe.difficulty}
               </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-earth mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-earth dark:text-white mb-4">
               {recipe.title}
             </h1>
             <p className="text-lg text-muted-foreground mb-4">{recipe.excerpt}</p>
@@ -122,7 +122,7 @@ export default async function RecipePage({
           <div className="grid lg:grid-cols-3 gap-10">
             {/* Main content */}
             <div className="lg:col-span-2">
-              <article className="prose prose-lg max-w-none prose-headings:text-earth prose-h2:text-2xl prose-h3:text-xl prose-a:text-primary">
+              <article className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-earth dark:prose-headings:text-white prose-h2:text-2xl prose-h3:text-xl prose-a:text-primary">
                 <ReactMarkdown>{recipe.content}</ReactMarkdown>
               </article>
 
@@ -148,8 +148,8 @@ export default async function RecipePage({
             <aside className="space-y-6">
               {/* Ingredients */}
               {recipe.ingredients && recipe.ingredients.length > 0 && (
-                <div className="bg-amber-50 rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-earth mb-4">
+                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-6 border border-transparent dark:border-amber-900/50">
+                  <h3 className="text-lg font-bold text-earth dark:text-amber-400 mb-4">
                     Ingredients
                   </h3>
                   <ul className="space-y-2">
@@ -167,8 +167,8 @@ export default async function RecipePage({
 
               {/* Related Product */}
               {relatedProduct && (
-                <div className="bg-green-50 rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-earth mb-2">
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-6 border border-transparent dark:border-green-900/50">
+                  <h3 className="text-lg font-bold text-earth dark:text-green-400 mb-2">
                     Try This Product
                   </h3>
                   <p className="text-sm text-muted-foreground mb-3">
@@ -193,7 +193,7 @@ export default async function RecipePage({
 
               {/* Share */}
               <div className="bg-muted/50 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-earth mb-3">
+                <h3 className="text-lg font-bold text-earth dark:text-white mb-3">
                   Share This Recipe
                 </h3>
                 <div className="flex gap-2">
