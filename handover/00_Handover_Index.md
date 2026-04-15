@@ -1,8 +1,8 @@
 # Ayola Foods KE — Client Handover Documentation
 **Prepared by:** Development Team  
 **Handover Date:** April 2026  
-**Website:** [ayola-foods-ke.vercel.app](https://ayola-foods-ke.vercel.app)  
-**Admin Panel:** [ayola-foods-ke.vercel.app/admin](https://ayola-foods-ke.vercel.app/admin)
+**Website:** [ayola-foods-ke.vercel.app](https://ayolafoods.com)  
+**Admin Panel:** [ayola-foods-ke.vercel.app/admin](https://ayolafoods.com/admin)
 
 ---
 
@@ -20,14 +20,15 @@ This folder contains the complete handover documentation for the Ayola Foods KE 
 | 06 | [Deployment & Environment](./06_Deployment_Environment.md) | Developers / DevOps | Vercel, Supabase, M-Pesa, environment vars |
 | 07 | [Maintenance & Troubleshooting](./07_Maintenance_Troubleshooting.md) | Developers / Admin | Common issues, how to maintain the platform |
 
+
 ---
 
 ## 🔑 Quick Reference
 
 | Item | Value |
 |---|---|
-| **Live URL** | https://ayola-foods-ke.vercel.app |
-| **Admin URL** | https://ayola-foods-ke.vercel.app/admin |
+| **Live URL** | https://ayolafoods.com |
+| **Admin URL** | https://ayolafoods.com/admin |
 | **Supabase Project** | Configured in `.env` → `NEXT_PUBLIC_SUPABASE_URL` |
 | **M-Pesa** | Daraja API (Sandbox by default — switch to production per doc 06) |
 | **Framework** | Next.js 16 (App Router) |
