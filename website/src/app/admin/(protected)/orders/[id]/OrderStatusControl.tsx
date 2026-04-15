@@ -56,6 +56,8 @@ export function OrderStatusControl({ orderId, currentStatus, role }: Props) {
         return
       }
       toast.success(`Status updated to ${newStatus}`)
+      const next = getNextStatuses(newStatus, role)
+      setSelected(next[0] ?? "")
       router.refresh()
     } catch {
       toast.error("An error occurred. Please try again.")
