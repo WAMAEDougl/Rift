@@ -153,11 +153,11 @@ export default function PaymentsPage() {
             <title>Payments Report - Ayola Foods</title>
             <style>${style}</style>
           </head>
-          <body>
+          <body onload="window.print(); window.onafterprint = function(){ window.close(); }">
             <div class="header">
-              <div class="logo">Ayola Foods</div>
+              <div class="logo">🥗 Ayola Foods</div>
               <div class="title">Payments Report</div>
-              <div class="subtitle">Generated on ${new Date().toLocaleString()}</div>
+              <div class="subtitle">Generated on ${new Date().toLocaleString("en-KE")} &nbsp;|&nbsp; ${rows.length} records</div>
             </div>
             <table>
               <thead>
@@ -182,8 +182,7 @@ export default function PaymentsPage() {
         </html>
       `)
       printWindow.document.close()
-      setTimeout(() => printWindow.print(), 250)
-      toast.success(`Exported ${rows.length} payment records`)
+      toast.success(`Report ready — ${rows.length} payment records`)
     } catch {
       toast.error("Failed to download report")
     } finally {

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getAdminClient } from "@/lib/admin/supabase"
 import AdminSidebar from "@/components/admin/AdminSidebar"
+import AdminTopbar from "@/components/admin/AdminTopbar"
 
 export default async function AdminProtectedLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -30,6 +31,7 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
         userRole={profile.role}
       />
       <div className="flex-1 flex flex-col min-w-0 ml-64 h-screen overflow-hidden">
+        <AdminTopbar user={{ name: userName, role: profile.role as "admin" | "kitchen" }} />
         <main className="flex-1 overflow-y-auto p-8 lg:p-10 custom-scrollbar">
           {children}
         </main>
