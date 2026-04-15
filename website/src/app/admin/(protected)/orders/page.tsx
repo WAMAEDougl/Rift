@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { toast } from "sonner"
 import StatusBadge from "@/components/admin/StatusBadge"
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters"
 
@@ -205,7 +206,7 @@ export default function OrdersPage() {
       const allOrders = data.data?.items || []
 
       if (allOrders.length === 0) {
-        toast?.error?.("No orders to export") 
+        toast.error("No orders to export")
         return
       }
 
