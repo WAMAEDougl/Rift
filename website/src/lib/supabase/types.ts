@@ -218,6 +218,12 @@ export interface Database {
           confirmed_at?: string | null;
           completed_at?: string | null;
           updated_at?: string;
+          customer_name?: string;
+          customer_phone?: string;
+          customer_email?: string | null;
+          delivery_address?: string;
+          delivery_city?: string;
+          delivery_type?: string;
         };
         Relationships: [
           {

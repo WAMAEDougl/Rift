@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { getAdminClient } from "@/lib/admin/supabase"
 import { ok, err } from "@/lib/admin/response"
+import { generateOrderNumber } from "@/lib/order-utils"
 import { z } from "zod"
 
 const createOrderSchema = z.object({
@@ -69,10 +70,12 @@ export async function POST(request: Request) {
 
     const deliveryFee = subtotal >= 2000 || data.delivery_type === "pickup" ? 0 : 200
     const total = subtotal + deliveryFee
+    const orderNumber = await generateOrderNumber()
 
     const { data: order, error: orderError } = await admin
       .from("orders")
       .insert({
+        order_number: orderNumber,
         customer_name: data.customer_name,
         customer_phone: data.customer_phone,
         customer_email: data.customer_email || null,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Check, MessageCircle, Printer, Download, ArrowRight, Package, MapPin, Phone, Mail } from "lucide-react";
@@ -43,7 +43,7 @@ function formatDate(dateString: string) {
   });
 }
 
-export default function OrderSuccessPage() {
+function OrderSuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get("order_id");
@@ -245,5 +245,17 @@ export default function OrderSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrderSuccessPageWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <OrderSuccessPage />
+    </Suspense>
   );
 }
