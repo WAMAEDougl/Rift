@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import StatusBadge from "@/components/admin/StatusBadge"
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters"
+import { useAdminRole } from "@/lib/admin/useAdminRole"
 
 interface OrderRow {
   id: string
@@ -56,6 +57,7 @@ interface OrdersResponse {
 export default function OrdersPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { isKitchen } = useAdminRole()
 
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [pagination, setPagination] = useState<Pagination | null>(null)

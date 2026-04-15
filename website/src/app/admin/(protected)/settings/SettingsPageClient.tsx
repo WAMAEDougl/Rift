@@ -347,29 +347,49 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
   const [open, setOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState<"admin" | "kitchen">("admin")
+  const [invitePassword, setInvitePassword] = useState("")
+  const [inviteConfirm, setInviteConfirm] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [inviting, setInviting] = useState(false)
   const [removing, setRemoving] = useState<string | null>(null)
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) return
+    if (invitePassword.length < 8) {
+      toast.error("Password must be at least 8 characters.")
+      return
+    }
+    if (invitePassword !== inviteConfirm) {
+      toast.error("Passwords do not match.")
+      return
+    }
     setInviting(true)
     try {
       const res = await fetch("/api/admin/settings/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
+        body: JSON.stringify({ email: inviteEmail, role: inviteRole, password: invitePassword }),
       })
       const json = await res.json()
       if (json.error) {
         toast.error(json.error.message)
       } else {
-        toast.success(`Invitation sent to ${inviteEmail}.`)
+        toast.success(`Account created for ${inviteEmail}.`)
         setOpen(false)
         setInviteEmail("")
+        setInvitePassword("")
+        setInviteConfirm("")
         setInviteRole("admin")
+        // Refresh the user list
+        const usersRes = await fetch("/api/admin/settings/users")
+        if (usersRes.ok) {
+          const usersData = await usersRes.json()
+          if (usersData.data) setUsers(usersData.data)
+        }
       }
     } catch {
-      toast.error("Failed to send invitation.")
+      toast.error("Failed to create account.")
     } finally {
       setInviting(false)
     }
@@ -486,7 +506,7 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
             <DialogTitle className="text-xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
               Invite Team Member
             </DialogTitle>
-            <p className="text-sm text-gray-400 mt-1">Send an invitation email and assign their role.</p>
+            <p className="text-sm text-gray-400 mt-1">Create a new account and set their password.</p>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -518,6 +538,46 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
                 ))}
               </div>
             </div>
+            <div>
+              <FieldLabel>Password</FieldLabel>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={invitePassword}
+                  onChange={(e) => setInvitePassword(e.target.value)}
+                  placeholder="Min. 8 characters"
+                  className={INPUT_CLS + " pr-10"}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <FieldLabel>Confirm Password</FieldLabel>
+              <div className="relative">
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  value={inviteConfirm}
+                  onChange={(e) => setInviteConfirm(e.target.value)}
+                  placeholder="Repeat password"
+                  className={INPUT_CLS + " pr-10"}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
           </div>
 
           <DialogFooter className="mt-6 flex gap-3">
@@ -529,10 +589,10 @@ function AccountsTable({ users: initialUsers }: { users: AdminUser[] }) {
             </button>
             <button
               onClick={handleInvite}
-              disabled={inviting || !inviteEmail.trim()}
+              disabled={inviting || !inviteEmail.trim() || !invitePassword.trim()}
               className="flex-1 py-2.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
             >
-              {inviting ? "Sending…" : "Send Invite"}
+              {inviting ? "Creating…" : "Create Account"}
             </button>
           </DialogFooter>
         </DialogContent>

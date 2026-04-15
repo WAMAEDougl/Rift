@@ -3,7 +3,7 @@ import { blogPosts } from "@/lib/blog";
 import { products } from "@/lib/products";
 import { recipes } from "@/lib/recipes";
 
-const BASE_URL = "https://ayola-foods-ke.vercel.app";
+const BASE_URL = "https://ayolafoods.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [

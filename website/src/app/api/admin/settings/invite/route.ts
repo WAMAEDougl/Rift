@@ -6,6 +6,7 @@ import { ok, err } from "@/lib/admin/response";
 const inviteSchema = z.object({
   email: z.string().email(),
   role: z.enum(["admin", "kitchen"]),
+  password: z.string().min(8),
 });
 
 export async function POST(request: Request) {
@@ -20,22 +21,28 @@ export async function POST(request: Request) {
       return err(parsed.error.issues[0].message, "VALIDATION_ERROR", 422);
     }
 
-    const { email, role } = parsed.data;
+    const { email, role, password } = parsed.data;
     const admin = getAdminClient();
 
-    const { data: inviteData, error: inviteError } =
-      await admin.auth.admin.inviteUserByEmail(email);
+    // Create user with password
+    const { data: userData, error: createError } =
+      await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
 
-    if (inviteError || !inviteData?.user) {
+    if (createError || !userData?.user) {
       return err(
-        inviteError?.message ?? "Failed to invite user",
+        createError?.message ?? "Failed to create user",
         "INTERNAL_ERROR",
         500
       );
     }
 
+    // Set user role in profiles table
     const { error: upsertError } = await admin.from("profiles").upsert(
-      { id: inviteData.user.id, email, role },
+      { id: userData.user.id, email, role },
       { onConflict: "id" }
     );
 
@@ -43,7 +50,7 @@ export async function POST(request: Request) {
       return err("Failed to set user role", "INTERNAL_ERROR", 500);
     }
 
-    return ok({ email, role, invited: true }, 201);
+    return ok({ email, role, created: true }, 201);
   } catch {
     return err("Internal server error", "INTERNAL_ERROR", 500);
   }

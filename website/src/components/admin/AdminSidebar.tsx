@@ -24,7 +24,7 @@ const allNavItems = [
   { label: "Settings",      href: "/admin/settings",       icon: Settings,        exact: false },
 ]
 
-const kitchenNavItems = ["/admin", "/admin/orders"]
+const kitchenNavItems = ["/admin", "/admin/orders", "/admin/products", "/admin/notifications"]
 
 export default function AdminSidebar({ role, userName, userRole }: AdminSidebarProps) {
   const pathname = usePathname()

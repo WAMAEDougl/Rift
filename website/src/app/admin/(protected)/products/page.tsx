@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatKES } from "@/lib/admin/formatters"
+import { useAdminRole } from "@/lib/admin/useAdminRole"
 
 interface Product {
   id: string
@@ -69,6 +70,7 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: () =>
 }
 
 export default function ProductsPage() {
+  const { isKitchen } = useAdminRole()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [pagination, setPagination] = useState<PaginationMeta | null>(null)
@@ -181,28 +183,6 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1
-            className="text-3xl font-bold text-gray-900"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
-          >
-            Products
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">
-            {pagination?.total.toLocaleString()} total &middot; View and manage all products
-          </p>
-        </div>
-        <Link
-          href="/admin/products/new"
-          className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
-        >
-          <Plus size={16} />
-          Add Product
-        </Link>
-      </div>
-
       {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
         <div className="flex items-center gap-2 flex-1 min-w-[180px]">
@@ -249,6 +229,15 @@ export default function ProductsPage() {
         >
           Clear
         </button>
+        {!isKitchen && (
+          <Link
+            href="/admin/products/new"
+            className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors ml-auto"
+          >
+            <Plus size={16} />
+            Add Product
+          </Link>
+        )}
       </div>
 
       {/* Table */}
@@ -262,7 +251,9 @@ export default function ProductsPage() {
                 <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Price</th>
                 <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">In Stock</th>
                 <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">Active</th>
-                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                {!isKitchen && (
+                  <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -319,7 +310,7 @@ export default function ProductsPage() {
                         <div className="flex justify-center">
                           <ToggleSwitch
                             checked={product.in_stock}
-                            onChange={() => handleToggle(product, "in_stock")}
+                            onChange={() => !isKitchen && handleToggle(product, "in_stock")}
                           />
                         </div>
                       </td>
@@ -327,31 +318,33 @@ export default function ProductsPage() {
                         <div className="flex justify-center">
                           <ToggleSwitch
                             checked={product.is_active}
-                            onChange={() => handleToggle(product, "is_active")}
+                            onChange={() => !isKitchen && handleToggle(product, "is_active")}
                           />
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-100 transition-opacity">
-                          {/* <Link
-                            href={`/admin/products/${product.id}/view`}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                          >
-                            <Eye size={15} />
-                          </Link> */}
-                          <Link
-                            href={`/admin/products/${product.id}/edit`}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                          >
-                            <Pencil size={15} />
-                          </Link>
-                          <button
-                            onClick={() => setDeleteTarget(product)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
+                        {!isKitchen && (
+                          <div className="flex items-center justify-end gap-2 opacity-100 transition-opacity">
+                            {/* <Link
+                              href={`/admin/products/${product.id}/view`}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                            >
+                              <Eye size={15} />
+                            </Link> */}
+                            <Link
+                              href={`/admin/products/${product.id}/edit`}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                            >
+                              <Pencil size={15} />
+                            </Link>
+                            <button
+                              onClick={() => setDeleteTarget(product)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
