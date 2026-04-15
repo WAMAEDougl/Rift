@@ -62,7 +62,7 @@ export default function CheckoutPage() {
         if (order?.payment_status === "completed") {
           clearInterval(pollRef.current!);
           clearCart();
-          router.push(`/orders/success?order_id=${orderId}`);
+          setStep("confirmed");
           return;
         }
 
@@ -174,19 +174,31 @@ export default function CheckoutPage() {
     );
   }
 
-  // Confirmed - redirect to success page
+  // Confirmed
   if (step === "confirmed" && orderResult) {
-    if (typeof window !== "undefined") {
-      router.push(`/orders/success?order_id=${orderResult.order_id}`);
-    }
     return (
       <div className="pt-28 pb-20">
         <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
           <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
             <Check className="w-10 h-10 text-green-600 dark:text-green-400" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Payment Confirmed!</h1>
-          <p className="text-muted-foreground mb-6">Redirecting to your order details...</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Order Confirmed!</h1>
+          <p className="text-muted-foreground mb-6">Your order has been placed successfully.</p>
+          <div className="bg-card rounded-2xl p-6 text-left mb-6 space-y-3 border border-border">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Order</span>
+              <span className="font-bold text-foreground font-mono">{orderResult.order_number}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Total</span>
+              <span className="font-bold text-primary">{formatPrice(orderResult.total)}</span>
+            </div>
+          </div>
+          <div className="flex gap-3 flex-wrap justify-center">
+            <Link href="/products" className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors">
+              Continue Shopping
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -255,7 +267,7 @@ export default function CheckoutPage() {
           total: data.order.total,
         });
         clearCart();
-        router.push(`/orders/success?order_id=${orderId}`);
+        setStep("confirmed");
         const waMsg = `NEW ORDER ${data.order.order_number}\n\n${items.map((i) => `${i.quantity}x ${i.product.name}`).join("\n")}\n\nTotal: KES ${data.order.total}\nCustomer: ${form.name}\nPhone: ${form.phone}\nPayment: Cash on Delivery\n${form.delivery_type === "pickup" ? "PICKUP" : `Deliver to: ${form.address}, ${form.city}`}`;
         window.open(getWhatsAppOrderLink(waMsg), "_blank");
       }
@@ -266,22 +278,9 @@ export default function CheckoutPage() {
 
   const inputCls = "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm placeholder:text-muted-foreground/50";
 
-  // Cash confirmation view (when STK push failed and fell back to cash) - redirect to success page
+  // Cash confirmation view - now handled by the main confirmed block above
   if (step === "confirmed" && orderResult && form.payment_method === "cash_on_delivery") {
-    if (typeof window !== "undefined") {
-      router.push(`/orders/success?order_id=${orderResult.order_id}`);
-    }
-    return (
-      <div className="pt-28 pb-20">
-        <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
-          <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="w-10 h-10 text-green-600 dark:text-green-400" />
-          </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Order Placed!</h1>
-          <p className="text-muted-foreground mb-6">Redirecting to your order details...</p>
-        </div>
-      </div>
-    );
+    return null; // handled by the confirmed block above
   }
 
   return (
