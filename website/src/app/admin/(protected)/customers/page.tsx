@@ -122,21 +122,6 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1
-            className="text-3xl font-bold text-gray-900"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
-          >
-            Customers
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">
-            {pagination?.total.toLocaleString()} accounts &middot; View and manage your customers
-          </p>
-        </div>
-      </div>
-
       {/* Stat mini-cards + filter bar */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Filter bar */}

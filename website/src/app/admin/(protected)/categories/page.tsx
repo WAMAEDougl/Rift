@@ -83,20 +83,9 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1
-            className="text-3xl font-bold text-gray-900"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
-          >
-            Categories
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">
-            {categories.length} total &middot; Manage how products are organized on the storefront
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+        <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-end gap-3">
           <button
             onClick={downloadReport}
             className="inline-flex items-center gap-2 border border-gray-200 hover:border-amber-300 hover:bg-amber-50 text-gray-600 hover:text-amber-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
@@ -112,10 +101,6 @@ export default function CategoriesPage() {
             Add Category
           </Link>
         </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>

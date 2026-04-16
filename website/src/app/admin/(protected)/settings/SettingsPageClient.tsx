@@ -625,14 +625,6 @@ export default function SettingsPageClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="pb-4 border-b border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-          Settings
-        </h1>
-        <p className="text-xs text-gray-400 mt-1">Manage your store, payments, and team</p>
-      </div>
-
       {/* Tab Bar */}
       <div className="flex gap-1 bg-gray-100/60 p-1 rounded-xl w-fit">
         {TABS.map((tab) => {

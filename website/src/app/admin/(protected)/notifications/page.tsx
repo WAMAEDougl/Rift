@@ -106,18 +106,22 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1
-            className="text-3xl font-bold text-gray-900"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
-          >
-            Notifications
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">
-            {unreadCount} unread &middot; Stay updated with recent activities
-          </p>
+      {/* Filter tabs */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="bg-white rounded-2xl border border-gray-100 p-1.5 flex items-center w-fit gap-1">
+          {(["", "false", "true"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setFilter(v)}
+              className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${
+                status === v
+                  ? "bg-amber-700 text-white"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {v === "" ? "All" : v === "false" ? "Unread" : "Read"}
+            </button>
+          ))}
         </div>
         {unreadCount > 0 && (
           <button
@@ -128,23 +132,6 @@ export default function NotificationsPage() {
             Mark All Read
           </button>
         )}
-      </div>
-
-      {/* Filter tabs */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-1.5 flex items-center w-fit gap-1">
-        {(["", "false", "true"] as const).map((v) => (
-          <button
-            key={v}
-            onClick={() => setFilter(v)}
-            className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${
-              status === v
-                ? "bg-amber-700 text-white"
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            {v === "" ? "All" : v === "false" ? "Unread" : "Read"}
-          </button>
-        ))}
       </div>
 
       {/* Notification list */}
