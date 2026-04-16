@@ -244,7 +244,7 @@ export default function RecipesPage() {
         )}
 
         {/* ── Table ── */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-gray-50/60 border-b border-gray-100">

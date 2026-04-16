@@ -4,6 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { Recipe } from "@/lib/recipes";
 import type { Database } from "@/lib/supabase/types";
 
@@ -17,14 +18,18 @@ function mapRowToRecipe(row: RecipeRow): Recipe {
     title: row.title,
     excerpt: row.excerpt,
     content: row.content,
+    ...(row.cover_image_url != null ? { coverImageUrl: row.cover_image_url } : {}),
     category: row.category,
-    video: {
-      url: row.video_url,
-      platform: row.video_platform,
-      ...(row.video_thumbnail_url != null
-        ? { thumbnailUrl: row.video_thumbnail_url }
-        : {}),
-    },
+    // video is optional — only include if video_url is present
+    ...(row.video_url != null ? {
+      video: {
+        url: row.video_url,
+        platform: row.video_platform,
+        ...(row.video_thumbnail_url != null
+          ? { thumbnailUrl: row.video_thumbnail_url }
+          : {}),
+      },
+    } : {}),
     ...(row.prep_time != null ? { prepTime: row.prep_time } : {}),
     ...(row.servings != null ? { servings: row.servings } : {}),
     difficulty: row.difficulty,
@@ -102,12 +107,14 @@ export async function getPublishedRecipeBySlug(
 
 /**
  * Return all recipe slugs for use with generateStaticParams.
- * Only returns slugs for published recipes.
+ * Uses the browser (anon) client — no cookies needed, safe at build time.
  *
  * Satisfies Requirement 8.4
  */
 export async function getAllRecipeSlugs(): Promise<string[]> {
-  const supabase = await createClient();
+  // Use the browser client here — generateStaticParams runs at build time
+  // outside a request scope, so cookies() cannot be called.
+  const supabase = createBrowserClient();
 
   const { data, error } = await supabase
     .from("recipes")
