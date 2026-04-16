@@ -8,6 +8,7 @@ export interface RecipeRow {
   title: string;
   excerpt: string;
   content: string;
+  cover_image_url: string | null;
   category: "cooking-demo" | "beverage" | "how-to" | "health-tip";
   video_url: string;
   video_platform: "youtube" | "facebook" | "instagram" | "tiktok";

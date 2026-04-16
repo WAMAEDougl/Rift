@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.recipes (
   title               TEXT          NOT NULL,
   excerpt             TEXT          NOT NULL,
   content             TEXT          NOT NULL,
+  cover_image_url     TEXT,
   category            TEXT          NOT NULL,
   video_url           TEXT          NOT NULL,
   video_platform      TEXT          NOT NULL,

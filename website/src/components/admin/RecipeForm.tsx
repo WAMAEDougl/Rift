@@ -3,6 +3,8 @@
 import { useState, useCallback } from "react";
 import { Plus, Trash2, Save } from "lucide-react";
 import type { RecipeRow } from "@/lib/types/recipe";
+import ImageUploader from "@/components/admin/ImageUploader";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -11,6 +13,7 @@ export type RecipeFormData = {
   slug: string;
   excerpt: string;
   content: string;
+  cover_image_url: string;
   category: "cooking-demo" | "beverage" | "how-to" | "health-tip";
   video_url: string;
   video_platform: "youtube" | "facebook" | "instagram" | "tiktok";
@@ -85,6 +88,7 @@ export function RecipeForm({
     slug: initialData?.slug ?? "",
     excerpt: initialData?.excerpt ?? "",
     content: initialData?.content ?? "",
+    cover_image_url: initialData?.cover_image_url ?? "",
     category: initialData?.category ?? "cooking-demo",
     video_url: initialData?.video_url ?? "",
     video_platform: initialData?.video_platform ?? "youtube",
@@ -278,15 +282,28 @@ export function RecipeForm({
           <label className={labelCls}>
             Content <span className="text-red-400">*</span>
           </label>
-          <textarea
+          <RichTextEditor
             value={form.content}
-            onChange={(e) => handleChange("content", e.target.value)}
-            placeholder="Full recipe content, instructions, tips…"
-            rows={8}
-            className={`${errors.content ? inputErrorCls : inputCls} resize-y`}
+            onChange={(html) => handleChange("content", html)}
+            placeholder="Full recipe content, instructions, tips… Use the toolbar to format text and insert images."
+            hasError={!!errors.content}
           />
           {errors.content && <p className={errorCls}>{errors.content}</p>}
         </div>
+      </div>
+
+      {/* ── Section: Cover Image ───────────────────────────────────────────── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+        <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">
+          Cover Image
+        </h2>
+        <p className="text-[10px] text-slate-400 -mt-2">
+          Shown as the recipe card thumbnail on the public recipes page.
+        </p>
+        <ImageUploader
+          imageUrl={form.cover_image_url}
+          onImageUrl={(url) => handleChange("cover_image_url", url)}
+        />
       </div>
 
       {/* ── Section: Classification ────────────────────────────────────────── */}
