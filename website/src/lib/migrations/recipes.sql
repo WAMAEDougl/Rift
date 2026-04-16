@@ -2,6 +2,13 @@
 -- Migration: Create recipes table
 -- Description: Creates the recipes table with all columns, constraints,
 --              updated_at trigger, and seeds the 6 existing recipes.
+--
+-- CHANGES FROM INITIAL VERSION:
+--   - cover_image_url added (was missing from original CREATE TABLE)
+--   - video_url and video_platform made nullable (video is now optional)
+--
+-- If you already ran an earlier version of this migration, run the
+-- ALTER TABLE statements in section 5 to bring your DB up to date.
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -15,8 +22,8 @@ CREATE TABLE IF NOT EXISTS public.recipes (
   content             TEXT          NOT NULL,
   cover_image_url     TEXT,
   category            TEXT          NOT NULL,
-  video_url           TEXT          NOT NULL,
-  video_platform      TEXT          NOT NULL,
+  video_url           TEXT,
+  video_platform      TEXT,
   video_thumbnail_url TEXT,
   prep_time           TEXT,
   servings            TEXT,
@@ -278,3 +285,16 @@ INSERT INTO public.recipes (
   'rabbit-wet-fry',
   TRUE
 );
+
+-- ---------------------------------------------------------------------------
+-- 5. Incremental changes — run these if you already applied an earlier version
+-- ---------------------------------------------------------------------------
+
+-- Add cover_image_url if it doesn't exist yet
+ALTER TABLE public.recipes
+  ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
+
+-- Make video_url and video_platform nullable (video is now optional)
+ALTER TABLE public.recipes
+  ALTER COLUMN video_url DROP NOT NULL,
+  ALTER COLUMN video_platform DROP NOT NULL;
