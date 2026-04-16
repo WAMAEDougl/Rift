@@ -10,6 +10,13 @@ const optionalUrlField = z
     message: "Must be a valid URL",
   });
 
+// Required URL field — uses regex instead of z.string().url() which rejects
+// valid social media URLs containing query params (e.g. YouTube ?v=...)
+const requiredUrlField = z
+  .string()
+  .min(1, { message: "URL is required" })
+  .refine((v) => /^https?:\/\/.+/.test(v), { message: "Must be a valid URL starting with http:// or https://" });
+
 export const recipeSchema = z.object({
   title: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/),
@@ -17,7 +24,7 @@ export const recipeSchema = z.object({
   content: z.string().min(1),
   category: z.enum(["cooking-demo", "beverage", "how-to", "health-tip"]),
   cover_image_url: optionalUrlField,
-  video_url: z.string().url(),
+  video_url: requiredUrlField,
   video_platform: z.enum(["youtube", "facebook", "instagram", "tiktok"]),
   video_thumbnail_url: optionalUrlField,
   prep_time: z.string().optional().nullable(),
@@ -42,7 +49,7 @@ export const recipePatchSchema = z.object({
   content: z.string().min(1).optional(),
   category: z.enum(["cooking-demo", "beverage", "how-to", "health-tip"]).optional(),
   cover_image_url: optionalUrlField,
-  video_url: z.string().url().optional(),
+  video_url: requiredUrlField.optional(),
   video_platform: z.enum(["youtube", "facebook", "instagram", "tiktok"]).optional(),
   video_thumbnail_url: optionalUrlField,
   prep_time: z.string().optional().nullable(),

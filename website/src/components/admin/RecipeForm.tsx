@@ -561,7 +561,7 @@ export function RecipeForm({
               Video URL <span className="text-red-400">*</span>
             </label>
             <input
-              type="url"
+              type="text"
               value={form.video_url}
               onChange={(e) => handleChange("video_url", e.target.value)}
               placeholder="https://youtube.com/watch?v=…"
@@ -577,7 +577,7 @@ export function RecipeForm({
         <div>
           <label className={labelCls}>Thumbnail URL (optional)</label>
           <input
-            type="url"
+            type="text"
             value={form.video_thumbnail_url}
             onChange={(e) =>
               handleChange("video_thumbnail_url", e.target.value)
