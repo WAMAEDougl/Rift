@@ -93,7 +93,8 @@ export async function POST(request: Request) {
     .single();
 
   if (insertError || !recipe) {
-    return err("Failed to create recipe", "INTERNAL_ERROR", 500);
+    console.error("[recipes POST] insert error:", insertError?.message, insertError?.details);
+    return err(insertError?.message ?? "Failed to create recipe", "INTERNAL_ERROR", 500);
   }
 
   return ok(recipe, 201);

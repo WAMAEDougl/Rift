@@ -20,12 +20,30 @@ const requiredUrlField = z
 export const recipeSchema = z.object({
   title: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/),
-  excerpt: z.string().min(1),
-  content: z.string().min(1),
+  // excerpt and content come from rich text editor as HTML — strip tags to validate not empty
+  excerpt: z.string().transform((v) => v.trim()).refine((v) => v.replace(/<[^>]*>/g, "").trim().length > 0, {
+    message: "Excerpt is required",
+  }),
+  content: z.string().transform((v) => v.trim()).refine((v) => v.replace(/<[^>]*>/g, "").trim().length > 0, {
+    message: "Content is required",
+  }),
   category: z.enum(["cooking-demo", "beverage", "how-to", "health-tip"]),
   cover_image_url: optionalUrlField,
-  video_url: optionalUrlField,
-  video_platform: z.enum(["youtube", "facebook", "instagram", "tiktok"]).optional().nullable(),
+  // video_url is optional — empty string becomes null
+  video_url: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v === "" ? null : v ?? null))
+    .refine((v) => v === null || /^https?:\/\/.+/.test(v), {
+      message: "Must be a valid URL",
+    }),
+  // video_platform defaults to youtube when not provided
+  video_platform: z
+    .enum(["youtube", "facebook", "instagram", "tiktok"])
+    .optional()
+    .nullable()
+    .transform((v) => v ?? "youtube"),
   video_thumbnail_url: optionalUrlField,
   prep_time: z.string().optional().nullable(),
   servings: z.string().optional().nullable(),
@@ -37,7 +55,7 @@ export const recipeSchema = z.object({
     message: "Date must be in YYYY-MM-DD format",
   }),
   featured: z.boolean().default(false),
-  related_product: z.string().optional().nullable(),
+  related_product: z.string().optional().nullable().transform((v) => v === "" ? null : v ?? null),
   is_published: z.boolean().default(true),
 });
 
