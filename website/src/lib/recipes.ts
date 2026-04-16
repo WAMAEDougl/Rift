@@ -3,8 +3,9 @@ export interface Recipe {
   title: string;
   excerpt: string;
   content: string;
+  coverImageUrl?: string;
   category: "cooking-demo" | "beverage" | "how-to" | "health-tip";
-  video: {
+  video?: {
     url: string;
     platform: "youtube" | "facebook" | "instagram" | "tiktok";
     thumbnailUrl?: string;
@@ -17,7 +18,7 @@ export interface Recipe {
   author: string;
   date: string;
   featured?: boolean;
-  relatedProduct?: string; // slug of related product
+  relatedProduct?: string;
 }
 
 export const recipeCategories = [

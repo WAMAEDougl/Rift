@@ -297,8 +297,6 @@ export function RecipeForm({
     "excerpt",
     "content",
     "category",
-    "video_url",
-    "video_platform",
     "difficulty",
     "author",
     "date",
@@ -326,7 +324,7 @@ export function RecipeForm({
         "Slug may only contain lowercase letters, numbers, and hyphens";
     }
 
-    // URL format for video_url
+    // URL format for video_url — only validate if provided
     if (form.video_url && !/^https?:\/\/.+/.test(form.video_url)) {
       newErrors.video_url = "Must be a valid URL (starting with http/https)";
     }
@@ -541,7 +539,7 @@ export function RecipeForm({
           {/* Video Platform */}
           <div>
             <label className={labelCls}>
-              Platform <span className="text-red-400">*</span>
+              Platform <span className="text-slate-300">(optional)</span>
             </label>
             <select
               value={form.video_platform}
@@ -566,7 +564,7 @@ export function RecipeForm({
           {/* Video URL */}
           <div>
             <label className={labelCls}>
-              Video URL <span className="text-red-400">*</span>
+              Video URL <span className="text-slate-300">(optional)</span>
             </label>
             <input
               type="text"

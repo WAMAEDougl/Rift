@@ -10,7 +10,7 @@ export interface RecipeRow {
   content: string;
   cover_image_url: string | null;
   category: "cooking-demo" | "beverage" | "how-to" | "health-tip";
-  video_url: string;
+  video_url: string | null;
   video_platform: "youtube" | "facebook" | "instagram" | "tiktok";
   video_thumbnail_url: string | null;
   prep_time: string | null;

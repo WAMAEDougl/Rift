@@ -79,12 +79,21 @@ export default async function Recipes({ searchParams }: RecipesPageProps) {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <AnimatedSection>
               <div className="grid lg:grid-cols-2 gap-8 items-center">
-                <VideoEmbed
-                  url={featuredRecipe.video.url}
-                  platform={featuredRecipe.video.platform}
-                  title={featuredRecipe.title}
-                  thumbnailUrl={featuredRecipe.video.thumbnailUrl}
-                />
+                {featuredRecipe.video ? (
+                  <VideoEmbed
+                    url={featuredRecipe.video.url}
+                    platform={featuredRecipe.video.platform}
+                    title={featuredRecipe.title}
+                    thumbnailUrl={featuredRecipe.video.thumbnailUrl ?? featuredRecipe.coverImageUrl}
+                  />
+                ) : featuredRecipe.coverImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={featuredRecipe.coverImageUrl}
+                    alt={featuredRecipe.title}
+                    className="w-full rounded-2xl object-cover aspect-video"
+                  />
+                ) : null}
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                     Featured Recipe
@@ -92,9 +101,10 @@ export default async function Recipes({ searchParams }: RecipesPageProps) {
                   <h2 className="text-3xl font-bold text-earth mt-2 mb-3">
                     {featuredRecipe.title}
                   </h2>
-                  <p className="text-muted-foreground mb-4 leading-relaxed">
-                    {featuredRecipe.excerpt}
-                  </p>
+                  <div
+                    className="text-muted-foreground mb-4 leading-relaxed [&_*]:inline"
+                    dangerouslySetInnerHTML={{ __html: featuredRecipe.excerpt }}
+                  />
                   <div className="flex items-center gap-4 mb-6 text-sm text-muted-foreground">
                     {featuredRecipe.prepTime && (
                       <span className="inline-flex items-center gap-1">
@@ -139,15 +149,28 @@ export default async function Recipes({ searchParams }: RecipesPageProps) {
               {recipes.map((recipe, i) => (
                 <AnimatedSection key={recipe.slug} delay={i * 0.05}>
                   <article className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl transition-all group">
-                    {/* Video Thumbnail */}
+                    {/* Video Thumbnail or Cover Image */}
                     <div className="relative">
-                      <VideoEmbed
-                        url={recipe.video.url}
-                        platform={recipe.video.platform}
-                        title={recipe.title}
-                        thumbnailUrl={recipe.video.thumbnailUrl}
-                        className="rounded-none"
-                      />
+                      {recipe.video ? (
+                        <VideoEmbed
+                          url={recipe.video.url}
+                          platform={recipe.video.platform}
+                          title={recipe.title}
+                          thumbnailUrl={recipe.video.thumbnailUrl ?? recipe.coverImageUrl}
+                          className="rounded-none"
+                        />
+                      ) : recipe.coverImageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={recipe.coverImageUrl}
+                          alt={recipe.title}
+                          className="w-full aspect-video object-cover"
+                        />
+                      ) : (
+                        <div className="w-full aspect-video bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">
+                          <ChefHat className="w-10 h-10 text-amber-300" />
+                        </div>
+                      )}
                     </div>
 
                     {/* Content */}
@@ -171,9 +194,10 @@ export default async function Recipes({ searchParams }: RecipesPageProps) {
                         </Link>
                       </h3>
 
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                        {recipe.excerpt}
-                      </p>
+                      <div
+                        className="text-sm text-muted-foreground mb-3 line-clamp-2 [&_*]:inline"
+                        dangerouslySetInnerHTML={{ __html: recipe.excerpt }}
+                      />
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 text-xs text-muted-foreground/60">

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -20,11 +20,12 @@ import {
   FileText,
   Video,
   CheckCircle,
+  ShoppingBag,
 } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import type { RecipeFormData } from "@/components/admin/RecipeForm";
 
-// ─── Shared styles ────────────────────────────────────────────────────────────
+// --- Shared styles ------------------------------------------------------------
 
 const inputCls =
   "w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 outline-none transition-all placeholder:text-gray-300 shadow-sm";
@@ -35,7 +36,7 @@ const inputErrCls =
 const labelCls = "block text-xs font-semibold text-gray-600 mb-1.5";
 const errorCls = "mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 
 function generateSlug(title: string): string {
   return title
@@ -52,7 +53,7 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
 }
 
-// ─── Step config ──────────────────────────────────────────────────────────────
+// --- Step config --------------------------------------------------------------
 
 const STEPS = [
   {
@@ -76,8 +77,14 @@ const STEPS = [
   {
     label: "Video & Ingredients",
     title: "Video & Ingredients",
-    subtitle: "Link your video and list ingredients",
+    subtitle: "Optionally link a video and list ingredients",
     Icon: Video,
+  },
+  {
+    label: "Related Product",
+    title: "Related Product",
+    subtitle: "Optionally link a product featured in this recipe",
+    Icon: ShoppingBag,
   },
   {
     label: "Review & Publish",
@@ -87,55 +94,52 @@ const STEPS = [
   },
 ];
 
-// ─── Step indicator ───────────────────────────────────────────────────────────
+// --- Step indicator -----------------------------------------------------------
 
-function StepIndicator({ current }: { current: number }) {
+function StepIndicator({ current, onStepClick }: { current: number; onStepClick: (i: number) => void }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4">
-      <div className="flex items-center">
-        {STEPS.map((step, i) => {
-          const done = i < current;
-          const active = i === current;
-          return (
-            <div key={i} className="flex items-center">
-              {/* Pill */}
-              <div
-                className={[
-                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap",
-                  done
-                    ? "bg-amber-700 text-white"
-                    : active
-                    ? "bg-white border-2 border-amber-700 text-amber-700 font-bold"
-                    : "bg-slate-100 text-slate-400",
-                ].join(" ")}
-              >
-                {done ? (
-                  <Check size={12} />
-                ) : (
-                  <span
-                    className={[
-                      "w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold",
-                      active ? "bg-amber-700 text-white" : "bg-slate-300 text-white",
-                    ].join(" ")}
-                  >
-                    {i + 1}
-                  </span>
-                )}
+    <div className="space-y-1">
+      {STEPS.map((step, i) => {
+        const done = i < current;
+        const active = i === current;
+        const Icon = step.Icon;
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={() => done && onStepClick(i)}
+            disabled={!done}
+            className={[
+              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all",
+              active
+                ? "bg-amber-700 text-white shadow-sm"
+                : done
+                ? "text-amber-700 hover:bg-amber-50 cursor-pointer"
+                : "text-gray-400 cursor-default",
+            ].join(" ")}
+          >
+            <div className={[
+              "w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold",
+              active ? "bg-white/20 text-white" : done ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-400",
+            ].join(" ")}>
+              {done ? <Check size={12} strokeWidth={3} /> : <span>{i + 1}</span>}
+            </div>
+            <div className="min-w-0">
+              <p className={["text-xs font-semibold leading-none", active ? "text-white" : done ? "text-amber-700" : "text-gray-500"].join(" ")}>
                 {step.label}
-              </div>
-              {/* Separator */}
-              {i < STEPS.length - 1 && (
-                <ChevronRight size={14} className="mx-1 text-slate-300 shrink-0" />
+              </p>
+              {active && (
+                <p className="text-[10px] text-white/70 mt-0.5 leading-none truncate">{step.subtitle}</p>
               )}
             </div>
-          );
-        })}
-      </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-// ─── Inline cover image picker ────────────────────────────────────────────────
+// --- Inline cover image picker ------------------------------------------------
 
 function CoverImagePicker({
   value,
@@ -257,7 +261,7 @@ function CoverImagePicker({
                   </p>
                 </>
               )}
-              <p className="text-[10px] text-slate-300 mt-1">JPG, PNG, WebP — max 5MB</p>
+              <p className="text-[10px] text-slate-300 mt-1">JPG, PNG, WebP � max 5MB</p>
             </div>
             <input
               ref={fileInputRef}
@@ -291,7 +295,7 @@ function CoverImagePicker({
   );
 }
 
-// ─── Toggle component ─────────────────────────────────────────────────────────
+// --- Toggle component ---------------------------------------------------------
 
 function Toggle({
   checked,
@@ -332,7 +336,7 @@ function Toggle({
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+// --- Main page ----------------------------------------------------------------
 
 const INITIAL_FORM: RecipeFormData = {
   title: "",
@@ -365,7 +369,7 @@ export default function NewRecipePage() {
   const [submitting, setSubmitting] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
 
-  // ── Field helpers ────────────────────────────────────────────────────────────
+  // -- Field helpers ------------------------------------------------------------
 
   const set = useCallback(
     <K extends keyof RecipeFormData>(field: K, value: RecipeFormData[K]) => {
@@ -397,7 +401,7 @@ export default function NewRecipePage() {
     [set]
   );
 
-  // ── Ingredients ──────────────────────────────────────────────────────────────
+  // -- Ingredients --------------------------------------------------------------
 
   const addIngredient = () =>
     setForm((p) => ({ ...p, ingredients: [...p.ingredients, ""] }));
@@ -415,7 +419,7 @@ export default function NewRecipePage() {
       ingredients: p.ingredients.filter((_, idx) => idx !== i),
     }));
 
-  // ── Per-step validation ──────────────────────────────────────────────────────
+  // -- Per-step validation ------------------------------------------------------
 
   function validateStep(s: number): boolean {
     const errs: Partial<Record<keyof RecipeFormData, string>> = {};
@@ -437,9 +441,10 @@ export default function NewRecipePage() {
     }
 
     if (s === 3) {
-      if (!form.video_url.trim()) errs.video_url = "Video URL is required";
-      else if (!/^https?:\/\/.+/.test(form.video_url))
-        errs.video_url = "Must be a valid URL";
+      // Video is optional � only validate URL format if one was entered
+      if (form.video_url.trim() && !/^https?:\/\/.+/.test(form.video_url)) {
+        errs.video_url = "Must be a valid URL starting with http:// or https://";
+      }
     }
 
     setErrors(errs);
@@ -455,13 +460,13 @@ export default function NewRecipePage() {
     setStep((s) => s - 1);
   }
 
-  // ── Submit ───────────────────────────────────────────────────────────────────
+  // -- Submit -------------------------------------------------------------------
 
   async function handleSubmit() {
     setSubmitting(true);
     setSlugError(null);
     try {
-      // Convert comma-separated tags string → array before sending to API
+      // Convert comma-separated tags string ? array before sending to API
       const payload = {
         ...form,
         tags: form.tags
@@ -478,7 +483,7 @@ export default function NewRecipePage() {
       if (res.status === 409) {
         setSlugError("This slug is already taken. Please choose a different one.");
         setStep(0);
-        toast.error("Slug conflict — please update the slug on step 1.");
+        toast.error("Slug conflict � please update the slug on step 1.");
         return;
       }
       if (!res.ok) {
@@ -494,60 +499,65 @@ export default function NewRecipePage() {
     }
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // -- Render -------------------------------------------------------------------
 
   const progressPct = Math.round(((step + 1) / STEPS.length) * 100);
   const currentStep = STEPS[step];
   const StepIcon = currentStep.Icon;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4 w-full">
-      {/* Back link */}
-      <Link
-        href="/admin/recipes"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-amber-700 transition-colors"
-      >
-        <ArrowLeft size={13} /> Back to Recipes
-      </Link>
-
-      {/* Page title */}
-      <div>
-        <h1
-          className="text-2xl font-bold text-gray-900"
-          style={{ fontFamily: "var(--font-playfair, serif)" }}
-        >
+    <div className="w-full">
+      {/* Back link + title */}
+      <div className="mb-6">
+        <Link href="/admin/recipes" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-amber-700 transition-colors mb-3">
+          <ArrowLeft size={13} /> Back to Recipes
+        </Link>
+        <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
           New Recipe
         </h1>
-        <p className="text-xs text-gray-400 mt-1">
-          Step {step + 1} of {STEPS.length} — {currentStep.label}
-        </p>
       </div>
 
-      {/* Step indicator */}
-      <StepIndicator current={step} />
-
-      {/* Progress bar */}
-      <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-amber-600 rounded-full transition-all duration-500"
-          style={{ width: `${progressPct}%` }}
-        />
-      </div>
-
-      {/* Step card */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 space-y-6">
-        {/* Step header */}
-        <div className="flex items-center gap-4 pb-2 border-b border-gray-50">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-            <StepIcon size={18} className="text-amber-700" />
+      <div className="flex gap-6 items-start">
+        {/* ── Left sidebar ── */}
+        <aside className="w-52 shrink-0 sticky top-6">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3">
+            <StepIndicator current={step} onStepClick={(i) => setStep(i)} />
+            {/* Progress bar */}
+            <div className="mt-4 px-1">
+              <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+                <span>Progress</span>
+                <span>{Math.round(((step + 1) / STEPS.length) * 100)}%</span>
+              </div>
+              <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-amber-600 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.round(((step + 1) / STEPS.length) * 100)}%` }}
+                />
+              </div>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-bold text-gray-900">{currentStep.title}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">{currentStep.subtitle}</p>
-          </div>
-        </div>
+        </aside>
 
-        {/* ── Step 1: Basics ─────────────────────────────────────────────── */}
+        {/* ── Right content ── */}
+        <div className="flex-1 min-w-0 space-y-4">
+
+          {/* Step card */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 space-y-6">
+            {/* Step header */}
+            <div className="flex items-center gap-4 pb-4 border-b border-gray-50">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                <StepIcon size={18} className="text-amber-700" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-900">{currentStep.title}</h2>
+                <p className="text-xs text-slate-400 mt-0.5">{currentStep.subtitle}</p>
+              </div>
+              <div className="ml-auto text-xs text-gray-400 font-medium">
+                Step {step + 1} of {STEPS.length}
+              </div>
+            </div>
+
+        {/* -- Step 1: Basics ----------------------------------------------- */}
         {step === 0 && (
           <div className="space-y-5">
             {/* Title */}
@@ -662,7 +672,7 @@ export default function NewRecipePage() {
           </div>
         )}
 
-        {/* ── Step 2: Cover Image & Excerpt ──────────────────────────────── */}
+        {/* -- Step 2: Cover Image & Excerpt -------------------------------- */}
         {step === 1 && (
           <div className="space-y-5">
             {/* Cover image */}
@@ -680,7 +690,7 @@ export default function NewRecipePage() {
               <RichTextEditor
                 value={form.excerpt}
                 onChange={(html) => set("excerpt", html)}
-                placeholder="Short description shown in recipe cards…"
+                placeholder="Short description shown in recipe cards�"
                 minHeight="min-h-[120px]"
               />
               <p className="mt-1 text-[10px] text-slate-400">
@@ -690,7 +700,7 @@ export default function NewRecipePage() {
           </div>
         )}
 
-        {/* ── Step 3: Content ────────────────────────────────────────────── */}
+        {/* -- Step 3: Content ---------------------------------------------- */}
         {step === 2 && (
           <div className="space-y-5">
             <div>
@@ -700,7 +710,7 @@ export default function NewRecipePage() {
               <RichTextEditor
                 value={form.content}
                 onChange={(html) => set("content", html)}
-                placeholder="Full recipe content, instructions, tips… Use the toolbar to format text and insert images."
+                placeholder="Full recipe content, instructions, tips� Use the toolbar to format text and insert images."
                 hasError={!!errors.content}
                 minHeight="min-h-[300px]"
               />
@@ -709,7 +719,7 @@ export default function NewRecipePage() {
           </div>
         )}
 
-        {/* ── Step 4: Video & Ingredients ────────────────────────────────── */}
+        {/* -- Step 4: Video & Ingredients ---------------------------------- */}
         {step === 3 && (
           <div className="space-y-5">
             {/* Video platform + URL */}
@@ -734,13 +744,13 @@ export default function NewRecipePage() {
               </div>
               <div>
                 <label className={labelCls}>
-                  Video URL <span className="text-red-400">*</span>
+                  Video URL <span className="text-slate-400">(optional)</span>
                 </label>
                 <input
                   type="text"
                   value={form.video_url}
                   onChange={(e) => set("video_url", e.target.value)}
-                  placeholder="https://youtube.com/watch?v=…"
+                  placeholder="https://youtube.com/watch?v=�"
                   className={errors.video_url ? inputErrCls : inputCls}
                 />
                 {errors.video_url && (
@@ -759,7 +769,7 @@ export default function NewRecipePage() {
                 type="text"
                 value={form.video_thumbnail_url}
                 onChange={(e) => set("video_thumbnail_url", e.target.value)}
-                placeholder="https://…"
+                placeholder="https://�"
                 className={inputCls}
               />
             </div>
@@ -814,7 +824,7 @@ export default function NewRecipePage() {
                   <div key={i} className="flex items-center gap-2">
                     {/* Drag handle (decorative) */}
                     <div className="text-slate-300 text-xs leading-none select-none shrink-0 flex flex-col gap-0.5">
-                      <span className="block">⋮⋮</span>
+                      <span className="block">??</span>
                     </div>
                     {/* Number badge */}
                     <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold flex items-center justify-center shrink-0">
@@ -859,8 +869,44 @@ export default function NewRecipePage() {
           </div>
         )}
 
-        {/* ── Step 5: Review & Publish ───────────────────────────────────── */}
+        {/* -- Step 4: Related Product -------------------------------------- */}
         {step === 4 && (
+          <div className="space-y-5">
+            <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 text-xs text-amber-700">
+              This step is <strong>optional</strong>. If this recipe features one of your products, link it here so customers can find and buy it directly from the recipe page.
+            </div>
+
+            <div>
+              <label className={labelCls}>
+                Related Product Slug <span className="text-slate-400">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={form.related_product}
+                onChange={(e) => set("related_product", e.target.value)}
+                placeholder="e.g. ayola-ugali-blend"
+                className={inputCls}
+              />
+              <p className="mt-1 text-[10px] text-slate-400">
+                Enter the URL slug of the product (e.g. <span className="font-mono">synbiotic-porridge</span>). Leave blank if no product is featured.
+              </p>
+            </div>
+
+            {form.related_product.trim() && (
+              <div className="rounded-xl bg-green-50 border border-green-100 px-4 py-3 flex items-center gap-3">
+                <ShoppingBag size={16} className="text-green-600 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-green-800">Product linked</p>
+                  <p className="text-[10px] text-green-600 font-mono mt-0.5">{form.related_product.trim()}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* -- Step 5 (was 4): Video & Ingredients label fix --------------- */}
+        {/* -- Step 5: Review & Publish ------------------------------------- */}
+        {step === 5 && (
           <div className="space-y-4">
             <p className="text-xs text-slate-400">
               Review your recipe before publishing. Click &ldquo;Go back to edit&rdquo; on any
@@ -885,13 +931,13 @@ export default function NewRecipePage() {
                 <div>
                   <span className="text-slate-400">Title</span>
                   <p className="font-semibold text-gray-800 mt-0.5">
-                    {form.title || <em className="text-slate-300">—</em>}
+                    {form.title || <em className="text-slate-300">�</em>}
                   </p>
                 </div>
                 <div>
                   <span className="text-slate-400">Slug</span>
                   <p className="font-mono text-gray-700 mt-0.5">
-                    {form.slug || <em className="text-slate-300">—</em>}
+                    {form.slug || <em className="text-slate-300">�</em>}
                   </p>
                 </div>
                 <div>
@@ -909,13 +955,13 @@ export default function NewRecipePage() {
                 <div>
                   <span className="text-slate-400">Author</span>
                   <p className="font-semibold text-gray-800 mt-0.5">
-                    {form.author || <em className="text-slate-300">—</em>}
+                    {form.author || <em className="text-slate-300">�</em>}
                   </p>
                 </div>
                 <div>
                   <span className="text-slate-400">Date</span>
                   <p className="font-semibold text-gray-800 mt-0.5">
-                    {form.date || <em className="text-slate-300">—</em>}
+                    {form.date || <em className="text-slate-300">�</em>}
                   </p>
                 </div>
               </div>
@@ -1003,7 +1049,7 @@ export default function NewRecipePage() {
                 <div className="col-span-2">
                   <span className="text-slate-400">URL</span>
                   <p className="font-mono text-gray-700 break-all mt-0.5">
-                    {form.video_url || <em className="text-slate-300">—</em>}
+                    {form.video_url || <em className="text-slate-300">�</em>}
                   </p>
                 </div>
                 {form.prep_time && (
@@ -1034,7 +1080,7 @@ export default function NewRecipePage() {
                     ))}
                     {form.ingredients.length > 5 && (
                       <li className="text-slate-400">
-                        +{form.ingredients.length - 5} more…
+                        +{form.ingredients.length - 5} more�
                       </li>
                     )}
                   </ul>
@@ -1085,51 +1131,55 @@ export default function NewRecipePage() {
             </div>
           </div>
         )}
-      </div>
-      {/* end step card */}
+          </div>
+          {/* end step card */}
 
-      {/* Navigation buttons */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4 flex items-center justify-between">
-        <div>
-          {step > 0 && (
-            <button
-              type="button"
-              onClick={handleBack}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors"
-            >
-              <ChevronLeft size={15} /> Back
-            </button>
-          )}
-        </div>
-        <div>
-          {step < STEPS.length - 1 ? (
-            <button
-              type="button"
-              onClick={handleNext}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 text-white text-sm font-semibold hover:bg-amber-800 transition-colors shadow-sm shadow-amber-700/20"
-            >
-              Next <ChevronRight size={15} />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 text-white text-sm font-semibold hover:bg-amber-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-amber-700/20"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 size={15} className="animate-spin" /> Publishing…
-                </>
-              ) : (
-                <>
-                  <Check size={15} /> Publish Recipe
-                </>
+          {/* Navigation buttons */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4 flex items-center justify-between">
+            <div>
+              {step > 0 && (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  <ChevronLeft size={15} /> Back
+                </button>
               )}
-            </button>
-          )}
+            </div>
+            <div>
+              {step < STEPS.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 text-white text-sm font-semibold hover:bg-amber-800 transition-colors shadow-sm shadow-amber-700/20"
+                >
+                  Next <ChevronRight size={15} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 text-white text-sm font-semibold hover:bg-amber-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-amber-700/20"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" /> Publishing…
+                    </>
+                  ) : (
+                    <>
+                      <Check size={15} /> Publish Recipe
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
+        {/* end right content */}
       </div>
+      {/* end flex row */}
     </div>
   );
 }
