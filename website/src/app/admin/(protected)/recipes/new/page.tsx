@@ -369,10 +369,18 @@ export default function NewRecipePage() {
     setSubmitting(true);
     setSlugError(null);
     try {
+      // Convert comma-separated tags string → array before sending to API
+      const payload = {
+        ...form,
+        tags: form.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+      };
       const res = await fetch("/api/admin/recipes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (res.status === 409) {

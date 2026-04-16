@@ -345,7 +345,15 @@ export function RecipeForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    onSubmit(form);
+    // Convert comma-separated tags string → array before passing up
+    const payload = {
+      ...form,
+      tags: form.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
+    };
+    onSubmit(payload as unknown as RecipeFormData);
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
