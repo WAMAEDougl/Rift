@@ -84,45 +84,285 @@ export default function OrderSuccessPage() {
   };
 
   const handleDownload = () => {
-    const printContent = document.getElementById("order-details");
-    if (!printContent) return;
+    if (!order) return;
 
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
+    const paymentMethodLabel = order.payment_method === "mpesa" ? "M-Pesa" : "Cash on Delivery";
+
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Order #${order?.order_number} - Ayola Foods</title>
+          <title>Receipt — Order #${order.order_number} — Ayola Foods</title>
+          <meta charset="utf-8" />
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; color: #1a1a2e; }
-            .header { text-align: center; margin-bottom: 32px; }
-            .logo { font-size: 28px; font-weight: 800; color: #22c55e; }
-            .order-number { font-size: 18px; color: #64748b; margin-top: 8px; }
-            .section { margin-bottom: 24px; }
-            .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin-bottom: 12px; }
-            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-            .info-item { padding: 12px; background: #f8fafc; border-radius: 8px; }
-            .info-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
-            .info-value { font-size: 14px; font-weight: 600; margin-top: 4px; }
-            table { width: 100%; border-collapse: collapse; margin: 24px 0; }
-            th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; padding: 12px; border-bottom: 2px solid #e2e8f0; }
-            td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
-            .total-row { display: flex; justify-content: space-between; padding: 16px; background: #1a1a2e; color: white; border-radius: 8px; margin-top: 16px; }
-            .total-label { font-size: 14px; font-weight: 600; }
-            .total-value { font-size: 20px; font-weight: 800; }
-            .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #94a3b8; }
-            @media print { body { padding: 20px; } }
+            body {
+              font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+              color: #1a1a2e;
+              background: #fff;
+              padding: 48px 40px;
+              max-width: 600px;
+              margin: 0 auto;
+            }
+
+            /* Header */
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              padding-bottom: 24px;
+              border-bottom: 2px solid #f1f5f9;
+              margin-bottom: 28px;
+            }
+            .brand-name {
+              font-size: 22px;
+              font-weight: 800;
+              color: #78350f;
+              letter-spacing: -0.5px;
+            }
+            .brand-tagline {
+              font-size: 11px;
+              color: #94a3b8;
+              margin-top: 3px;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+            }
+            .receipt-label {
+              text-align: right;
+            }
+            .receipt-label h2 {
+              font-size: 18px;
+              font-weight: 700;
+              color: #1a1a2e;
+            }
+            .receipt-label p {
+              font-size: 12px;
+              color: #64748b;
+              margin-top: 3px;
+            }
+
+            /* Section */
+            .section {
+              margin-bottom: 24px;
+            }
+            .section-title {
+              font-size: 10px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.12em;
+              color: #94a3b8;
+              margin-bottom: 10px;
+            }
+
+            /* Info grid */
+            .info-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 12px;
+            }
+            .info-item {
+              background: #f8fafc;
+              border-radius: 8px;
+              padding: 10px 14px;
+            }
+            .info-label {
+              font-size: 10px;
+              color: #94a3b8;
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+            }
+            .info-value {
+              font-size: 13px;
+              font-weight: 600;
+              color: #1a1a2e;
+              margin-top: 3px;
+            }
+
+            /* Items table */
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            thead tr {
+              border-bottom: 2px solid #e2e8f0;
+            }
+            th {
+              text-align: left;
+              font-size: 10px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.1em;
+              color: #94a3b8;
+              padding: 8px 0;
+            }
+            th:last-child { text-align: right; }
+            td {
+              padding: 10px 0;
+              font-size: 13px;
+              color: #1a1a2e;
+              border-bottom: 1px solid #f1f5f9;
+            }
+            td:last-child { text-align: right; font-weight: 600; }
+            .qty-col { color: #64748b; font-size: 12px; }
+
+            /* Totals */
+            .totals {
+              margin-top: 16px;
+            }
+            .totals-row {
+              display: flex;
+              justify-content: space-between;
+              font-size: 13px;
+              color: #64748b;
+              padding: 5px 0;
+            }
+            .totals-row.grand {
+              margin-top: 10px;
+              padding: 14px 16px;
+              background: #78350f;
+              color: #fff;
+              border-radius: 10px;
+              font-size: 15px;
+              font-weight: 700;
+            }
+
+            /* Status badge */
+            .badge {
+              display: inline-block;
+              padding: 3px 10px;
+              border-radius: 20px;
+              font-size: 11px;
+              font-weight: 600;
+              background: #dcfce7;
+              color: #16a34a;
+              text-transform: capitalize;
+            }
+
+            /* Footer */
+            .footer {
+              margin-top: 36px;
+              padding-top: 20px;
+              border-top: 1px solid #f1f5f9;
+              text-align: center;
+              font-size: 11px;
+              color: #94a3b8;
+              line-height: 1.8;
+            }
+            .footer strong {
+              color: #78350f;
+            }
+
+            @media print {
+              body { padding: 24px; }
+              @page { margin: 1cm; }
+            }
           </style>
         </head>
         <body>
-          ${printContent.innerHTML}
+          <!-- Header -->
+          <div class="header">
+            <div>
+              <div class="brand-name">🌿 Ayola Foods</div>
+              <div class="brand-tagline">Eat Healthy · Live Well</div>
+            </div>
+            <div class="receipt-label">
+              <h2>Receipt</h2>
+              <p>Order #${order.order_number}</p>
+              <p>${formatDate(order.created_at)}</p>
+            </div>
+          </div>
+
+          <!-- Order Info -->
+          <div class="section">
+            <div class="section-title">Order Details</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Customer</div>
+                <div class="info-value">${order.customer_name}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Phone</div>
+                <div class="info-value">${order.customer_phone}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Payment</div>
+                <div class="info-value">${paymentMethodLabel}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value"><span class="badge">${order.status}</span></div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Delivery</div>
+                <div class="info-value" style="text-transform:capitalize">${order.delivery_type}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Region</div>
+                <div class="info-value">${order.delivery_city}</div>
+              </div>
+              ${order.delivery_type !== "pickup" ? `
+              <div class="info-item" style="grid-column: span 2">
+                <div class="info-label">Delivery Address</div>
+                <div class="info-value">${order.delivery_address}</div>
+              </div>` : ""}
+            </div>
+          </div>
+
+          <!-- Items -->
+          <div class="section">
+            <div class="section-title">Items Ordered</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th style="text-align:center">Qty</th>
+                  <th style="text-align:right">Unit Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${order.order_items.map((item) => `
+                <tr>
+                  <td>${item.product_name}</td>
+                  <td class="qty-col" style="text-align:center">${item.quantity}</td>
+                  <td style="text-align:right; color:#64748b">${formatPrice(item.product_price)}</td>
+                  <td>${formatPrice(item.line_total)}</td>
+                </tr>`).join("")}
+              </tbody>
+            </table>
+
+            <div class="totals">
+              <div class="totals-row">
+                <span>Subtotal</span>
+                <span>${formatPrice(order.subtotal)}</span>
+              </div>
+              <div class="totals-row">
+                <span>Delivery Fee</span>
+                <span>${order.delivery_fee === 0 ? "FREE" : formatPrice(order.delivery_fee)}</span>
+              </div>
+              <div class="totals-row grand">
+                <span>Total Paid</span>
+                <span>${formatPrice(order.total)}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="footer">
+            <p><strong>Ayola Foods Kenya</strong></p>
+            <p>Ruhan Plaza, Ground Floor Room 23, Kahawa Sukari</p>
+            <p>📞 +254 700 000 000 &nbsp;|&nbsp; 🌐 www.ayolafoods.com</p>
+            <p style="margin-top:10px">Thank you for choosing Ayola Foods — Eat Healthy, Live Well! 🌿</p>
+          </div>
+
+          <script>window.onload = function() { window.print(); }</script>
         </body>
       </html>
     `);
     printWindow.document.close();
-    printWindow.print();
   };
 
   if (loading) {
