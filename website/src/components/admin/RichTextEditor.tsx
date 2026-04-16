@@ -29,6 +29,7 @@ interface RichTextEditorProps {
   onChange: (html: string) => void;
   placeholder?: string;
   hasError?: boolean;
+  minHeight?: string;
 }
 
 type FormatCommand =
@@ -52,6 +53,7 @@ export function RichTextEditor({
   onChange,
   placeholder = "Write your content here…",
   hasError = false,
+  minHeight = "min-h-[240px]",
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const isInternalUpdate = useRef(false);
@@ -230,7 +232,8 @@ export function RichTextEditor({
         onInput={handleInput}
         data-placeholder={placeholder}
         className={[
-          "min-h-[240px] p-4 text-sm text-[#1a1a2e] outline-none",
+          minHeight,
+          "p-4 text-sm text-[#1a1a2e] outline-none",
           // Prose styles for the editor content
           "[&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2",
           "[&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1",

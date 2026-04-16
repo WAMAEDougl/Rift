@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Plus, Trash2, Save } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
+import { Plus, Trash2, Save, Upload, Link as LinkIcon, ImageIcon, X, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import type { RecipeRow } from "@/lib/types/recipe";
-import ImageUploader from "@/components/admin/ImageUploader";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -69,6 +69,135 @@ const labelCls =
   "block text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 ml-1";
 
 const errorCls = "mt-1.5 ml-1 text-xs font-semibold text-red-500";
+
+// ─── Compact cover image picker ──────────────────────────────────────────────
+
+function CoverImagePicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const [tab, setTab] = useState<"upload" | "url">("upload");
+  const [uploading, setUploading] = useState(false);
+  const [urlInput, setUrlInput] = useState(value.startsWith("http") ? value : "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "recipes");
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok) { toast.error(json.error?.message ?? "Upload failed"); return; }
+      onChange(json.data.url);
+      toast.success("Cover image uploaded");
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  function applyUrl() {
+    const trimmed = urlInput.trim();
+    if (!trimmed) { toast.error("Enter a URL"); return; }
+    if (!/^https?:\/\/.+/.test(trimmed)) { toast.error("Enter a valid URL"); return; }
+    onChange(trimmed);
+    toast.success("Cover image set");
+  }
+
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 items-start">
+      {/* Preview — fixed small size */}
+      <div className="w-32 h-24 shrink-0 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center relative">
+        {value ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={value} alt="Cover preview" className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={() => { onChange(""); setUrlInput(""); }}
+              className="absolute top-1 right-1 w-5 h-5 bg-white/90 rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 shadow transition-colors"
+            >
+              <X size={11} />
+            </button>
+          </>
+        ) : (
+          <div className="text-center">
+            <ImageIcon size={20} className="text-slate-200 mx-auto mb-1" />
+            <p className="text-[10px] text-slate-300">No image</p>
+          </div>
+        )}
+      </div>
+
+      {/* Controls */}
+      <div className="flex-1 space-y-2 min-w-0">
+        {/* Tab switcher */}
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+          <button
+            type="button"
+            onClick={() => setTab("upload")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              tab === "upload" ? "bg-white text-amber-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <Upload size={11} /> Upload
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("url")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              tab === "url" ? "bg-white text-amber-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <LinkIcon size={11} /> URL
+          </button>
+        </div>
+
+        {tab === "upload" ? (
+          <>
+            <div
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              className="border-2 border-dashed border-slate-200 rounded-xl px-4 py-3 text-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/30 transition-all"
+            >
+              {uploading
+                ? <Loader2 size={16} className="text-amber-600 mx-auto animate-spin" />
+                : <p className="text-xs text-slate-400 hover:text-amber-600 transition-colors">Click to choose a file</p>
+              }
+              <p className="text-[10px] text-slate-300 mt-0.5">JPG, PNG, WebP — max 5MB</p>
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+          </>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), applyUrl())}
+              placeholder="https://example.com/image.jpg"
+              className="flex-1 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-sm text-[#1a1a2e] focus:border-amber-600 focus:ring-2 focus:ring-amber-600/10 outline-none transition-all placeholder:text-slate-300 min-w-0"
+            />
+            <button
+              type="button"
+              onClick={applyUrl}
+              className="px-3 py-2.5 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-bold transition-colors shrink-0"
+            >
+              Apply
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -178,10 +307,16 @@ export function RecipeForm({
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof RecipeFormData, string>> = {};
 
+    // Strip HTML tags to check if rich text fields are truly empty
+    const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
+
     for (const field of requiredFields) {
       const val = form[field];
-      if (typeof val === "string" && val.trim() === "") {
-        newErrors[field] = "This field is required";
+      if (typeof val === "string") {
+        const text = field === "excerpt" || field === "content" ? stripHtml(val) : val.trim();
+        if (text === "") {
+          newErrors[field] = "This field is required";
+        }
       }
     }
 
@@ -267,12 +402,12 @@ export function RecipeForm({
           <label className={labelCls}>
             Excerpt <span className="text-red-400">*</span>
           </label>
-          <textarea
+          <RichTextEditor
             value={form.excerpt}
-            onChange={(e) => handleChange("excerpt", e.target.value)}
+            onChange={(html) => handleChange("excerpt", html)}
             placeholder="Short description shown in recipe cards…"
-            rows={3}
-            className={`${errors.excerpt ? inputErrorCls : inputCls} resize-none`}
+            hasError={!!errors.excerpt}
+            minHeight="min-h-[100px]"
           />
           {errors.excerpt && <p className={errorCls}>{errors.excerpt}</p>}
         </div>
@@ -300,9 +435,9 @@ export function RecipeForm({
         <p className="text-[10px] text-slate-400 -mt-2">
           Shown as the recipe card thumbnail on the public recipes page.
         </p>
-        <ImageUploader
-          imageUrl={form.cover_image_url}
-          onImageUrl={(url) => handleChange("cover_image_url", url)}
+        <CoverImagePicker
+          value={form.cover_image_url}
+          onChange={(url) => handleChange("cover_image_url", url)}
         />
       </div>
 
