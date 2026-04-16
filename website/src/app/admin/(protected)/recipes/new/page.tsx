@@ -582,7 +582,7 @@ export default function NewRecipePage() {
               <div>
                 <label className={labelCls}>Video URL <span className="text-red-400">*</span></label>
                 <input
-                  type="url"
+                  type="text"
                   value={form.video_url}
                   onChange={(e) => set("video_url", e.target.value)}
                   placeholder="https://youtube.com/watch?v=…"
@@ -596,7 +596,7 @@ export default function NewRecipePage() {
             <div>
               <label className={labelCls}>Video Thumbnail URL <span className="text-slate-300">(optional)</span></label>
               <input
-                type="url"
+                type="text"
                 value={form.video_thumbnail_url}
                 onChange={(e) => set("video_thumbnail_url", e.target.value)}
                 placeholder="https://…"
