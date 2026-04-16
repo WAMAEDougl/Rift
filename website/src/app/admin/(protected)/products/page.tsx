@@ -51,46 +51,17 @@ interface PaginationMeta {
   total_pages: number
 }
 
-function ToggleSwitch({
-  checked,
-  onChange,
-  labelOn,
-  labelOff,
-  colorOn = "bg-green-500",
-}: {
-  checked: boolean
-  onChange: () => void
-  labelOn: string
-  labelOff: string
-  colorOn?: string
-}) {
-  return (
-    <button
-      onClick={onChange}
-      title={`Click to ${checked ? "disable" : "enable"}`}
-      className="inline-flex items-center gap-2 group"
-    >
-      {/* Toggle track */}
-      <div
-        className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
-          checked ? colorOn : "bg-gray-200"
-        }`}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-            checked ? "translate-x-4" : "translate-x-0"
-          }`}
-        />
-      </div>
-      {/* Label */}
-      <span
-        className={`text-xs font-semibold transition-colors ${
-          checked ? "text-gray-700" : "text-gray-400"
-        }`}
-      >
-        {checked ? labelOn : labelOff}
-      </span>
-    </button>
+function StatusBadge({ active, labelOn, labelOff }: { active: boolean; labelOn: string; labelOff: string }) {
+  return active ? (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
+      <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+      {labelOn}
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-400 border border-gray-200">
+      <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+      {labelOff}
+    </span>
   )
 }
 
@@ -103,6 +74,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("")
   const [stockFilter, setStockFilter] = useState("")
+  const [activeFilter, setActiveFilter] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
@@ -121,6 +93,8 @@ export default function ProductsPage() {
     if (categoryFilter) params.set("category_id", categoryFilter)
     if (stockFilter === "in_stock") params.set("in_stock", "true")
     if (stockFilter === "out_of_stock") params.set("in_stock", "false")
+    if (activeFilter === "active") params.set("is_active", "true")
+    if (activeFilter === "inactive") params.set("is_active", "false")
 
     const res = await fetch(`/api/admin/products?${params.toString()}`)
     const json = await res.json()
@@ -129,7 +103,7 @@ export default function ProductsPage() {
       setPagination(json.data.pagination as PaginationMeta)
     }
     setLoading(false)
-  }, [page, search, categoryFilter, stockFilter])
+  }, [page, search, categoryFilter, stockFilter, activeFilter])
 
   useEffect(() => {
     fetchCategories()
@@ -182,6 +156,7 @@ export default function ProductsPage() {
     setSearch("")
     setCategoryFilter("")
     setStockFilter("")
+    setActiveFilter("")
     setPage(1)
   }
 
@@ -265,7 +240,25 @@ export default function ProductsPage() {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              {v === "" ? "All" : v === "in_stock" ? "In Stock" : "Out"}
+              {v === "" ? "All Stock" : v === "in_stock" ? "In Stock" : "Out of Stock"}
+            </button>
+          ))}
+        </div>
+        {/* Active filter toggle */}
+        <div className="flex items-center bg-gray-50 rounded-xl p-1 gap-1">
+          {(["", "active", "inactive"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => { setActiveFilter(v); setPage(1) }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                activeFilter === v
+                  ? v === "inactive"
+                    ? "bg-gray-500 text-white"
+                    : "bg-amber-700 text-white"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {v === "" ? "All Status" : v === "active" ? "Active" : "Inactive"}
             </button>
           ))}
         </div>
@@ -343,23 +336,19 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center">
-                          <ToggleSwitch
-                            checked={product.in_stock}
-                            onChange={() => handleToggle(product, "in_stock")}
+                          <StatusBadge
+                            active={product.in_stock}
                             labelOn="In Stock"
                             labelOff="Out of Stock"
-                            colorOn="bg-green-500"
                           />
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center">
-                          <ToggleSwitch
-                            checked={product.is_active}
-                            onChange={() => handleToggle(product, "is_active")}
+                          <StatusBadge
+                            active={product.is_active}
                             labelOn="Active"
                             labelOff="Inactive"
-                            colorOn="bg-amber-600"
                           />
                         </div>
                       </td>
