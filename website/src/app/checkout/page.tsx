@@ -11,7 +11,7 @@ import type { SavedCustomer } from "@/types/api";
 import {
   ShieldCheck, Truck, Beaker, Check, Loader2,
   AlertCircle, ShoppingBag, MessageCircle, MapPin, ChevronDown,
-  Plus, Minus, Trash2, Smartphone, Banknote, ArrowRight,
+  Plus, Minus, Trash2, Smartphone, ArrowRight,
 } from "lucide-react";
 
 type Step = "form" | "awaiting_payment" | "confirmed";
@@ -35,7 +35,7 @@ export default function CheckoutPage() {
 
   const [form, setForm] = useState({
     name: "", phone: "", address: "", city: "Nairobi", delivery_type: "delivery", notes: "",
-    payment_method: "mpesa" as "mpesa" | "cash_on_delivery",
+    payment_method: "mpesa" as "mpesa",
   });
 
   useEffect(() => {
@@ -74,7 +74,7 @@ export default function CheckoutPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ reason: "M-Pesa payment cancelled by user" }),
           }).catch(() => {});
-          setError("M-Pesa payment was cancelled. Your cart has been kept — you can try again or choose Cash on Delivery.");
+          setError("M-Pesa payment was cancelled. Your cart has been kept — please try again.");
           setStep("form");
           return;
         }
@@ -87,7 +87,7 @@ export default function CheckoutPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ reason: "Payment not confirmed after 5 minutes" }),
           }).catch(() => {});
-          setError("Payment not confirmed after 5 minutes. Your cart has been kept — please try again or choose Cash on Delivery.");
+          setError("Payment not confirmed after 5 minutes. Your cart has been kept — please try again.");
           setStep("form");
         } else if (attempts % 6 === 0) {
           setPollingMsg("Still waiting for confirmation... If you haven't received the M-Pesa prompt on your phone, check your phone or try again.");
@@ -162,7 +162,7 @@ export default function CheckoutPage() {
                   body: JSON.stringify({ reason: "Cancelled by customer" }),
                 }).catch(() => {});
               }
-              setError("Payment cancelled. Your cart has been kept — you can try again or choose Cash on Delivery.");
+              setError("Payment cancelled. Your cart has been kept — you can try again.");
               setStep("form");
             }}
             className="mt-4 text-sm text-muted-foreground hover:text-red-500 underline transition-colors"
@@ -174,19 +174,31 @@ export default function CheckoutPage() {
     );
   }
 
-  // Confirmed - redirect to success page
+  // Confirmed
   if (step === "confirmed" && orderResult) {
-    if (typeof window !== "undefined") {
-      router.push(`/orders/success?order_id=${orderResult.order_id}`);
-    }
     return (
       <div className="pt-28 pb-20">
         <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
           <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
             <Check className="w-10 h-10 text-green-600 dark:text-green-400" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Payment Confirmed!</h1>
-          <p className="text-muted-foreground mb-6">Redirecting to your order details...</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Order Confirmed!</h1>
+          <p className="text-muted-foreground mb-6">Your order has been placed successfully.</p>
+          <div className="bg-card rounded-2xl p-6 text-left mb-6 space-y-3 border border-border">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Order</span>
+              <span className="font-bold text-foreground font-mono">{orderResult.order_number}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Total</span>
+              <span className="font-bold text-primary">{formatPrice(orderResult.total)}</span>
+            </div>
+          </div>
+          <div className="flex gap-3 flex-wrap justify-center">
+            <Link href="/products" className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors">
+              Continue Shopping
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -221,43 +233,30 @@ export default function CheckoutPage() {
 
       const orderId = data.order.id;
 
-      if (form.payment_method === "mpesa") {
-        // Step 2: Trigger M-Pesa STK push
-        const mpesaRes = await fetch("/api/payments/mpesa/initiate", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ order_id: orderId, phone: normalizedPhone }),
-        });
-        const mpesaData = await mpesaRes.json();
+      // Step 2: Trigger M-Pesa STK push
+      const mpesaRes = await fetch("/api/payments/mpesa/initiate", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: orderId, phone: normalizedPhone }),
+      });
+      const mpesaData = await mpesaRes.json();
 
-        if (mpesaRes.ok && mpesaData.data?.checkout_request_id) {
-          // Step 3: Show awaiting payment, start polling
-          setOrderResult({
-            order_number: data.order.order_number,
-            order_id: orderId,
-            total: data.order.total,
-            checkout_request_id: mpesaData.data.checkout_request_id,
-          });
-          setPollingMsg("Waiting for M-Pesa confirmation...");
-          setStep("awaiting_payment");
-          startPolling(orderId);
-        } else {
-          // STK push failed — show error, do NOT checkout
-          const errMsg = mpesaData.error?.message ?? mpesaData.data?.message ?? "M-Pesa payment could not be initiated. Please try again or use Cash on Delivery.";
-          setError(errMsg);
-          setLoading(false);
-          return;
-        }
-      } else {
-        // Cash on delivery
+      if (mpesaRes.ok && mpesaData.data?.checkout_request_id) {
+        // Step 3: Show awaiting payment, start polling
         setOrderResult({
           order_number: data.order.order_number,
           order_id: orderId,
           total: data.order.total,
+          checkout_request_id: mpesaData.data.checkout_request_id,
         });
-        clearCart();
-        router.push(`/orders/success?order_id=${orderId}`);
-        const waMsg = `NEW ORDER ${data.order.order_number}\n\n${items.map((i) => `${i.quantity}x ${i.product.name}`).join("\n")}\n\nTotal: KES ${data.order.total}\nCustomer: ${form.name}\nPhone: ${form.phone}\nPayment: Cash on Delivery\n${form.delivery_type === "pickup" ? "PICKUP" : `Deliver to: ${form.address}, ${form.city}`}`;
-        window.open(getWhatsAppOrderLink(waMsg), "_blank");
+        setPollingMsg("Waiting for M-Pesa confirmation...");
+        setStep("awaiting_payment");
+        startPolling(orderId);
+      } else {
+        // STK push failed — show error, do NOT checkout
+        const errMsg = mpesaData.error?.message ?? mpesaData.data?.message ?? "M-Pesa payment could not be initiated. Please try again.";
+        setError(errMsg);
+        setLoading(false);
+        return;
       }
     } catch {
       setError("Network error. Please check your connection and try again.");
@@ -265,24 +264,6 @@ export default function CheckoutPage() {
   };
 
   const inputCls = "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm placeholder:text-muted-foreground/50";
-
-  // Cash confirmation view (when STK push failed and fell back to cash) - redirect to success page
-  if (step === "confirmed" && orderResult && form.payment_method === "cash_on_delivery") {
-    if (typeof window !== "undefined") {
-      router.push(`/orders/success?order_id=${orderResult.order_id}`);
-    }
-    return (
-      <div className="pt-28 pb-20">
-        <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
-          <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="w-10 h-10 text-green-600 dark:text-green-400" />
-          </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Order Placed!</h1>
-          <p className="text-muted-foreground mb-6">Redirecting to your order details...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="pt-28 pb-20 bg-muted/30 min-h-screen">
@@ -374,33 +355,13 @@ export default function CheckoutPage() {
               <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-primary" /> Payment
               </h2>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setForm({ ...form, payment_method: "mpesa" })}
-                  className={`py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                    form.payment_method === "mpesa"
-                      ? "bg-green-600 text-white shadow-sm"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <Smartphone className="w-4 h-4" /> M-Pesa
-                </button>
-                <button
-                  onClick={() => setForm({ ...form, payment_method: "cash_on_delivery" })}
-                  className={`py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                    form.payment_method === "cash_on_delivery"
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <Banknote className="w-4 h-4" /> Cash
-                </button>
+              <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                <Smartphone className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <span className="text-sm font-medium text-green-800 dark:text-green-300">M-Pesa</span>
               </div>
-              {form.payment_method === "mpesa" && (
-                <p className="text-xs text-green-600 dark:text-green-400/70 mt-2">
-                  ✓ You&apos;ll receive an M-Pesa prompt on your phone to complete payment
-                </p>
-              )}
+              <p className="text-xs text-green-600 dark:text-green-400/70 mt-2">
+                ✓ You&apos;ll receive an M-Pesa prompt on your phone to complete payment
+              </p>
             </div>
 
             {/* Notes */}
@@ -425,14 +386,12 @@ export default function CheckoutPage() {
               {loading ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Placing Order...</>
               ) : (
-                <>{form.payment_method === "mpesa" ? "Pay with M-Pesa" : "Place Order"} — {formatPrice(grandTotal)}</>
+                <>Pay with M-Pesa — {formatPrice(grandTotal)}</>
               )}
             </button>
 
             <p className="text-xs text-muted-foreground/60 text-center">
-              {form.payment_method === "mpesa"
-                ? "You'll get an M-Pesa prompt. We'll confirm once payment is received."
-                : "Pay via cash when your order arrives. We'll confirm on WhatsApp."}
+              You&apos;ll get an M-Pesa prompt. We&apos;ll confirm once payment is received.
             </p>
 
             <div className="flex items-center justify-center gap-5 text-[11px] text-muted-foreground/50 pt-1">

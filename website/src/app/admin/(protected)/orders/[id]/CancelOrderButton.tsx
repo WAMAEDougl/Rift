@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Trash2, AlertTriangle } from "lucide-react"
 import {
@@ -14,7 +13,6 @@ interface Props {
 }
 
 export function CancelOrderButton({ orderId, orderNumber }: Props) {
-  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState("")
   const [loading, setLoading] = useState(false)

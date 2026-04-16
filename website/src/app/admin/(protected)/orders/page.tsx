@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { toast } from "sonner"
 import StatusBadge from "@/components/admin/StatusBadge"
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters"
 import { useAdminRole } from "@/lib/admin/useAdminRole"
@@ -204,21 +205,18 @@ export default function OrdersPage() {
       if (!res.ok) throw new Error("Failed to fetch orders")
 
       const data = await res.json()
-      const orders = data.data?.items || []
+      const allOrders = data.data?.items || []
 
-      const printContent = document.getElementById("orders-table-print")
-      if (!printContent) {
-        const a = window.document.createElement("a")
-        a.href = URL.createObjectURL(
-          new Blob([JSON.stringify(orders, null, 2)], { type: "application/json" })
-        )
-        a.download = `orders-report-${new Date().toISOString().slice(0, 10)}.json`
-        a.click()
+      if (allOrders.length === 0) {
+        toast.error("No orders to export")
         return
       }
 
       const printWindow = window.open("", "_blank")
-      if (!printWindow) return
+      if (!printWindow) {
+        alert("Please allow popups to export PDF")
+        return
+      }
 
       const style = `
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -244,7 +242,7 @@ export default function OrdersPage() {
         @media print { body { padding: 20px; } }
       `
 
-      const rows = orders.map((o: OrderRow) => `
+      const rows = allOrders.map((o: OrderRow) => `
         <tr>
           <td>${o.order_number}</td>
           <td>${o.customer_name}</td>
@@ -284,13 +282,13 @@ export default function OrdersPage() {
             </table>
             <div class="footer">
               <p>Ayola Foods KE - www.ayolafoods.com</p>
-              <p>Total Orders: ${orders.length}</p>
+              <p>Total Orders: ${allOrders.length}</p>
             </div>
           </body>
         </html>
       `)
       printWindow.document.close()
-      setTimeout(() => printWindow.print(), 250)
+      setTimeout(() => printWindow.print(), 400)
     } catch (error) {
       console.error("Download error:", error)
     } finally {

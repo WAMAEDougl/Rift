@@ -20,6 +20,7 @@ function getPageTitle(pathname: string): { title: string; subtitle: string } {
   if (pathname.startsWith("/admin/payments"))         return { title: "Payments",      subtitle: "Review payment logs and transactions." }
   if (pathname.startsWith("/admin/notifications"))    return { title: "Notifications", subtitle: "Stay on top of store activity." }
   if (pathname.startsWith("/admin/settings"))         return { title: "Settings",      subtitle: "Configure your store preferences." }
+  if (pathname.startsWith("/admin/recipes"))          return { title: "Recipes",       subtitle: "Manage your recipe catalogue." }
   return { title: "Admin", subtitle: "" }
 }
 

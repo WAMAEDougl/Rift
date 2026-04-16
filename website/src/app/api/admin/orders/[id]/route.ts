@@ -98,9 +98,10 @@ export async function PATCH(
     return err("Order not found", "NOT_FOUND", 404);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error: updateError } = await admin
     .from("orders")
-    .update(parsed.data)
+    .update(parsed.data as any)
     .eq("id", id);
 
   if (updateError) {

@@ -53,7 +53,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const [{ data: order }, { data: profile }] = await Promise.all([
     admin.from("orders")
-      .select("*, order_items(id, product_id, product_name, product_price, quantity, line_total)")
+      .select("id, order_number, status, payment_status, customer_name, customer_phone, customer_email, customer_id, delivery_address, delivery_city, delivery_type, order_notes, subtotal, delivery_fee, total, payment_method, mpesa_receipt_number, created_at, order_items(id, product_id, product_name, product_price, quantity, line_total)")
       .eq("id", id).single(),
     admin.from("profiles").select("role").eq("id", user!.id).single(),
   ])

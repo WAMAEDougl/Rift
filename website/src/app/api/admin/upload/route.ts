@@ -25,7 +25,10 @@ export async function POST(request: Request) {
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const folder = (formData.get("folder") as string | null) ?? "products";
+    const safeFolders = ["products", "recipes"];
+    const uploadFolder = safeFolders.includes(folder) ? folder : "products";
+    const fileName = `${uploadFolder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
