@@ -107,7 +107,9 @@ export async function getPublishedRecipeBySlug(
  * Satisfies Requirement 8.4
  */
 export async function getAllRecipeSlugs(): Promise<string[]> {
-  const supabase = await createClient();
+  // Use static client for build-time generation (no cookies needed)
+  const { createStaticClient } = await import("@/lib/supabase/server");
+  const supabase = createStaticClient();
 
   const { data, error } = await supabase
     .from("recipes")
