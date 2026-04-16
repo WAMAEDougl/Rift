@@ -67,18 +67,29 @@ function ToggleSwitch({
   return (
     <button
       onClick={onChange}
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-        checked
-          ? `${colorOn} text-white border-transparent`
-          : "bg-gray-50 text-gray-400 border-gray-200 hover:border-gray-300"
-      }`}
+      title={`Click to ${checked ? "disable" : "enable"}`}
+      className="inline-flex items-center gap-2 group"
     >
-      <span
-        className={`w-2 h-2 rounded-full shrink-0 ${
-          checked ? "bg-white/80" : "bg-gray-300"
+      {/* Toggle track */}
+      <div
+        className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+          checked ? colorOn : "bg-gray-200"
         }`}
-      />
-      {checked ? labelOn : labelOff}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+            checked ? "translate-x-4" : "translate-x-0"
+          }`}
+        />
+      </div>
+      {/* Label */}
+      <span
+        className={`text-xs font-semibold transition-colors ${
+          checked ? "text-gray-700" : "text-gray-400"
+        }`}
+      >
+        {checked ? labelOn : labelOff}
+      </span>
     </button>
   )
 }
