@@ -88,7 +88,7 @@ export default function ProductsPage() {
     setLoading(true)
     const params = new URLSearchParams()
     params.set("page", String(page))
-    params.set("per_page", "20")
+    params.set("per_page", "10")
     if (search) params.set("q", search)
     if (categoryFilter) params.set("category_id", categoryFilter)
     if (stockFilter === "in_stock") params.set("in_stock", "true")
@@ -431,7 +431,7 @@ export default function ProductsPage() {
         )}
 
         {/* Pagination */}
-        {pagination && pagination.total_pages > 1 && (
+        {pagination && (
           <div className="px-6 py-4 border-t border-gray-50 bg-gray-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-400">
               Showing <span className="text-gray-700 font-medium">{showingFrom}–{showingTo}</span> of{" "}
