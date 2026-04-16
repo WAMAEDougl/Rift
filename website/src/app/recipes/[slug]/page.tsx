@@ -1,14 +1,16 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { recipes, getRecipeBySlug, recipeCategories } from "@/lib/recipes";
+import { recipeCategories } from "@/lib/recipes";
+import { getPublishedRecipeBySlug, getAllRecipeSlugs } from "@/lib/recipes-db";
 import { getProductBySlug } from "@/lib/products";
 import VideoEmbed from "@/components/recipes/VideoEmbed";
 import { Clock, Users, ChefHat, ArrowLeft, ShoppingCart } from "lucide-react";
 import type { Metadata } from "next";
 
 export async function generateStaticParams() {
-  return recipes.map((r) => ({ slug: r.slug }));
+  const slugs = await getAllRecipeSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -17,7 +19,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const recipe = getRecipeBySlug(slug);
+  const recipe = await getPublishedRecipeBySlug(slug);
   if (!recipe) return { title: "Recipe Not Found" };
   return {
     title: `${recipe.title} | Ayola Foods KE Recipes`,
@@ -31,7 +33,7 @@ export default async function RecipePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const recipe = getRecipeBySlug(slug);
+  const recipe = await getPublishedRecipeBySlug(slug);
 
   if (!recipe) notFound();
 

@@ -11,7 +11,7 @@ const createOrderSchema = z.object({
   delivery_address: z.string().min(1, "Delivery address is required"),
   delivery_city: z.string().optional().default("Nairobi"),
   order_notes: z.string().optional(),
-  payment_method: z.enum(["cash_on_delivery", "mpesa"]),
+  payment_method: z.literal("mpesa"),
   items: z.array(z.object({
     product_id: z.string(),
     quantity: z.number().int().positive(),
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
         delivery_fee: deliveryFee,
         total,
         payment_method: data.payment_method,
-        payment_status: data.payment_method === "mpesa" ? "processing" : "pending",
+        payment_status: "processing",
         status: "pending",
         customer_id: user.id,
       })
