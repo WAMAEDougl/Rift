@@ -76,7 +76,7 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto no-scrollbar">
         {navItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item)

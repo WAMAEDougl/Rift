@@ -204,6 +204,48 @@ export default function ProductsPage() {
         </Link>
       </div>
 
+      {/* Summary stat cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
+              <TrendingUp size={16} className="text-green-700" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Catalog Value</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {formatKES(totalValuation)}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Calculated from listed prices</p>
+        </div>
+
+        <div className="bg-amber-50 rounded-2xl border border-amber-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+              <Package size={16} className="text-amber-700" />
+            </div>
+            <p className="text-xs text-amber-700 font-medium uppercase tracking-wide">Live Products</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {products.length}
+          </p>
+          <p className="text-xs text-amber-600 mt-1">On this page</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
+              <AlertCircle size={16} className="text-red-500" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Stock Alerts</p>
+          </div>
+          <p className="text-2xl font-bold text-red-600" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {stockAlerts}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Items out of stock</p>
+        </div>
+      </div>
+
       {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
         <div className="flex items-center gap-2 flex-1 min-w-[180px]">
@@ -430,48 +472,6 @@ export default function ProductsPage() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Summary stat cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
-              <TrendingUp size={16} className="text-green-700" />
-            </div>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Catalog Value</p>
-          </div>
-          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-            {formatKES(totalValuation)}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">Calculated from listed prices</p>
-        </div>
-
-        <div className="bg-amber-50 rounded-2xl border border-amber-100 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
-              <Package size={16} className="text-amber-700" />
-            </div>
-            <p className="text-xs text-amber-700 font-medium uppercase tracking-wide">Live Products</p>
-          </div>
-          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-            {products.length}
-          </p>
-          <p className="text-xs text-amber-600 mt-1">On this page</p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
-              <AlertCircle size={16} className="text-red-500" />
-            </div>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Stock Alerts</p>
-          </div>
-          <p className="text-2xl font-bold text-red-600" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-            {stockAlerts}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">Items out of stock</p>
-        </div>
       </div>
 
       {/* Delete confirmation dialog */}
