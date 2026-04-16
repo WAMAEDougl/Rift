@@ -4,19 +4,38 @@ import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Check, ChevronLeft, ChevronRight, Plus, Trash2, Upload, Link as LinkIcon, ImageIcon, X, Loader2, ArrowLeft } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Trash2,
+  Upload,
+  Link as LinkIcon,
+  ImageIcon,
+  X,
+  Loader2,
+  ArrowLeft,
+  BookOpen,
+  FileText,
+  Video,
+  CheckCircle,
+} from "lucide-react";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import type { RecipeFormData } from "@/components/admin/RecipeForm";
 
-//  Shared styles 
+// ─── Shared styles ────────────────────────────────────────────────────────────
 
 const inputCls =
-  "w-full p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium text-gray-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/10 outline-none transition-all placeholder:text-slate-300";
+  "w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 outline-none transition-all placeholder:text-gray-300 shadow-sm";
 
-const labelCls = "block text-xs font-semibold text-gray-500 mb-1.5";
-const errorCls = "mt-1 text-xs font-semibold text-red-500";
+const inputErrCls =
+  "w-full px-4 py-3 rounded-xl bg-red-50 border border-red-300 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 outline-none transition-all placeholder:text-gray-300 shadow-sm";
 
-//  Helpers 
+const labelCls = "block text-xs font-semibold text-gray-600 mb-1.5";
+const errorCls = "mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function generateSlug(title: string): string {
   return title
@@ -33,66 +52,90 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
 }
 
-//  Step indicator 
+// ─── Step config ──────────────────────────────────────────────────────────────
 
 const STEPS = [
-  { label: "Basics" },
-  { label: "Cover & Excerpt" },
-  { label: "Content" },
-  { label: "Video & Ingredients" },
-  { label: "Review & Publish" },
+  {
+    label: "Basics",
+    title: "Basic Information",
+    subtitle: "Set the title, category and author details",
+    Icon: BookOpen,
+  },
+  {
+    label: "Cover & Excerpt",
+    title: "Cover & Excerpt",
+    subtitle: "Add a cover photo and short description",
+    Icon: ImageIcon,
+  },
+  {
+    label: "Content",
+    title: "Recipe Content",
+    subtitle: "Write the full recipe with formatting",
+    Icon: FileText,
+  },
+  {
+    label: "Video & Ingredients",
+    title: "Video & Ingredients",
+    subtitle: "Link your video and list ingredients",
+    Icon: Video,
+  },
+  {
+    label: "Review & Publish",
+    title: "Review & Publish",
+    subtitle: "Review everything before going live",
+    Icon: CheckCircle,
+  },
 ];
+
+// ─── Step indicator ───────────────────────────────────────────────────────────
 
 function StepIndicator({ current }: { current: number }) {
   return (
-    <div className="flex items-center gap-0 w-full mb-8 overflow-x-auto pb-1">
-      {STEPS.map((step, i) => {
-        const done = i < current;
-        const active = i === current;
-        return (
-          <div key={i} className="flex items-center flex-1 min-w-0">
-            <div className="flex flex-col items-center shrink-0">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4">
+      <div className="flex items-center">
+        {STEPS.map((step, i) => {
+          const done = i < current;
+          const active = i === current;
+          return (
+            <div key={i} className="flex items-center">
+              {/* Pill */}
               <div
                 className={[
-                  "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all",
+                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap",
                   done
-                    ? "bg-amber-700 border-amber-700 text-white"
+                    ? "bg-amber-700 text-white"
                     : active
-                    ? "bg-white border-amber-600 text-amber-700"
-                    : "bg-white border-slate-200 text-slate-400",
+                    ? "bg-white border-2 border-amber-700 text-amber-700 font-bold"
+                    : "bg-slate-100 text-slate-400",
                 ].join(" ")}
               >
-                {done ? <Check size={14} /> : <span>{i + 1}</span>}
-              </div>
-              <span
-                className={[
-                  "mt-1.5 text-[10px] font-semibold whitespace-nowrap",
-                  done
-                    ? "text-amber-700"
-                    : active
-                    ? "text-amber-600"
-                    : "text-slate-400",
-                ].join(" ")}
-              >
+                {done ? (
+                  <Check size={12} />
+                ) : (
+                  <span
+                    className={[
+                      "w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold",
+                      active ? "bg-amber-700 text-white" : "bg-slate-300 text-white",
+                    ].join(" ")}
+                  >
+                    {i + 1}
+                  </span>
+                )}
                 {step.label}
-              </span>
+              </div>
+              {/* Separator */}
+              {i < STEPS.length - 1 && (
+                <ChevronRight size={14} className="mx-1 text-slate-300 shrink-0" />
+              )}
             </div>
-            {i < STEPS.length - 1 && (
-              <div
-                className={[
-                  "flex-1 h-0.5 mx-2 mt-[-14px] transition-all",
-                  i < current ? "bg-amber-600" : "bg-slate-200",
-                ].join(" ")}
-              />
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-//  Inline cover image picker 
+// ─── Inline cover image picker ────────────────────────────────────────────────
 
 function CoverImagePicker({
   value,
@@ -116,7 +159,10 @@ function CoverImagePicker({
       fd.append("folder", "recipes");
       const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
       const json = await res.json();
-      if (!res.ok) { toast.error(json.error?.message ?? "Upload failed"); return; }
+      if (!res.ok) {
+        toast.error(json.error?.message ?? "Upload failed");
+        return;
+      }
       onChange(json.data.url);
       toast.success("Cover image uploaded");
     } catch {
@@ -129,31 +175,40 @@ function CoverImagePicker({
 
   function applyUrl() {
     const trimmed = urlInput.trim();
-    if (!trimmed) { toast.error("Enter a URL"); return; }
-    if (!/^https?:\/\/.+/.test(trimmed)) { toast.error("Enter a valid URL"); return; }
+    if (!trimmed) {
+      toast.error("Enter a URL");
+      return;
+    }
+    if (!/^https?:\/\/.+/.test(trimmed)) {
+      toast.error("Enter a valid URL");
+      return;
+    }
     onChange(trimmed);
     toast.success("Cover image set");
   }
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 items-start">
-      {/* 128x96 preview */}
-      <div className="w-32 h-24 shrink-0 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center relative">
+      {/* 160x120 preview */}
+      <div className="w-40 h-30 shrink-0 rounded-xl bg-slate-50 border border-gray-200 overflow-hidden flex items-center justify-center relative" style={{ width: 160, height: 120 }}>
         {value ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={value} alt="Cover preview" className="w-full h-full object-cover" />
             <button
               type="button"
-              onClick={() => { onChange(""); setUrlInput(""); }}
-              className="absolute top-1 right-1 w-5 h-5 bg-white/90 rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 shadow transition-colors"
+              onClick={() => {
+                onChange("");
+                setUrlInput("");
+              }}
+              className="absolute top-1.5 right-1.5 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 shadow transition-colors"
             >
-              <X size={11} />
+              <X size={12} />
             </button>
           </>
         ) : (
           <div className="text-center">
-            <ImageIcon size={20} className="text-slate-200 mx-auto mb-1" />
+            <ImageIcon size={24} className="text-slate-200 mx-auto mb-1.5" />
             <p className="text-[10px] text-slate-300">No image</p>
           </div>
         )}
@@ -166,7 +221,9 @@ function CoverImagePicker({
             type="button"
             onClick={() => setTab("upload")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              tab === "upload" ? "bg-white text-amber-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              tab === "upload"
+                ? "bg-white text-amber-700 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             <Upload size={11} /> Upload
@@ -175,7 +232,9 @@ function CoverImagePicker({
             type="button"
             onClick={() => setTab("url")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              tab === "url" ? "bg-white text-amber-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              tab === "url"
+                ? "bg-white text-amber-700 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             <LinkIcon size={11} /> URL
@@ -186,15 +245,27 @@ function CoverImagePicker({
           <>
             <div
               onClick={() => !uploading && fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-200 rounded-xl px-4 py-3 text-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/30 transition-all"
+              className="border-2 border-dashed border-slate-200 rounded-xl px-4 py-6 text-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/30 transition-all"
             >
-              {uploading
-                ? <Loader2 size={16} className="text-amber-600 mx-auto animate-spin" />
-                : <p className="text-xs text-slate-400 hover:text-amber-600 transition-colors">Click to choose a file</p>
-              }
-              <p className="text-[10px] text-slate-300 mt-0.5">JPG, PNG, WebP  max 5MB</p>
+              {uploading ? (
+                <Loader2 size={20} className="text-amber-600 mx-auto animate-spin" />
+              ) : (
+                <>
+                  <Upload size={20} className="text-slate-300 mx-auto mb-2" />
+                  <p className="text-xs text-slate-400 hover:text-amber-600 transition-colors">
+                    Click to choose a file
+                  </p>
+                </>
+              )}
+              <p className="text-[10px] text-slate-300 mt-1">JPG, PNG, WebP — max 5MB</p>
             </div>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFile}
+              className="hidden"
+            />
           </>
         ) : (
           <div className="flex gap-2">
@@ -204,7 +275,7 @@ function CoverImagePicker({
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), applyUrl())}
               placeholder="https://example.com/image.jpg"
-              className="flex-1 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-sm text-gray-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/10 outline-none transition-all placeholder:text-slate-300 min-w-0"
+              className="flex-1 px-4 py-3 rounded-xl bg-white border border-gray-200 text-sm text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 outline-none transition-all placeholder:text-gray-300 shadow-sm min-w-0"
             />
             <button
               type="button"
@@ -242,8 +313,16 @@ function Toggle({
           onChange={(e) => onChange(e.target.checked)}
           className="sr-only"
         />
-        <div className={`w-10 h-6 rounded-full transition-colors ${checked ? "bg-amber-600" : "bg-slate-200"}`} />
-        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-5" : "translate-x-1"}`} />
+        <div
+          className={`w-10 h-6 rounded-full transition-colors ${
+            checked ? "bg-amber-600" : "bg-slate-200"
+          }`}
+        />
+        <div
+          className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+            checked ? "translate-x-5" : "translate-x-1"
+          }`}
+        />
       </div>
       <div>
         <p className="text-sm font-bold text-gray-900">{label}</p>
@@ -288,10 +367,13 @@ export default function NewRecipePage() {
 
   // ── Field helpers ────────────────────────────────────────────────────────────
 
-  const set = useCallback(<K extends keyof RecipeFormData>(field: K, value: RecipeFormData[K]) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
-  }, []);
+  const set = useCallback(
+    <K extends keyof RecipeFormData>(field: K, value: RecipeFormData[K]) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    },
+    []
+  );
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -306,15 +388,19 @@ export default function NewRecipePage() {
     [slugManuallyEdited]
   );
 
-  const handleSlugChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSlugManuallyEdited(true);
-    setSlugError(null);
-    set("slug", e.target.value);
-  }, [set]);
+  const handleSlugChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSlugManuallyEdited(true);
+      setSlugError(null);
+      set("slug", e.target.value);
+    },
+    [set]
+  );
 
   // ── Ingredients ──────────────────────────────────────────────────────────────
 
-  const addIngredient = () => setForm((p) => ({ ...p, ingredients: [...p.ingredients, ""] }));
+  const addIngredient = () =>
+    setForm((p) => ({ ...p, ingredients: [...p.ingredients, ""] }));
 
   const updateIngredient = (i: number, v: string) =>
     setForm((p) => {
@@ -324,7 +410,10 @@ export default function NewRecipePage() {
     });
 
   const removeIngredient = (i: number) =>
-    setForm((p) => ({ ...p, ingredients: p.ingredients.filter((_, idx) => idx !== i) }));
+    setForm((p) => ({
+      ...p,
+      ingredients: p.ingredients.filter((_, idx) => idx !== i),
+    }));
 
   // ── Per-step validation ──────────────────────────────────────────────────────
 
@@ -334,7 +423,9 @@ export default function NewRecipePage() {
     if (s === 0) {
       if (!form.title.trim()) errs.title = "Title is required";
       if (!form.slug.trim()) errs.slug = "Slug is required";
-      else if (!/^[a-z0-9-]+$/.test(form.slug)) errs.slug = "Slug may only contain lowercase letters, numbers, and hyphens";
+      else if (!/^[a-z0-9-]+$/.test(form.slug))
+        errs.slug =
+          "Slug may only contain lowercase letters, numbers, and hyphens";
       if (!form.category) errs.category = "Category is required";
       if (!form.difficulty) errs.difficulty = "Difficulty is required";
       if (!form.author.trim()) errs.author = "Author is required";
@@ -347,7 +438,8 @@ export default function NewRecipePage() {
 
     if (s === 3) {
       if (!form.video_url.trim()) errs.video_url = "Video URL is required";
-      else if (!/^https?:\/\/.+/.test(form.video_url)) errs.video_url = "Must be a valid URL";
+      else if (!/^https?:\/\/.+/.test(form.video_url))
+        errs.video_url = "Must be a valid URL";
     }
 
     setErrors(errs);
@@ -404,8 +496,12 @@ export default function NewRecipePage() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
+  const progressPct = Math.round(((step + 1) / STEPS.length) * 100);
+  const currentStep = STEPS[step];
+  const StepIcon = currentStep.Icon;
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6 w-full">
+    <div className="max-w-3xl mx-auto space-y-4 w-full">
       {/* Back link */}
       <Link
         href="/admin/recipes"
@@ -416,104 +512,149 @@ export default function NewRecipePage() {
 
       {/* Page title */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+        <h1
+          className="text-2xl font-bold text-gray-900"
+          style={{ fontFamily: "var(--font-playfair, serif)" }}
+        >
           New Recipe
         </h1>
-        <p className="text-xs text-gray-400 mt-1">Step {step + 1} of {STEPS.length} — {STEPS[step].label}</p>
+        <p className="text-xs text-gray-400 mt-1">
+          Step {step + 1} of {STEPS.length} — {currentStep.label}
+        </p>
       </div>
 
       {/* Step indicator */}
       <StepIndicator current={step} />
 
+      {/* Progress bar */}
+      <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-amber-600 rounded-full transition-all duration-500"
+          style={{ width: `${progressPct}%` }}
+        />
+      </div>
+
       {/* Step card */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 space-y-6">
+        {/* Step header */}
+        <div className="flex items-center gap-4 pb-2 border-b border-gray-50">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+            <StepIcon size={18} className="text-amber-700" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-gray-900">{currentStep.title}</h2>
+            <p className="text-xs text-slate-400 mt-0.5">{currentStep.subtitle}</p>
+          </div>
+        </div>
 
         {/* ── Step 1: Basics ─────────────────────────────────────────────── */}
         {step === 0 && (
           <div className="space-y-5">
-            <h2 className="text-sm font-bold text-gray-700">Basic Information</h2>
-
             {/* Title */}
             <div>
-              <label className={labelCls}>Title <span className="text-red-400">*</span></label>
+              <label className={labelCls}>
+                Title <span className="text-red-400">*</span>
+              </label>
               <input
                 type="text"
                 value={form.title}
                 onChange={handleTitleChange}
                 placeholder="e.g. Mango Smoothie Bowl"
-                className={errors.title ? inputCls.replace("border-slate-100", "border-red-300 bg-red-50") : inputCls}
+                className={errors.title ? inputErrCls : inputCls}
               />
               {errors.title && <p className={errorCls}>{errors.title}</p>}
             </div>
 
             {/* Slug */}
             <div>
-              <label className={labelCls}>Slug <span className="text-red-400">*</span></label>
+              <label className={labelCls}>
+                Slug <span className="text-red-400">*</span>
+              </label>
               <input
                 type="text"
                 value={form.slug}
                 onChange={handleSlugChange}
                 placeholder="auto-generated-from-title"
-                className={(errors.slug || slugError) ? inputCls.replace("border-slate-100", "border-red-300 bg-red-50") : inputCls}
+                className={errors.slug || slugError ? inputErrCls : inputCls}
               />
               {errors.slug && <p className={errorCls}>{errors.slug}</p>}
-              {!errors.slug && slugError && <p className={errorCls}>{slugError}</p>}
+              {!errors.slug && slugError && (
+                <p className={errorCls}>{slugError}</p>
+              )}
               {!errors.slug && !slugError && (
-                <p className="mt-1 text-[10px] text-slate-400">Auto-generated from title. Edit to customise.</p>
+                <p className="mt-1 text-[10px] text-slate-400">
+                  Auto-generated from title. Edit to customise.
+                </p>
               )}
             </div>
 
             {/* Category + Difficulty */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Category <span className="text-red-400">*</span></label>
+                <label className={labelCls}>
+                  Category <span className="text-red-400">*</span>
+                </label>
                 <select
                   value={form.category}
-                  onChange={(e) => set("category", e.target.value as RecipeFormData["category"])}
-                  className={errors.category ? inputCls.replace("border-slate-100", "border-red-300 bg-red-50") : inputCls}
+                  onChange={(e) =>
+                    set("category", e.target.value as RecipeFormData["category"])
+                  }
+                  className={errors.category ? inputErrCls : inputCls}
                 >
                   <option value="cooking-demo">Cooking Demo</option>
                   <option value="beverage">Beverage</option>
                   <option value="how-to">How-To</option>
                   <option value="health-tip">Health Tip</option>
                 </select>
-                {errors.category && <p className={errorCls}>{errors.category}</p>}
+                {errors.category && (
+                  <p className={errorCls}>{errors.category}</p>
+                )}
               </div>
               <div>
-                <label className={labelCls}>Difficulty <span className="text-red-400">*</span></label>
+                <label className={labelCls}>
+                  Difficulty <span className="text-red-400">*</span>
+                </label>
                 <select
                   value={form.difficulty}
-                  onChange={(e) => set("difficulty", e.target.value as RecipeFormData["difficulty"])}
-                  className={errors.difficulty ? inputCls.replace("border-slate-100", "border-red-300 bg-red-50") : inputCls}
+                  onChange={(e) =>
+                    set("difficulty", e.target.value as RecipeFormData["difficulty"])
+                  }
+                  className={errors.difficulty ? inputErrCls : inputCls}
                 >
                   <option value="Easy">Easy</option>
                   <option value="Medium">Medium</option>
                   <option value="Advanced">Advanced</option>
                 </select>
-                {errors.difficulty && <p className={errorCls}>{errors.difficulty}</p>}
+                {errors.difficulty && (
+                  <p className={errorCls}>{errors.difficulty}</p>
+                )}
               </div>
             </div>
 
             {/* Author + Date */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Author <span className="text-red-400">*</span></label>
+                <label className={labelCls}>
+                  Author <span className="text-red-400">*</span>
+                </label>
                 <input
                   type="text"
                   value={form.author}
                   onChange={(e) => set("author", e.target.value)}
                   placeholder="e.g. Ayola Kitchen"
-                  className={errors.author ? inputCls.replace("border-slate-100", "border-red-300 bg-red-50") : inputCls}
+                  className={errors.author ? inputErrCls : inputCls}
                 />
                 {errors.author && <p className={errorCls}>{errors.author}</p>}
               </div>
               <div>
-                <label className={labelCls}>Date <span className="text-red-400">*</span></label>
+                <label className={labelCls}>
+                  Date <span className="text-red-400">*</span>
+                </label>
                 <input
                   type="date"
                   value={form.date}
                   onChange={(e) => set("date", e.target.value)}
-                  className={errors.date ? inputCls.replace("border-slate-100", "border-red-300 bg-red-50") : inputCls}
+                  className={errors.date ? inputErrCls : inputCls}
                 />
                 {errors.date && <p className={errorCls}>{errors.date}</p>}
               </div>
@@ -524,8 +665,6 @@ export default function NewRecipePage() {
         {/* ── Step 2: Cover Image & Excerpt ──────────────────────────────── */}
         {step === 1 && (
           <div className="space-y-5">
-            <h2 className="text-sm font-bold text-gray-700">Cover Image &amp; Excerpt</h2>
-
             {/* Cover image */}
             <div>
               <label className={labelCls}>Cover Image</label>
@@ -544,7 +683,9 @@ export default function NewRecipePage() {
                 placeholder="Short description shown in recipe cards…"
                 minHeight="min-h-[120px]"
               />
-              <p className="mt-1 text-[10px] text-slate-400">Optional but recommended for recipe cards.</p>
+              <p className="mt-1 text-[10px] text-slate-400">
+                Optional but recommended for recipe cards.
+              </p>
             </div>
           </div>
         )}
@@ -552,9 +693,10 @@ export default function NewRecipePage() {
         {/* ── Step 3: Content ────────────────────────────────────────────── */}
         {step === 2 && (
           <div className="space-y-5">
-            <h2 className="text-sm font-bold text-gray-700">Recipe Content</h2>
             <div>
-              <label className={labelCls}>Content <span className="text-red-400">*</span></label>
+              <label className={labelCls}>
+                Content <span className="text-red-400">*</span>
+              </label>
               <RichTextEditor
                 value={form.content}
                 onChange={(html) => set("content", html)}
@@ -570,15 +712,18 @@ export default function NewRecipePage() {
         {/* ── Step 4: Video & Ingredients ────────────────────────────────── */}
         {step === 3 && (
           <div className="space-y-5">
-            <h2 className="text-sm font-bold text-gray-700">Video &amp; Ingredients</h2>
-
             {/* Video platform + URL */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Platform</label>
                 <select
                   value={form.video_platform}
-                  onChange={(e) => set("video_platform", e.target.value as RecipeFormData["video_platform"])}
+                  onChange={(e) =>
+                    set(
+                      "video_platform",
+                      e.target.value as RecipeFormData["video_platform"]
+                    )
+                  }
                   className={inputCls}
                 >
                   <option value="youtube">YouTube</option>
@@ -588,21 +733,28 @@ export default function NewRecipePage() {
                 </select>
               </div>
               <div>
-                <label className={labelCls}>Video URL <span className="text-red-400">*</span></label>
+                <label className={labelCls}>
+                  Video URL <span className="text-red-400">*</span>
+                </label>
                 <input
                   type="text"
                   value={form.video_url}
                   onChange={(e) => set("video_url", e.target.value)}
                   placeholder="https://youtube.com/watch?v=…"
-                  className={errors.video_url ? inputCls.replace("border-slate-100", "border-red-300 bg-red-50") : inputCls}
+                  className={errors.video_url ? inputErrCls : inputCls}
                 />
-                {errors.video_url && <p className={errorCls}>{errors.video_url}</p>}
+                {errors.video_url && (
+                  <p className={errorCls}>{errors.video_url}</p>
+                )}
               </div>
             </div>
 
             {/* Video thumbnail */}
             <div>
-              <label className={labelCls}>Video Thumbnail URL <span className="text-slate-300">(optional)</span></label>
+              <label className={labelCls}>
+                Video Thumbnail URL{" "}
+                <span className="text-slate-300">(optional)</span>
+              </label>
               <input
                 type="text"
                 value={form.video_thumbnail_url}
@@ -613,9 +765,11 @@ export default function NewRecipePage() {
             </div>
 
             {/* Prep time + Servings */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Prep Time <span className="text-slate-300">(optional)</span></label>
+                <label className={labelCls}>
+                  Prep Time <span className="text-slate-300">(optional)</span>
+                </label>
                 <input
                   type="text"
                   value={form.prep_time}
@@ -625,7 +779,9 @@ export default function NewRecipePage() {
                 />
               </div>
               <div>
-                <label className={labelCls}>Servings <span className="text-slate-300">(optional)</span></label>
+                <label className={labelCls}>
+                  Servings <span className="text-slate-300">(optional)</span>
+                </label>
                 <input
                   type="text"
                   value={form.servings}
@@ -649,11 +805,21 @@ export default function NewRecipePage() {
                 </button>
               </div>
               {form.ingredients.length === 0 && (
-                <p className="text-sm text-slate-300 italic">No ingredients added yet.</p>
+                <p className="text-sm text-slate-300 italic">
+                  No ingredients added yet.
+                </p>
               )}
               <div className="space-y-2">
                 {form.ingredients.map((ing, i) => (
                   <div key={i} className="flex items-center gap-2">
+                    {/* Drag handle (decorative) */}
+                    <div className="text-slate-300 text-xs leading-none select-none shrink-0 flex flex-col gap-0.5">
+                      <span className="block">⋮⋮</span>
+                    </div>
+                    {/* Number badge */}
+                    <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold flex items-center justify-center shrink-0">
+                      {i + 1}
+                    </div>
                     <input
                       type="text"
                       value={ing}
@@ -676,7 +842,9 @@ export default function NewRecipePage() {
 
             {/* Tags */}
             <div>
-              <label className={labelCls}>Tags <span className="text-slate-300">(comma-separated)</span></label>
+              <label className={labelCls}>
+                Tags <span className="text-slate-300">(comma-separated)</span>
+              </label>
               <input
                 type="text"
                 value={form.tags}
@@ -684,102 +852,222 @@ export default function NewRecipePage() {
                 placeholder="healthy, quick, vegan"
                 className={inputCls}
               />
-              <p className="mt-1 text-[10px] text-slate-400">Separate tags with commas.</p>
+              <p className="mt-1 text-[10px] text-slate-400">
+                Separate tags with commas.
+              </p>
             </div>
           </div>
         )}
 
         {/* ── Step 5: Review & Publish ───────────────────────────────────── */}
         {step === 4 && (
-          <div className="space-y-5">
-            <h2 className="text-sm font-bold text-gray-700">Review &amp; Publish</h2>
-            <p className="text-xs text-slate-400">Review your recipe before publishing. Go back to any step to make changes.</p>
+          <div className="space-y-4">
+            <p className="text-xs text-slate-400">
+              Review your recipe before publishing. Click &ldquo;Go back to edit&rdquo; on any
+              section to make changes.
+            </p>
 
-            {/* Summary cards */}
-            <div className="space-y-3">
-              {/* Basics */}
-              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 space-y-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Basics</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                  <div><span className="text-slate-400">Title: </span><span className="font-semibold text-gray-800">{form.title || <em className="text-slate-300">—</em>}</span></div>
-                  <div><span className="text-slate-400">Slug: </span><span className="font-mono text-gray-700">{form.slug || <em className="text-slate-300">—</em>}</span></div>
-                  <div><span className="text-slate-400">Category: </span><span className="font-semibold text-gray-800">{form.category}</span></div>
-                  <div><span className="text-slate-400">Difficulty: </span><span className="font-semibold text-gray-800">{form.difficulty}</span></div>
-                  <div><span className="text-slate-400">Author: </span><span className="font-semibold text-gray-800">{form.author || <em className="text-slate-300">—</em>}</span></div>
-                  <div><span className="text-slate-400">Date: </span><span className="font-semibold text-gray-800">{form.date || <em className="text-slate-300">—</em>}</span></div>
+            {/* Basics */}
+            <div className="rounded-xl border border-gray-100 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-l-4 border-amber-400">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  Basics
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setStep(0)}
+                  className="text-[10px] font-semibold text-amber-700 hover:text-amber-800 transition-colors"
+                >
+                  Go back to edit
+                </button>
+              </div>
+              <div className="p-4 grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                <div>
+                  <span className="text-slate-400">Title</span>
+                  <p className="font-semibold text-gray-800 mt-0.5">
+                    {form.title || <em className="text-slate-300">—</em>}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Slug</span>
+                  <p className="font-mono text-gray-700 mt-0.5">
+                    {form.slug || <em className="text-slate-300">—</em>}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Category</span>
+                  <p className="font-semibold text-gray-800 mt-0.5">
+                    {form.category}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Difficulty</span>
+                  <p className="font-semibold text-gray-800 mt-0.5">
+                    {form.difficulty}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Author</span>
+                  <p className="font-semibold text-gray-800 mt-0.5">
+                    {form.author || <em className="text-slate-300">—</em>}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Date</span>
+                  <p className="font-semibold text-gray-800 mt-0.5">
+                    {form.date || <em className="text-slate-300">—</em>}
+                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* Cover & Excerpt */}
-              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 space-y-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cover &amp; Excerpt</p>
-                <div className="flex items-start gap-3">
-                  {form.cover_image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={form.cover_image_url} alt="Cover" className="w-16 h-12 rounded-lg object-cover border border-slate-200 shrink-0" />
-                  ) : (
-                    <div className="w-16 h-12 rounded-lg bg-slate-200 flex items-center justify-center shrink-0">
-                      <ImageIcon size={14} className="text-slate-400" />
-                    </div>
-                  )}
-                  <div className="text-xs text-slate-500 line-clamp-3">
-                    {stripHtml(form.excerpt) || <em className="text-slate-300">No excerpt</em>}
+            {/* Cover & Excerpt */}
+            <div className="rounded-xl border border-gray-100 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-l-4 border-amber-400">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  Cover &amp; Excerpt
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="text-[10px] font-semibold text-amber-700 hover:text-amber-800 transition-colors"
+                >
+                  Go back to edit
+                </button>
+              </div>
+              <div className="p-4 flex items-start gap-3">
+                {form.cover_image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={form.cover_image_url}
+                    alt="Cover"
+                    className="w-16 h-12 rounded-lg object-cover border border-slate-200 shrink-0"
+                  />
+                ) : (
+                  <div className="w-16 h-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                    <ImageIcon size={14} className="text-slate-400" />
                   </div>
+                )}
+                <div className="text-xs text-slate-500 line-clamp-3">
+                  {stripHtml(form.excerpt) || (
+                    <em className="text-slate-300">No excerpt</em>
+                  )}
                 </div>
               </div>
+            </div>
 
-              {/* Content */}
-              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Content</p>
+            {/* Content */}
+            <div className="rounded-xl border border-gray-100 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-l-4 border-amber-400">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  Content
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="text-[10px] font-semibold text-amber-700 hover:text-amber-800 transition-colors"
+                >
+                  Go back to edit
+                </button>
+              </div>
+              <div className="p-4">
                 <p className="text-xs text-slate-500 line-clamp-2">
-                  {stripHtml(form.content) || <em className="text-slate-300">No content</em>}
+                  {stripHtml(form.content) || (
+                    <em className="text-slate-300">No content</em>
+                  )}
                 </p>
               </div>
+            </div>
 
-              {/* Video */}
-              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 space-y-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Video</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                  <div><span className="text-slate-400">Platform: </span><span className="font-semibold text-gray-800 capitalize">{form.video_platform}</span></div>
-                  <div className="col-span-2"><span className="text-slate-400">URL: </span><span className="font-mono text-gray-700 break-all">{form.video_url || <em className="text-slate-300">—</em>}</span></div>
-                  {form.prep_time && <div><span className="text-slate-400">Prep: </span><span className="font-semibold text-gray-800">{form.prep_time}</span></div>}
-                  {form.servings && <div><span className="text-slate-400">Servings: </span><span className="font-semibold text-gray-800">{form.servings}</span></div>}
-                </div>
+            {/* Video */}
+            <div className="rounded-xl border border-gray-100 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-l-4 border-amber-400">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  Video &amp; Ingredients
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setStep(3)}
+                  className="text-[10px] font-semibold text-amber-700 hover:text-amber-800 transition-colors"
+                >
+                  Go back to edit
+                </button>
               </div>
-
-              {/* Ingredients */}
+              <div className="p-4 grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                <div>
+                  <span className="text-slate-400">Platform</span>
+                  <p className="font-semibold text-gray-800 capitalize mt-0.5">
+                    {form.video_platform}
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-slate-400">URL</span>
+                  <p className="font-mono text-gray-700 break-all mt-0.5">
+                    {form.video_url || <em className="text-slate-300">—</em>}
+                  </p>
+                </div>
+                {form.prep_time && (
+                  <div>
+                    <span className="text-slate-400">Prep</span>
+                    <p className="font-semibold text-gray-800 mt-0.5">
+                      {form.prep_time}
+                    </p>
+                  </div>
+                )}
+                {form.servings && (
+                  <div>
+                    <span className="text-slate-400">Servings</span>
+                    <p className="font-semibold text-gray-800 mt-0.5">
+                      {form.servings}
+                    </p>
+                  </div>
+                )}
+              </div>
               {form.ingredients.length > 0 && (
-                <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 space-y-2">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ingredients ({form.ingredients.length})</p>
+                <div className="px-4 pb-4">
+                  <p className="text-[10px] font-semibold text-slate-400 mb-1.5">
+                    Ingredients ({form.ingredients.length})
+                  </p>
                   <ul className="text-xs text-gray-700 space-y-0.5 list-disc list-inside">
                     {form.ingredients.slice(0, 5).map((ing, i) => (
                       <li key={i}>{ing}</li>
                     ))}
                     {form.ingredients.length > 5 && (
-                      <li className="text-slate-400">+{form.ingredients.length - 5} more…</li>
+                      <li className="text-slate-400">
+                        +{form.ingredients.length - 5} more…
+                      </li>
                     )}
                   </ul>
                 </div>
               )}
-
-              {/* Tags */}
               {form.tags && (
-                <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 space-y-2">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tags</p>
+                <div className="px-4 pb-4">
+                  <p className="text-[10px] font-semibold text-slate-400 mb-1.5">
+                    Tags
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {form.tags.split(",").map((t) => t.trim()).filter(Boolean).map((tag) => (
-                      <span key={tag} className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold border border-amber-100">
-                        {tag}
-                      </span>
-                    ))}
+                    {form.tags
+                      .split(",")
+                      .map((t) => t.trim())
+                      .filter(Boolean)
+                      .map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold border border-amber-100"
+                        >
+                          {tag}
+                        </span>
+                      ))}
                   </div>
                 </div>
               )}
             </div>
 
             {/* Visibility toggles */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visibility</p>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Visibility
+              </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Toggle
                   checked={form.featured}
@@ -797,17 +1085,17 @@ export default function NewRecipePage() {
             </div>
           </div>
         )}
-
-      </div>{/* end step card */}
+      </div>
+      {/* end step card */}
 
       {/* Navigation buttons */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4 flex items-center justify-between">
         <div>
           {step > 0 && (
             <button
               type="button"
               onClick={handleBack}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors"
             >
               <ChevronLeft size={15} /> Back
             </button>
@@ -818,7 +1106,7 @@ export default function NewRecipePage() {
             <button
               type="button"
               onClick={handleNext}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 text-white text-sm font-bold hover:bg-amber-800 transition-colors shadow-sm shadow-amber-700/20"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 text-white text-sm font-semibold hover:bg-amber-800 transition-colors shadow-sm shadow-amber-700/20"
             >
               Next <ChevronRight size={15} />
             </button>
@@ -827,12 +1115,16 @@ export default function NewRecipePage() {
               type="button"
               onClick={handleSubmit}
               disabled={submitting}
-              className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-amber-700 text-white text-sm font-bold hover:bg-amber-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-700/20"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 text-white text-sm font-semibold hover:bg-amber-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-amber-700/20"
             >
               {submitting ? (
-                <><Loader2 size={15} className="animate-spin" /> Publishing…</>
+                <>
+                  <Loader2 size={15} className="animate-spin" /> Publishing…
+                </>
               ) : (
-                <><Check size={15} /> Publish Recipe</>
+                <>
+                  <Check size={15} /> Publish Recipe
+                </>
               )}
             </button>
           )}
