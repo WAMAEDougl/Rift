@@ -51,19 +51,34 @@ interface PaginationMeta {
   total_pages: number
 }
 
-function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+function ToggleSwitch({
+  checked,
+  onChange,
+  labelOn,
+  labelOff,
+  colorOn = "bg-green-500",
+}: {
+  checked: boolean
+  onChange: () => void
+  labelOn: string
+  labelOff: string
+  colorOn?: string
+}) {
   return (
     <button
       onClick={onChange}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-        checked ? "bg-amber-600" : "bg-gray-200"
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+        checked
+          ? `${colorOn} text-white border-transparent`
+          : "bg-gray-50 text-gray-400 border-gray-200 hover:border-gray-300"
       }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-          checked ? "translate-x-6" : "translate-x-1"
+        className={`w-2 h-2 rounded-full shrink-0 ${
+          checked ? "bg-white/80" : "bg-gray-300"
         }`}
       />
+      {checked ? labelOn : labelOff}
     </button>
   )
 }
@@ -320,6 +335,9 @@ export default function ProductsPage() {
                           <ToggleSwitch
                             checked={product.in_stock}
                             onChange={() => handleToggle(product, "in_stock")}
+                            labelOn="In Stock"
+                            labelOff="Out of Stock"
+                            colorOn="bg-green-500"
                           />
                         </div>
                       </td>
@@ -328,6 +346,9 @@ export default function ProductsPage() {
                           <ToggleSwitch
                             checked={product.is_active}
                             onChange={() => handleToggle(product, "is_active")}
+                            labelOn="Active"
+                            labelOff="Inactive"
+                            colorOn="bg-amber-600"
                           />
                         </div>
                       </td>
