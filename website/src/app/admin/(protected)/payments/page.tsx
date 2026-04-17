@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Download, Search, Smartphone, Banknote, CreditCard, RotateCcw, CreditCard as CardIcon } from "lucide-react"
+import { ChevronLeft, ChevronRight, Download, Search, Smartphone, CreditCard, RotateCcw, CreditCard as CardIcon } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatKES, formatRelativeTime } from "@/lib/admin/formatters"
 import { toast } from "sonner"
@@ -41,13 +41,6 @@ function MethodBadge({ method }: { method: string }) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
         <Smartphone size={12} /> M-Pesa
-      </span>
-    )
-  }
-  if (method === "cash_on_delivery") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium border border-gray-200">
-        <Banknote size={12} /> Cash
       </span>
     )
   }
@@ -137,7 +130,7 @@ export default function PaymentsPage() {
           <td>${p.customer_name}</td>
           <td>${p.customer_phone}</td>
           <td class="amount">KES ${Number(p.total).toLocaleString()}</td>
-          <td>${p.payment_method === "cash_on_delivery" ? "Cash on Delivery" : "M-Pesa"}</td>
+          <td>${"M-Pesa"}</td>
           <td><span class="status status-${p.payment_status}">${p.payment_status}</span></td>
           <td>${p.mpesa_receipt_number || "-"}</td>
           <td>${new Date(p.created_at).toLocaleDateString("en-KE")}</td>
@@ -257,7 +250,6 @@ export default function PaymentsPage() {
         >
           <option value="">All Methods</option>
           <option value="mpesa">M-Pesa</option>
-          <option value="cash_on_delivery">Cash</option>
         </select>
         <select
           value={status}

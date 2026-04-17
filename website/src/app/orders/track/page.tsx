@@ -160,7 +160,7 @@ export default function TrackOrderPage() {
                         <div className="text-right">
                           <p className="font-bold text-primary">KES {order.total.toLocaleString()}</p>
                           <p className="text-xs text-muted-foreground/60 mt-0.5">
-                            {order.payment_status === "completed" ? "Paid" : order.payment_method === "cash_on_delivery" ? "COD" : "Pending"}
+                            {order.payment_status === "completed" ? "Paid" : "Pending"}
                           </p>
                         </div>
                       </div>

@@ -25,7 +25,7 @@ export const createOrderSchema = z.object({
   delivery_city: z.string().min(2).max(50).default("Nairobi"),
   delivery_type: z.enum(["delivery", "pickup", "shipping"]).default("delivery"),
   order_notes: z.string().max(500).optional().nullable(),
-  payment_method: z.enum(["mpesa", "cash_on_delivery"]).default("cash_on_delivery"),
+  payment_method: z.literal("mpesa").default("mpesa"),
   items: z
     .array(
       z.object({

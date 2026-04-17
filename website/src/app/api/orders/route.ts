@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         delivery_fee: deliveryFee,
         total,
         payment_method: data.payment_method,
-        payment_status: data.payment_method === "cash_on_delivery" ? "pending" : "processing",
+        payment_status: "processing",
         status: "pending",
       })
       .select("id, order_number")
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
         delivery_fee: deliveryFee,
         total,
         payment_method: data.payment_method,
-        payment_status: data.payment_method === "cash_on_delivery" ? "pending" : "processing",
+        payment_status: "processing",
       },
       items: validation.validatedItems,
     });

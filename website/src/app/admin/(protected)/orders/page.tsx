@@ -313,6 +313,72 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6 w-full">
+{/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h1
+            className="text-3xl font-bold text-gray-900"
+            style={{ fontFamily: "var(--font-playfair, serif)" }}
+          >
+            Orders
+          </h1>
+          <p className="text-xs text-gray-400 mt-1">
+            {pagination?.total.toLocaleString()} total &middot; Sales history
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={downloading || orders.length === 0}
+            className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+          >
+            <FileDown size={16} />
+            {downloading ? "Generating..." : "Export PDF"}
+          </button>
+        </div>
+      </div>
+
+      {/* Summary stat cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
+              <TrendingUp size={16} className="text-green-700" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Total Revenue</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {formatKES(stats.totalRevenue)}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Sales summary (current page)</p>
+        </div>
+
+        <div className="bg-amber-50 rounded-2xl border border-amber-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+              <Clock size={16} className="text-amber-700" />
+            </div>
+            <p className="text-xs text-amber-700 font-medium uppercase tracking-wide">Needs Attention</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {stats.pendingCount} Pending
+          </p>
+          <p className="text-xs text-amber-600 mt-1">Orders awaiting fulfillment</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
+              <ShoppingBag size={16} className="text-blue-700" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Processing</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            Healthy
+          </p>
+          <p className="text-xs text-gray-400 mt-1">System status: Online</p>
+        </div>
+      </div>
       {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
         <input
@@ -518,48 +584,6 @@ export default function OrdersPage() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Summary stat cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
-              <TrendingUp size={16} className="text-green-700" />
-            </div>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Total Revenue</p>
-          </div>
-          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-            {formatKES(stats.totalRevenue)}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">Sales summary (current page)</p>
-        </div>
-
-        <div className="bg-amber-50 rounded-2xl border border-amber-100 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
-              <Clock size={16} className="text-amber-700" />
-            </div>
-            <p className="text-xs text-amber-700 font-medium uppercase tracking-wide">Needs Attention</p>
-          </div>
-          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-            {stats.pendingCount} Pending
-          </p>
-          <p className="text-xs text-amber-600 mt-1">Orders awaiting fulfillment</p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-              <ShoppingBag size={16} className="text-blue-700" />
-            </div>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Processing</p>
-          </div>
-          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-            Healthy
-          </p>
-          <p className="text-xs text-gray-400 mt-1">System status: Online</p>
-        </div>
       </div>
 
       {/* Bulk action bar */}

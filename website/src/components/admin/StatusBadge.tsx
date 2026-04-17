@@ -4,27 +4,27 @@ interface StatusBadgeProps {
 }
 
 const ORDER_COLORS: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700",
-  confirmed: "bg-blue-100 text-blue-700",
-  preparing: "bg-orange-100 text-orange-700",
-  ready: "bg-purple-100 text-purple-700",
-  dispatched: "bg-indigo-100 text-indigo-700",
-  delivered: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
+  pending: "bg-amber-100 text-amber-800",
+  confirmed: "bg-amber-50 text-amber-700",
+  preparing: "bg-orange-100 text-orange-800",
+  ready: "bg-orange-50 text-orange-700",
+  dispatched: "bg-amber-200 text-amber-900",
+  delivered: "bg-green-100 text-green-800",
+  cancelled: "bg-stone-100 text-stone-600",
 };
 
 const PAYMENT_COLORS: Record<string, string> = {
-  pending: "bg-slate-100 text-slate-600",
-  processing: "bg-blue-100 text-blue-700",
-  completed: "bg-green-100 text-green-700",
-  failed: "bg-red-100 text-red-700",
-  refunded: "bg-purple-100 text-purple-700",
+  pending: "bg-amber-100 text-amber-800",
+  processing: "bg-orange-100 text-orange-800",
+  completed: "bg-green-100 text-green-800",
+  failed: "bg-red-100 text-red-800",
+  refunded: "bg-stone-100 text-stone-600",
 };
 
 const DELIVERY_COLORS: Record<string, string> = {
-  delivery: "bg-blue-100 text-blue-700",
-  pickup: "bg-green-100 text-green-700",
-  shipping: "bg-indigo-100 text-indigo-700",
+  delivery: "bg-orange-100 text-orange-800",
+  pickup: "bg-green-100 text-green-800",
+  shipping: "bg-amber-100 text-amber-800",
 };
 
 export default function StatusBadge({ status, type = "order" }: StatusBadgeProps) {

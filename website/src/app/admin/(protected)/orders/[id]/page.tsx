@@ -253,7 +253,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-400">Method</span>
                 <span className="text-sm font-medium text-gray-700 capitalize">
-                  {order.payment_method === "cash_on_delivery" ? "Cash on Delivery" : "M-Pesa"}
+                  {"M-Pesa"}
                 </span>
               </div>
               <div className="flex items-center justify-between">

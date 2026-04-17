@@ -61,7 +61,7 @@ describe("POST /api/orders — new_order notification side effect", () => {
         delivery_address: "123 Main St",
         delivery_city: "Nairobi",
         delivery_type: "delivery",
-        payment_method: "cash_on_delivery",
+        payment_method: "mpesa",
         items: [{ product_id: "prod-1", quantity: 2 }],
       },
     });
@@ -115,7 +115,7 @@ describe("POST /api/orders — new_order notification side effect", () => {
         delivery_address: "123 Main St",
         delivery_city: "Nairobi",
         delivery_type: "delivery",
-        payment_method: "cash_on_delivery",
+        payment_method: "mpesa",
         items: [{ product_id: "prod-1", quantity: 2 }],
       }),
     });
@@ -142,7 +142,7 @@ describe("POST /api/orders — new_order notification side effect", () => {
         delivery_address: "123 Main St",
         delivery_city: "Nairobi",
         delivery_type: "delivery",
-        payment_method: "cash_on_delivery",
+        payment_method: "mpesa",
         items: [{ product_id: "prod-1", quantity: 1 }],
       },
     });
@@ -195,7 +195,7 @@ describe("POST /api/orders — new_order notification side effect", () => {
         delivery_address: "123 Main St",
         delivery_city: "Nairobi",
         delivery_type: "delivery",
-        payment_method: "cash_on_delivery",
+        payment_method: "mpesa",
         items: [{ product_id: "prod-1", quantity: 1 }],
       }),
     });

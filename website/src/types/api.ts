@@ -47,7 +47,7 @@ export interface CreateOrderRequest {
   delivery_city: string;
   delivery_type: "delivery" | "pickup" | "shipping";
   order_notes?: string;
-  payment_method: "mpesa" | "cash_on_delivery";
+  payment_method: "mpesa";
   items: OrderItemRequest[];
 }
 
