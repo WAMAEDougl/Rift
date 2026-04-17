@@ -414,16 +414,12 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Delivery</span>
-                  <span className={form.delivery_type === "pickup" ? "text-green-600 dark:text-green-400 font-medium" : "text-amber-600 dark:text-amber-400 font-medium"}>
-                    {form.delivery_type === "pickup" ? "FREE (Pickup)" : "Confirmed via WhatsApp"}
-                  </span>
+                  <span className="text-amber-600 dark:text-amber-400 font-medium">Confirmed via WhatsApp</span>
                 </div>
-                {form.delivery_type !== "pickup" && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400">Delivery fee will be agreed with you over WhatsApp</p>
-                )}
+                <p className="text-xs text-amber-600 dark:text-amber-400">Delivery fee will be agreed with you over WhatsApp</p>
                 <div className="flex justify-between text-base font-bold pt-2 border-t border-border">
                   <span className="text-foreground">Subtotal</span>
-                  <span className="text-primary">{formatPrice(grandTotal)}</span>
+                  <span className="text-primary">{formatPrice(totalPrice)}</span>
                 </div>
               </div>
               <Link href="/products" className="block text-center text-sm text-primary font-medium mt-4 hover:underline">+ Add more items</Link>
