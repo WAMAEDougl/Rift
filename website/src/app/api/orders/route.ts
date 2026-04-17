@@ -1,6 +1,6 @@
 import { createOrderSchema } from "@/lib/utils/validation";
 import { getServiceClient, apiError, apiSuccess, checkRateLimit } from "@/lib/utils/api";
-import { generateOrderNumber, calculateDeliveryFee, validateOrderItems } from "@/lib/order-utils";
+import { generateOrderNumber, validateOrderItems } from "@/lib/order-utils";
 import { createNotification } from "@/lib/admin/notifications";
 import { sendMessage, formatOrderConfirmationMessage, formatDeliveryInquiryMessage } from "@/lib/wasender";
 
@@ -29,8 +29,8 @@ export async function POST(request: Request) {
       return apiError(validation.error || "Invalid order items");
     }
 
-    const deliveryFee = calculateDeliveryFee(validation.subtotal, data.delivery_type, data.delivery_city);
-    const total = validation.subtotal + deliveryFee;
+    const deliveryFee = 0; // Always 0 at creation — admin negotiates and sets via STK Push
+    const total = validation.subtotal; // Total = subtotal only until delivery fee is agreed
     const orderNumber = await generateOrderNumber();
 
     const supabase = getServiceClient();

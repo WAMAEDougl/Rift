@@ -14,7 +14,6 @@ import { CancelOrderButton } from "./CancelOrderButton"
 import { WhatsAppPanel } from "./WhatsAppPanel"
 import { AdminSTKPushPanel } from "./AdminSTKPushPanel"
 import { AuditLogPanel } from "./AuditLogPanel"
-import { getMessageHistory } from "@/lib/wasender"
 
 const STEPS = [
   { key: "pending",    label: "Pending",    icon: Clock },
@@ -55,20 +54,31 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const admin = getAdminClient()
 
-  const [{ data: order }, { data: profile }, { data: auditLogs }] = await Promise.all([
+  const [{ data: order }, { data: profile }, { data: auditLogs }, { data: inboundMessages }] = await Promise.all([
     admin.from("orders")
       .select("id, order_number, status, payment_status, customer_name, customer_phone, customer_email, customer_id, delivery_address, delivery_city, delivery_type, order_notes, subtotal, delivery_fee, total, payment_method, mpesa_receipt_number, created_at, order_items(id, product_id, product_name, product_price, quantity, line_total)")
       .eq("id", id).single(),
     admin.from("profiles").select("role").eq("id", user!.id).single(),
     admin.from("order_audit_logs").select("*").eq("order_id", id).order("created_at", { ascending: false }),
+    admin.from("notifications")
+      .select("id, message, created_at")
+      .eq("order_id", id)
+      .eq("type", "delivery_negotiation_message")
+      .order("created_at", { ascending: true }),
   ])
 
   if (!order) notFound()
 
-  // Fetch message history sequentially — needs phone from order.
-  // A failure here must NOT prevent the rest of the page from rendering;
-  // WhatsAppPanel handles the error gracefully via initialError.
-  const whatsappResult = await getMessageHistory(order.customer_phone)
+  // Build inbound message list from delivery_negotiation_message notifications
+  // (WaSenderAPI has no per-contact history endpoint, so we use stored notifications)
+  const whatsappInbound: import("@/lib/wasender").WaSenderMessage[] = (inboundMessages ?? []).map((n) => ({
+    id: n.id,
+    from: order.customer_phone,
+    to: "admin",
+    body: n.message,
+    timestamp: n.created_at,
+    direction: "received" as const,
+  }))
 
   const role = (profile?.role ?? "admin") as "admin" | "kitchen"
   const isCancelled = order.status === "cancelled"
@@ -321,8 +331,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
           {/* WhatsApp Messages */}
           <WhatsAppPanel
-            initialMessages={whatsappResult.success ? whatsappResult.data : []}
-            initialError={whatsappResult.success ? null : whatsappResult.error}
+            initialMessages={whatsappInbound}
+            initialError={null}
             phone={order.customer_phone}
             orderId={order.id}
           />
