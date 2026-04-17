@@ -118,15 +118,27 @@ export function formatPaymentConfirmationMessage(order: {
   order_number: string;
   mpesa_receipt_number: string;
   total: number;
+  subtotal?: number;
+  customer_name?: string;
+  items?: Array<{ product_name: string; quantity: number; line_total: number }>;
 }): string {
+  const itemLines = order.items && order.items.length > 0
+    ? order.items.map((i) => `  • ${i.product_name} x${i.quantity} — KES ${i.line_total.toLocaleString()}`).join("\n")
+    : "";
+
   return [
-    `✅ *Payment Confirmed — #${order.order_number}*`,
+    `✅ *Payment Confirmed — Order #${order.order_number}*`,
     "",
+    order.customer_name ? `Hi ${order.customer_name}! Your payment has been received.` : "Your payment has been received.",
+    "",
+    ...(itemLines ? ["*Order Summary:*", itemLines, ""] : []),
+    ...(order.subtotal !== undefined && order.subtotal !== order.total ? [`Subtotal: KES ${order.subtotal.toLocaleString()}`] : []),
+    `Total Paid: *KES ${order.total.toLocaleString()}*`,
     `M-Pesa Receipt: *${order.mpesa_receipt_number}*`,
-    `Amount Paid: KES ${order.total}`,
     "",
-    "Your order is now being processed and will be prepared for delivery.",
-    "Thank you for your payment! 🙏",
+    "Your order is now confirmed and being prepared. We'll update you when it's on the way.",
+    "",
+    "Thank you for shopping with Ayola Foods! 🌿",
   ].join("\n");
 }
 
@@ -159,11 +171,29 @@ export function formatDeliveryReceiptMessage(order: {
   mpesa_receipt_number: string;
   total: number;
   delivery_fee: number;
+  subtotal?: number;
+  customer_name?: string;
+  delivery_address?: string;
+  items?: Array<{ product_name: string; quantity: number; line_total: number }>;
 }): string {
+  const itemLines = order.items && order.items.length > 0
+    ? order.items.map((i) => `  • ${i.product_name} x${i.quantity} — KES ${i.line_total.toLocaleString()}`).join("\n")
+    : "";
+
   return [
-    `✅ *Payment Received — #${order.order_number}*`,
+    `✅ *Payment Received — Order #${order.order_number}*`,
     "",
+    order.customer_name ? `Hi ${order.customer_name}! Your payment has been received.` : "Your payment has been received.",
+    "",
+    ...(itemLines ? ["*Order Summary:*", itemLines, ""] : []),
+    ...(order.subtotal !== undefined ? [`Subtotal: KES ${order.subtotal.toLocaleString()}`] : []),
+    `Delivery Fee: KES ${order.delivery_fee.toLocaleString()}`,
+    `*Total Paid: KES ${order.total.toLocaleString()}*`,
     `M-Pesa Receipt: *${order.mpesa_receipt_number}*`,
-    `Payment Received! Total: KES ${order.total} (includes KES ${order.delivery_fee} for delivery). Your order is now being dispatched.`,
+    ...(order.delivery_address ? [`Delivery to: ${order.delivery_address}`] : []),
+    "",
+    "Your order is now being dispatched. We'll be in touch with delivery updates. 🚚",
+    "",
+    "Thank you for shopping with Ayola Foods! 🌿",
   ].join("\n");
 }

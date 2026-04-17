@@ -58,25 +58,33 @@ export async function POST(request: Request) {
         order.id
       );
 
-      // Fetch full order for WhatsApp confirmation message
+      // Fetch full order including items for the WhatsApp receipt
       const { data: fullOrder } = await supabase
         .from("orders")
-        .select("order_number, total, delivery_fee, customer_phone, mpesa_receipt_number")
+        .select("order_number, subtotal, total, delivery_fee, customer_phone, customer_name, delivery_address, delivery_city, order_items(product_name, quantity, line_total)")
         .eq("id", order.id)
         .single();
 
       if (fullOrder) {
+        const receipt = String(receiptNumber || "");
         const message = fullOrder.delivery_fee > 0
           ? formatDeliveryReceiptMessage({
               order_number: fullOrder.order_number,
-              mpesa_receipt_number: String(receiptNumber || ""),
+              mpesa_receipt_number: receipt,
               total: fullOrder.total,
               delivery_fee: fullOrder.delivery_fee,
+              subtotal: fullOrder.subtotal,
+              customer_name: fullOrder.customer_name,
+              delivery_address: `${fullOrder.delivery_address}, ${fullOrder.delivery_city}`,
+              items: fullOrder.order_items as Array<{ product_name: string; quantity: number; line_total: number }>,
             })
           : formatPaymentConfirmationMessage({
               order_number: fullOrder.order_number,
-              mpesa_receipt_number: String(receiptNumber || ""),
+              mpesa_receipt_number: receipt,
               total: fullOrder.total,
+              subtotal: fullOrder.subtotal,
+              customer_name: fullOrder.customer_name,
+              items: fullOrder.order_items as Array<{ product_name: string; quantity: number; line_total: number }>,
             });
 
         sendMessage(fullOrder.customer_phone, message)
