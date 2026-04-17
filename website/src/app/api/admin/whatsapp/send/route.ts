@@ -33,6 +33,7 @@ export async function POST(request: Request): Promise<Response> {
   const result = await sendMessage(phone, message);
 
   if (!result.success) {
+    console.error("[WhatsApp send] sendMessage failed:", result.error);
     return err(result.error, "INTERNAL_ERROR", 500);
   }
 
