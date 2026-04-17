@@ -1,21 +1,23 @@
 import { getServiceClient } from "@/lib/utils/api";
 import { createNotification } from "@/lib/admin/notifications";
 
-// WaSenderAPI webhook payload for personal message received
-// Event: messages-personal.received
+// WaSenderAPI webhook payload
+// Handles both messages.upsert (array) and messages-personal.received (object)
+interface MessageEntry {
+  key?: {
+    fromMe?: boolean;
+    remoteJid?: string;
+    cleanedSenderPn?: string;
+  };
+  messageBody?: string;
+}
+
 interface WaSenderWebhookPayload {
   event?: string;
   data?: {
-    messages?: {
-      key?: {
-        fromMe?: boolean;
-        remoteJid?: string;
-        cleanedSenderPn?: string;
-      };
-      messageBody?: string;
-    };
+    messages?: MessageEntry | MessageEntry[]; // array in upsert, object in personal.received
   };
-  // Legacy / fallback flat fields
+  // Flat fallback for manual testing
   phone?: string;
   message?: string;
   [key: string]: unknown;
@@ -35,73 +37,58 @@ export async function POST(request: Request): Promise<Response> {
 
   const payload = body as WaSenderWebhookPayload;
 
-  // Log the raw payload in dev to help diagnose field names
-  console.log("[Webhook/WaSender] Received payload:", JSON.stringify(payload));
+  // Log raw payload to help diagnose any remaining issues
+  console.log("[Webhook/WaSender] Event:", payload?.event, "| Raw:", JSON.stringify(payload).slice(0, 300));
 
-  // Extract phone and message from WaSenderAPI nested structure
-  // Falls back to flat { phone, message } for manual testing
-  const messages = payload?.data?.messages;
-  const phone =
-    messages?.key?.cleanedSenderPn ??   // e.g. "254712345678"
-    messages?.key?.remoteJid?.replace("@s.whatsapp.net", "") ?? // e.g. "254712345678@s.whatsapp.net"
-    payload.phone ??
-    "";
+  // Normalise messages to an array regardless of event type
+  const rawMessages = payload?.data?.messages;
+  const messageEntries: MessageEntry[] = rawMessages
+    ? Array.isArray(rawMessages) ? rawMessages : [rawMessages]
+    : [];
 
-  const message =
-    messages?.messageBody ??
-    payload.message ??
-    "";
+  // Process each message entry (usually just one)
+  for (const entry of messageEntries) {
+    // Skip messages sent by us
+    if (entry?.key?.fromMe === true) continue;
 
-  // Skip messages sent by us (fromMe = true)
-  if (messages?.key?.fromMe === true) {
-    return new Response(null, { status: 200 });
-  }
+    // Extract phone — cleanedSenderPn is e.g. "254712345678"
+    const rawPhone =
+      entry?.key?.cleanedSenderPn ??
+      entry?.key?.remoteJid?.replace("@s.whatsapp.net", "") ??
+      payload.phone ??
+      "";
 
-  // Validate non-empty phone and message
-  if (!phone.trim() || !message.trim()) {
-    console.warn("[Webhook/WaSender] Missing phone or message in payload");
-    return new Response(
-      JSON.stringify({ error: "phone and message are required non-empty strings" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
+    const messageText = entry?.messageBody ?? payload.message ?? "";
+
+    if (!rawPhone.trim() || !messageText.trim()) continue;
+
+    // Normalise: strip leading + so it matches DB format (254...)
+    const phone = rawPhone.startsWith("+") ? rawPhone.slice(1) : rawPhone;
+
+    const supabase = getServiceClient();
+    const { data: order } = await supabase
+      .from("orders")
+      .select("id, order_number")
+      .eq("customer_phone", phone)
+      .eq("status", "pending_delivery_confirmation")
+      .maybeSingle();
+
+    if (!order) {
+      console.log(`[Webhook/WaSender] No pending order for phone: ${phone}`);
+      continue;
+    }
+
+    const truncated = messageText.slice(0, 100);
+    await createNotification(
+      "delivery_negotiation_message",
+      "Customer replied to delivery inquiry",
+      truncated,
+      order.id
     );
+
+    console.log(`[Webhook/WaSender] Notification created for order ${order.order_number}`);
   }
 
-  // Normalise phone: strip leading + so it matches the DB format (254...)
-  const normalizedPhone = phone.startsWith("+") ? phone.slice(1) : phone;
-
-  // Query orders for a matching pending_delivery_confirmation order
-  const supabase = getServiceClient();
-  const { data: order, error } = await supabase
-    .from("orders")
-    .select("id, order_number")
-    .eq("customer_phone", normalizedPhone)
-    .eq("status", "pending_delivery_confirmation")
-    .maybeSingle();
-
-  if (error) {
-    console.error("[Webhook/WaSender] DB query error:", error);
-    return new Response(null, { status: 200 });
-  }
-
-  if (!order) {
-    console.log(
-      `[Webhook/WaSender] No pending_delivery_confirmation order for phone: ${normalizedPhone}`
-    );
-    return new Response(null, { status: 200 });
-  }
-
-  // Truncate message to 100 characters
-  const truncatedMessage = message.slice(0, 100);
-
-  // Create admin notification
-  await createNotification(
-    "delivery_negotiation_message",
-    "Customer replied to delivery inquiry",
-    truncatedMessage,
-    order.id
-  );
-
-  console.log(`[Webhook/WaSender] Notification created for order ${order.order_number}`);
-
+  // Always return 200 to prevent WaSenderAPI retries
   return new Response(null, { status: 200 });
 }
