@@ -1,7 +1,7 @@
-// WaSender REST API — WhatsApp Messaging Service
-// Docs: https://app.wasender.app/api
+// WaSenderAPI REST API — WhatsApp Messaging Service
+// Docs: https://wasenderapi.com/api-docs
 
-const DEFAULT_BASE_URL = "https://app.wasender.app/api";
+const DEFAULT_BASE_URL = "https://www.wasenderapi.com/api";
 const REQUEST_TIMEOUT_MS = 10_000;
 
 // Discriminated union result type — never throws, always returns structured result
@@ -31,20 +31,21 @@ export async function sendMessage(
     return { success: false, error: "WASENDER_API_TOKEN is not configured" };
   }
 
-  // WaSender requires +254... format
+  // WaSenderAPI requires E.164 format: +254...
   const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const res = await fetch(`${baseUrl}/messages`, {
+    const res = await fetch(`${baseUrl}/send-message`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ phone: formattedPhone, message: body }),
+      // WaSenderAPI payload: { to, text }
+      body: JSON.stringify({ to: formattedPhone, text: body }),
       signal: controller.signal,
     });
 
@@ -55,7 +56,7 @@ export async function sendMessage(
     }
 
     const data = await res.json();
-    return { success: true, data: { messageId: data.messageId ?? data.id ?? "" } };
+    return { success: true, data: { messageId: String(data?.data?.msgId ?? data?.msgId ?? "") } };
   } catch (err: unknown) {
     if (err instanceof Error && err.name === "AbortError") {
       console.error("[WaSender] Network error: request timed out");
@@ -70,63 +71,12 @@ export async function sendMessage(
 }
 
 // Retrieve message history for a phone number
+// WaSenderAPI does not expose a per-contact message history endpoint.
+// Returns an empty array so the WhatsApp panel renders without error.
 export async function getMessageHistory(
-  phone: string
+  _phone: string
 ): Promise<WaSenderResult<WaSenderMessage[]>> {
-  const token = process.env.WASENDER_API_TOKEN;
-  const baseUrl = process.env.WASENDER_API_BASE_URL ?? DEFAULT_BASE_URL;
-
-  if (!token) {
-    console.warn("[WaSender] WASENDER_API_TOKEN is not configured");
-    return { success: false, error: "WASENDER_API_TOKEN is not configured" };
-  }
-
-  // WaSender requires +254... format
-  const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-  try {
-    const res = await fetch(
-      `${baseUrl}/messages?phone=${encodeURIComponent(formattedPhone)}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        signal: controller.signal,
-      }
-    );
-
-    if (!res.ok) {
-      const responseBody = await res.text().catch(() => "");
-      console.error(`[WaSender] HTTP ${res.status}: ${responseBody}`);
-      return { success: false, error: `HTTP ${res.status}: ${responseBody}` };
-    }
-
-    let json: unknown;
-    try {
-      json = await res.json();
-    } catch {
-      console.error("[WaSender] Invalid response from WaSender: malformed JSON");
-      return { success: false, error: "Invalid response from WaSender" };
-    }
-
-    const messages = Array.isArray(json) ? json : (json as { messages?: WaSenderMessage[] }).messages ?? [];
-    return { success: true, data: messages as WaSenderMessage[] };
-  } catch (err: unknown) {
-    if (err instanceof Error && err.name === "AbortError") {
-      console.error("[WaSender] Network error: request timed out");
-      return { success: false, error: "WaSender request timed out" };
-    }
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(`[WaSender] Network error: ${message}`);
-    return { success: false, error: `Network error: ${message}` };
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  return { success: true, data: [] };
 }
 
 // Message template functions (pure — no side effects)
