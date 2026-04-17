@@ -61,12 +61,13 @@ export async function POST(request: Request) {
       // Fetch full order including items for the WhatsApp receipt
       const { data: fullOrder } = await supabase
         .from("orders")
-        .select("order_number, subtotal, total, delivery_fee, customer_phone, customer_name, delivery_address, delivery_city, order_items(product_name, quantity, line_total)")
+        .select("order_number, subtotal, total, delivery_fee, customer_phone, customer_name, delivery_address, delivery_city, mpesa_receipt_number, order_items(product_name, quantity, line_total)")
         .eq("id", order.id)
         .single();
 
       if (fullOrder) {
-        const receipt = String(receiptNumber || "");
+        // Use the receipt number saved to DB (guaranteed to be a string)
+        const receipt = fullOrder.mpesa_receipt_number || String(receiptNumber || "");
         const message = fullOrder.delivery_fee > 0
           ? formatDeliveryReceiptMessage({
               order_number: fullOrder.order_number,
