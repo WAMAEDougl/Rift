@@ -82,7 +82,7 @@ export default async function RecipePage({
                 {recipe.difficulty}
               </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-earth mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-earth dark:text-white mb-4">
               {recipe.title}
             </h1>
             {/* Excerpt rendered as HTML */}
@@ -176,8 +176,8 @@ export default async function RecipePage({
             <aside className="space-y-6">
               {/* Ingredients */}
               {recipe.ingredients && recipe.ingredients.length > 0 && (
-                <div className="bg-amber-50 rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-earth mb-4">
+                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-6 border border-transparent dark:border-amber-900/50">
+                  <h3 className="text-lg font-bold text-earth dark:text-amber-400 mb-4">
                     Ingredients
                   </h3>
                   <ul className="space-y-2">
@@ -229,7 +229,7 @@ export default async function RecipePage({
 
               {/* Share */}
               <div className="bg-muted/50 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-earth mb-3">
+                <h3 className="text-lg font-bold text-earth dark:text-white mb-3">
                   Share This Recipe
                 </h3>
                 <div className="flex gap-2">

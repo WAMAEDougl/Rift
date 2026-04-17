@@ -25,6 +25,7 @@ import {
 import { toast } from "sonner"
 import StatusBadge from "@/components/admin/StatusBadge"
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters"
+import { useAdminRole } from "@/lib/admin/useAdminRole"
 
 interface OrderRow {
   id: string
@@ -57,6 +58,7 @@ interface OrdersResponse {
 export default function OrdersPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { isKitchen } = useAdminRole()
 
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [pagination, setPagination] = useState<Pagination | null>(null)
@@ -311,31 +313,6 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1
-            className="text-3xl font-bold text-gray-900"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
-          >
-            Orders
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">
-            {pagination?.total.toLocaleString()} total &middot; Sales history
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleDownloadPDF}
-            disabled={downloading || orders.length === 0}
-            className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50"
-          >
-            <FileDown size={16} />
-            {downloading ? "Generating..." : "Export PDF"}
-          </button>
-        </div>
-      </div>
-
       {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
         <input
@@ -386,6 +363,14 @@ export default function OrdersPage() {
           className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1"
         >
           Clear
+        </button>
+        <button
+          onClick={handleDownloadPDF}
+          disabled={downloading || orders.length === 0}
+          className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50 ml-auto"
+        >
+          <FileDown size={16} />
+          {downloading ? "Generating..." : "Export PDF"}
         </button>
       </div>
 
@@ -595,13 +580,15 @@ export default function OrdersPage() {
             >
               Confirm Orders
             </button>
-            <button
-              onClick={() => setShowCancelDialog(true)}
-              disabled={bulkLoading}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
-            >
-              Cancel Orders
-            </button>
+            {!isKitchen && (
+              <button
+                onClick={() => setShowCancelDialog(true)}
+                disabled={bulkLoading}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+              >
+                Cancel Orders
+              </button>
+            )}
           </div>
           <button
             onClick={() => setSelectedIds(new Set())}

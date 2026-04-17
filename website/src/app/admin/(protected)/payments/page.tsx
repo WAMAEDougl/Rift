@@ -238,29 +238,6 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1
-            className="text-3xl font-bold text-gray-900"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
-          >
-            Payments
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">
-            {pagination?.total.toLocaleString() ?? "0"} transactions &middot; Monitor and manage all customer payments
-          </p>
-        </div>
-        <button
-          onClick={downloadReport}
-          disabled={downloading}
-          className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50"
-        >
-          <Download size={16} />
-          {downloading ? "Downloading…" : "Download Report"}
-        </button>
-      </div>
-
       {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
         <div className="flex items-center gap-2 flex-1 min-w-[180px]">
@@ -311,6 +288,14 @@ export default function PaymentsPage() {
           title="Clear filters"
         >
           <RotateCcw size={14} />
+        </button>
+        <button
+          onClick={downloadReport}
+          disabled={downloading}
+          className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50 ml-auto"
+        >
+          <Download size={16} />
+          {downloading ? "Downloading…" : "Download Report"}
         </button>
       </div>
 

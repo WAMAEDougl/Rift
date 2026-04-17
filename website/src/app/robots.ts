@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: [],
     },
-    sitemap: "https://ayola-foods-ke.vercel.app/sitemap.xml",
+    sitemap: "https://ayolafoods.com/sitemap.xml",
   };
 }

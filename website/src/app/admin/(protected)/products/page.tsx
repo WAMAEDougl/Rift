@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatKES } from "@/lib/admin/formatters"
+import { useAdminRole } from "@/lib/admin/useAdminRole"
 
 interface Product {
   id: string
@@ -66,6 +67,7 @@ function StatusBadge({ active, labelOn, labelOff }: { active: boolean; labelOn: 
 }
 
 export default function ProductsPage() {
+  const { isKitchen } = useAdminRole()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [pagination, setPagination] = useState<PaginationMeta | null>(null)
@@ -310,6 +312,15 @@ export default function ProductsPage() {
         >
           Clear
         </button>
+        {!isKitchen && (
+          <Link
+            href="/admin/products/new"
+            className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors ml-auto"
+          >
+            <Plus size={16} />
+            Add Product
+          </Link>
+        )}
       </div>
 
       {/* Table */}
@@ -323,7 +334,9 @@ export default function ProductsPage() {
                 <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Price</th>
                 <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">In Stock</th>
                 <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">Active</th>
-                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                {!isKitchen && (
+                  <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -395,26 +408,28 @@ export default function ProductsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-100 transition-opacity">
-                          {/* <Link
-                            href={`/admin/products/${product.id}/view`}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                          >
-                            <Eye size={15} />
-                          </Link> */}
-                          <Link
-                            href={`/admin/products/${product.id}/edit`}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                          >
-                            <Pencil size={15} />
-                          </Link>
-                          <button
-                            onClick={() => setDeleteTarget(product)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
+                        {!isKitchen && (
+                          <div className="flex items-center justify-end gap-2 opacity-100 transition-opacity">
+                            {/* <Link
+                              href={`/admin/products/${product.id}/view`}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                            >
+                              <Eye size={15} />
+                            </Link> */}
+                            <Link
+                              href={`/admin/products/${product.id}/edit`}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                            >
+                              <Pencil size={15} />
+                            </Link>
+                            <button
+                              onClick={() => setDeleteTarget(product)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
