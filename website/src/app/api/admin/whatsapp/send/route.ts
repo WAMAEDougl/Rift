@@ -40,12 +40,16 @@ export async function POST(request: Request): Promise<Response> {
   // Store sent message as a notification so it appears in the WhatsApp thread
   if (order_id) {
     const admin = getAdminClient();
-    await admin.from("notifications").insert({
-      type: "whatsapp_sent",
-      title: "WhatsApp message sent",
-      message: message.slice(0, 500), // store up to 500 chars
-      order_id,
-    }).catch((e) => console.error("[WhatsApp send] Failed to store sent message:", e));
+    try {
+      await admin.from("notifications").insert({
+        type: "whatsapp_sent",
+        title: "WhatsApp message sent",
+        message: message.slice(0, 500),
+        order_id,
+      });
+    } catch (e) {
+      console.error("[WhatsApp send] Failed to store sent message:", e);
+    }
   }
 
   return ok({ messageId: result.data.messageId });

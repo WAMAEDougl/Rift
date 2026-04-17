@@ -78,17 +78,20 @@ export async function POST(request: Request) {
       return apiError("Failed to create order items", 500);
     }
 
-    // Fire-and-forget — do not await, do not block response
-    sendMessage(data.customer_phone, formatOrderConfirmationMessage({
-      order_number: order.order_number,
-      items: validation.validatedItems,
-      subtotal: validation.subtotal,
-      total,
-    })).catch((e) => console.error("[Orders API] WhatsApp order confirmation failed:", e));
-
+    // Fire-and-forget — send delivery inquiry first (most important for the flow)
+    // Then send order confirmation after 65s delay to avoid WaSender free-plan rate limit (1 msg/min)
     sendMessage(data.customer_phone, formatDeliveryInquiryMessage({
       order_number: order.order_number,
     })).catch((e) => console.error("[Orders API] WhatsApp delivery inquiry failed:", e));
+
+    setTimeout(() => {
+      sendMessage(data.customer_phone, formatOrderConfirmationMessage({
+        order_number: order.order_number,
+        items: validation.validatedItems,
+        subtotal: validation.subtotal,
+        total,
+      })).catch((e) => console.error("[Orders API] WhatsApp order confirmation failed:", e));
+    }, 65_000);
 
     createNotification(
       "new_order",

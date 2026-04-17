@@ -62,19 +62,21 @@ export async function POST(request: Request): Promise<Response> {
 
     if (!rawPhone.trim() || !messageText.trim()) continue;
 
-    // Normalise: strip leading + so it matches DB format (254...)
-    const phone = rawPhone.startsWith("+") ? rawPhone.slice(1) : rawPhone;
+    // Normalise: try both with and without + to match whatever format is in DB
+    const phoneWithPlus = rawPhone.startsWith("+") ? rawPhone : `+${rawPhone}`;
+    const phoneWithout = rawPhone.startsWith("+") ? rawPhone.slice(1) : rawPhone;
 
     const supabase = getServiceClient();
+    // Try matching both formats (some orders may have been created with + prefix)
     const { data: order } = await supabase
       .from("orders")
       .select("id, order_number")
-      .eq("customer_phone", phone)
+      .in("customer_phone", [phoneWithPlus, phoneWithout])
       .eq("status", "pending_delivery_confirmation")
       .maybeSingle();
 
     if (!order) {
-      console.log(`[Webhook/WaSender] No pending order for phone: ${phone}`);
+      console.log(`[Webhook/WaSender] No pending order for phone: ${phoneWithout} or ${phoneWithPlus}`);
       continue;
     }
 
