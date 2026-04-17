@@ -3,7 +3,6 @@ import { getAdminClient } from "@/lib/admin/supabase";
 import { ok, err } from "@/lib/admin/response";
 import { initiateSTKPush, isMpesaConfigured } from "@/lib/mpesa";
 import { normalizePhone } from "@/lib/utils/validation";
-import { sendMessage, formatPaymentRequestNotificationMessage } from "@/lib/wasender";
 import { z } from "zod";
 
 const bodySchema = z.object({
@@ -108,16 +107,7 @@ export async function POST(
     authorized_by_name: session.profile.full_name ?? "Admin",
   });
 
-  // 10. Fire-and-forget WhatsApp payment request notification
-  sendMessage(
-    order.customer_phone,
-    formatPaymentRequestNotificationMessage({
-      order_number: order.order_number,
-      delivery_fee,
-    })
-  ).catch((e) => console.error("[STK Push] WhatsApp notification failed:", e));
-
-  // 11. Return success
+  // 10. Return success — receipt is sent automatically by the M-Pesa callback on payment
   return ok({
     checkout_request_id: stkResponse.CheckoutRequestID,
     message: "STK Push sent",

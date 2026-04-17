@@ -88,7 +88,7 @@ export async function POST(request: Request) {
               items: fullOrder.order_items as Array<{ product_name: string; quantity: number; line_total: number }>,
             });
 
-        // Send receipt — retry once after 65s if rate-limited (free plan: 1 msg/min)
+        // Send receipt immediately — no prior message to cause rate limiting
         const sendReceipt = async (attempt = 1) => {
           const result = await sendMessage(fullOrder.customer_phone, message);
           if (result.success) {
