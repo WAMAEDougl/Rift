@@ -9,9 +9,9 @@ import { getWhatsAppOrderLink } from "@/lib/constants";
 import { getItem, setItem, STORAGE_KEYS } from "@/lib/utils/storage";
 import type { SavedCustomer } from "@/types/api";
 import {
-  ShieldCheck, Truck, Beaker, Check, Loader2,
-  AlertCircle, ShoppingBag, MessageCircle, MapPin, ChevronDown,
-  Plus, Minus, Trash2, Smartphone, ArrowRight,
+  ShieldCheck, Truck, Beaker, Loader2,
+  AlertCircle, ShoppingBag, MessageCircle, Check,
+  Plus, Minus, Trash2, ArrowRight,
 } from "lucide-react";
 
 type Step = "form" | "awaiting_payment" | "confirmed" | "pending_delivery";
@@ -21,7 +21,6 @@ export default function CheckoutPage() {
   const { items, totalItems, totalPrice, clearCart, updateQuantity } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showNotes, setShowNotes] = useState(false);
   const [step, setStep] = useState<Step>("form");
 
   const [orderResult, setOrderResult] = useState<{
@@ -34,14 +33,14 @@ export default function CheckoutPage() {
   const [pollingMsg, setPollingMsg] = useState("Waiting for M-Pesa confirmation...");
 
   const [form, setForm] = useState({
-    name: "", phone: "", address: "", city: "Nairobi", delivery_type: "delivery", notes: "",
+    name: "", phone: "",
     payment_method: "mpesa" as "mpesa",
   });
 
   useEffect(() => {
     const saved = getItem<SavedCustomer>(STORAGE_KEYS.CUSTOMER);
     if (saved) {
-      setForm((prev) => ({ ...prev, name: saved.name, phone: saved.phone, address: saved.address, city: saved.city }));
+      setForm((prev) => ({ ...prev, name: saved.name, phone: saved.phone }));
     }
   }, []);
 
@@ -101,9 +100,6 @@ export default function CheckoutPage() {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
-
-  const deliveryFee = form.delivery_type === "pickup" ? 0 : null; // negotiated via WhatsApp
-  const grandTotal = totalPrice; // delivery fee added later by admin
 
   const buildWhatsAppMessage = () =>
     `Hi Ayola Foods! I'd like to order:\n\n${items.map((i) => `• ${i.quantity}x ${i.product.name} — KES ${(i.product.price * i.quantity).toLocaleString()}`).join("\n")}\n\nSubtotal: KES ${totalPrice.toLocaleString()}`;
@@ -260,11 +256,10 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     if (!form.name.trim()) { setError("Enter your name"); return; }
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 9) { setError("Enter a valid phone number"); return; }
-    if (form.delivery_type !== "pickup" && !form.address.trim()) { setError("Enter a delivery address"); return; }
 
     setLoading(true);
     setError("");
-    setItem(STORAGE_KEYS.CUSTOMER, { name: form.name, phone: form.phone, address: form.address, city: form.city });
+    setItem(STORAGE_KEYS.CUSTOMER, { name: form.name, phone: form.phone, address: "", city: "Nairobi" });
 
     // Normalise to +254... format for storage and WaSender
     const digits = form.phone.replace(/\D/g, "");
@@ -282,8 +277,8 @@ export default function CheckoutPage() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer_name: form.name, customer_phone: normalizedPhone,
-          delivery_address: form.delivery_type === "pickup" ? "Pickup — Ruhan Plaza, Kahawa Sukari" : form.address,
-          delivery_city: form.city, delivery_type: form.delivery_type, order_notes: form.notes || null,
+          delivery_address: "To be confirmed via WhatsApp",
+          delivery_city: "Nairobi", delivery_type: "delivery", order_notes: null,
           payment_method: form.payment_method,
           items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
         }),
@@ -355,76 +350,6 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Delivery */}
-            <div className="bg-card rounded-2xl p-5 border border-border">
-              <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-primary" /> Delivery
-              </h2>
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {[
-                  { value: "delivery", label: "Deliver", icon: "🚚" },
-                  { value: "pickup", label: "Pickup", icon: "🏪" },
-                  { value: "shipping", label: "Ship", icon: "📦" },
-                ].map((opt) => (
-                  <button key={opt.value} onClick={() => setForm({ ...form, delivery_type: opt.value })}
-                    className={`py-3 rounded-xl text-sm font-medium transition-all ${
-                      form.delivery_type === opt.value
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    }`}>
-                    <span className="mr-1">{opt.icon}</span> {opt.label}
-                  </button>
-                ))}
-              </div>
-
-              {form.delivery_type === "pickup" ? (
-                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 text-sm text-amber-800 dark:text-amber-300">
-                  <p className="font-medium">Pickup at Ruhan Plaza</p>
-                  <p className="text-amber-600 dark:text-amber-400/70 text-xs mt-1">Ground Floor Room 23, Kahawa Sukari, near Quickmatt</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <input type="text" placeholder={form.delivery_type === "shipping" ? "Full shipping address" : "Delivery address (estate, building, etc.)"}
-                    value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inputCls} />
-                  <div className="relative">
-                    <select value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
-                      className={`${inputCls} appearance-none`}>
-                      {["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret", "Thika", "Other"].map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
-                  </div>
-                </div>
-              )}
-              {deliveryFee === 0 && form.delivery_type === "pickup" && (
-                <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-2">✓ No delivery fee — you&apos;re picking up!</p>
-              )}
-            </div>
-
-            {/* Payment */}
-            <div className="bg-card rounded-2xl p-5 border border-border">
-              <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-primary" /> Payment
-              </h2>
-              <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-                <Smartphone className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <span className="text-sm font-medium text-green-800 dark:text-green-300">M-Pesa</span>
-              </div>
-              <p className="text-xs text-green-600 dark:text-green-400/70 mt-2">
-                ✓ After confirming your delivery fee via WhatsApp, you&apos;ll receive an M-Pesa prompt to complete payment
-              </p>
-            </div>
-
-            {/* Notes */}
-            <button onClick={() => setShowNotes(!showNotes)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              {showNotes ? "- Hide" : "+ Add"} order notes
-            </button>
-            {showNotes && (
-              <textarea placeholder="Special instructions, allergies, etc." rows={2} value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })} className={inputCls} />
-            )}
-
             {/* Error */}
             {error && (
               <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl text-sm">
@@ -432,13 +357,13 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Place Order */}
+            {/* Order Now */}
             <button onClick={handlePlaceOrder} disabled={loading}
               className="w-full bg-primary text-primary-foreground py-4 rounded-2xl font-bold text-lg hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
               {loading ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Placing Order...</>
               ) : (
-                <>Place Order — {formatPrice(totalPrice)} <ArrowRight className="w-5 h-5" /></>
+                <>Order Now <ArrowRight className="w-5 h-5" /></>
               )}
             </button>
 
