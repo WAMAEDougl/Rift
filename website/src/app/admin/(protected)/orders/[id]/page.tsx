@@ -111,16 +111,21 @@ export default async function OrderDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
-        {/* ── Left Column ── */}
-        <div className="lg:col-span-8 space-y-5">
+        {/* ── Left Column — Order Details (2/3 width) ── */}
+        <div className="xl:col-span-2 space-y-5">
 
           {/* Pending delivery confirmation status banner */}
           {order.status === "pending_delivery_confirmation" && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-800">
-              <p className="font-semibold">Awaiting delivery fee confirmation</p>
-              <p className="text-sm mt-1">Review the WhatsApp conversation, agree on a delivery fee, then use the STK Push panel to request payment.</p>
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-800 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+                <AlertTriangle size={16} className="text-amber-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">Awaiting delivery fee confirmation</p>
+                <p className="text-xs mt-0.5 text-amber-700">Review the WhatsApp conversation on the right, agree on a delivery fee, then use the STK Push panel to request payment.</p>
+              </div>
             </div>
           )}
 
@@ -138,7 +143,6 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="relative pt-2 pb-6">
-                {/* Track */}
                 <div className="absolute top-6 left-0 right-0 h-1 bg-gray-100 rounded-full" />
                 <div
                   className="absolute top-6 left-0 h-1 bg-amber-600 rounded-full transition-all duration-700"
@@ -151,12 +155,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     const isCurrent = idx === currentStepIndex
                     return (
                       <div key={step.key} className="flex flex-col items-center gap-3 flex-1">
-                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                           isCompleted ? "bg-amber-600 text-white shadow-sm"
                           : isCurrent ? "bg-gray-900 text-white ring-4 ring-gray-900/10 scale-110"
                           : "bg-white border border-gray-200 text-gray-300"
                         }`}>
-                          <Icon size={18} />
+                          <Icon size={16} />
                         </div>
                         <p className={`text-[10px] font-semibold uppercase tracking-wide text-center ${
                           isCompleted || isCurrent ? "text-gray-700" : "text-gray-300"
@@ -209,25 +213,84 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 </tbody>
               </table>
             </div>
-
-            {/* Totals */}
             <div className="mt-4 flex justify-end">
-              <div className="w-full sm:w-72 space-y-2">
+              <div className="w-full sm:w-64 space-y-2 bg-gray-50/60 rounded-xl p-4">
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>Subtotal</span>
                   <span>{formatKES(order.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>Delivery Fee</span>
-                  <span>{formatKES(order.delivery_fee)}</span>
+                  <span className={order.delivery_fee === 0 ? "text-amber-600 font-medium" : ""}>
+                    {order.delivery_fee === 0 ? "TBD" : formatKES(order.delivery_fee)}
+                  </span>
                 </div>
-                <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                   <span className="text-sm font-bold text-gray-900">Total</span>
-                  <span className="text-xl font-bold text-amber-700">{formatKES(order.total)}</span>
+                  <span className="text-lg font-bold text-amber-700">{formatKES(order.total)}</span>
                 </div>
               </div>
             </div>
           </SectionCard>
+
+          {/* Customer + Payment side by side */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <SectionCard title="Customer" icon={<User size={17} />}>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 text-sm font-bold shrink-0">
+                    {order.customer_name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">{order.customer_name}</p>
+                    {order.customer_id && (
+                      <Link href={`/admin/customers/${order.customer_id}`} className="text-xs text-amber-700 hover:underline">
+                        View profile →
+                      </Link>
+                    )}
+                  </div>
+                </div>
+                {order.customer_email && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Mail size={13} className="text-gray-400 shrink-0" />
+                    <span className="truncate">{order.customer_email}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Phone size={13} className="text-gray-400 shrink-0" />
+                  {order.customer_phone}
+                </div>
+                <div className="flex items-start gap-2 text-sm text-gray-600">
+                  <MapPin size={13} className="text-gray-400 shrink-0 mt-0.5" />
+                  <span className="text-xs">{order.delivery_address}, {order.delivery_city}</span>
+                </div>
+                <StatusBadge status={order.delivery_type} type="delivery" />
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Payment" icon={<CreditCard size={17} />}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">Method</span>
+                  <span className="text-sm font-medium text-gray-700">M-Pesa</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">Status</span>
+                  <StatusBadge status={order.payment_status} type="payment" />
+                </div>
+                {order.mpesa_receipt_number && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400">Receipt</span>
+                    <span className="text-xs font-mono font-semibold text-green-700">{order.mpesa_receipt_number}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                  <span className="text-xs text-gray-400">Placed</span>
+                  <span className="text-xs text-gray-600">{formatDate(order.created_at)}</span>
+                </div>
+              </div>
+            </SectionCard>
+          </div>
 
           {/* Order Notes */}
           {order.order_notes && (
@@ -236,98 +299,33 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <p className="text-sm text-gray-700 leading-relaxed">{order.order_notes}</p>
             </div>
           )}
+
+          {/* Actions + Cancel */}
+          {!isTerminal && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <SectionCard title="Update Status" icon={<Zap size={17} />}>
+                <OrderStatusControl orderId={order.id} currentStatus={order.status} role={role} />
+              </SectionCard>
+              {role === "admin" && (
+                <div className="bg-red-50 rounded-2xl border border-red-100 p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-white border border-red-200 flex items-center justify-center text-red-500 shrink-0">
+                        <AlertTriangle size={15} />
+                      </div>
+                      <h3 className="text-sm font-bold text-gray-900">Danger Zone</h3>
+                    </div>
+                    <p className="text-xs text-red-700/60 leading-relaxed mb-4">Cancelling this order is irreversible.</p>
+                  </div>
+                  <CancelOrderButton orderId={order.id} orderNumber={order.order_number} />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* ── Right Column ── */}
-        <div className="lg:col-span-4 space-y-5">
-
-          {/* Customer */}
-          <SectionCard title="Customer" icon={<User size={17} />}>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 text-sm font-bold shrink-0">
-                  {order.customer_name?.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">{order.customer_name}</p>
-                  {order.customer_id && (
-                    <Link href={`/admin/customers/${order.customer_id}`} className="text-xs text-amber-700 hover:underline">
-                      View profile →
-                    </Link>
-                  )}
-                </div>
-              </div>
-
-              {order.customer_email && (
-                <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                  <Mail size={14} className="text-gray-400 shrink-0" />
-                  {order.customer_email}
-                </div>
-              )}
-              <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                <Phone size={14} className="text-gray-400 shrink-0" />
-                {order.customer_phone}
-              </div>
-              <div className="flex items-start gap-2.5 text-sm text-gray-600">
-                <MapPin size={14} className="text-gray-400 shrink-0 mt-0.5" />
-                <span>{order.delivery_address}, {order.delivery_city}</span>
-              </div>
-              <div className="pt-1">
-                <StatusBadge status={order.delivery_type} type="delivery" />
-              </div>
-            </div>
-          </SectionCard>
-
-          {/* Payment */}
-          <SectionCard title="Payment" icon={<CreditCard size={17} />}>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400">Method</span>
-                <span className="text-sm font-medium text-gray-700 capitalize">
-                  {"M-Pesa"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400">Status</span>
-                <StatusBadge status={order.payment_status} type="payment" />
-              </div>
-              {order.mpesa_receipt_number && (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">Receipt</span>
-                  <span className="text-xs font-mono font-semibold text-green-700">{order.mpesa_receipt_number}</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                <span className="text-xs text-gray-400">Placed</span>
-                <span className="text-xs text-gray-600">{formatDate(order.created_at)}</span>
-              </div>
-            </div>
-          </SectionCard>
-
-          {/* Actions */}
-          {!isTerminal && (
-            <SectionCard title="Update Status" icon={<Zap size={17} />}>
-              <OrderStatusControl orderId={order.id} currentStatus={order.status} role={role} />
-            </SectionCard>
-          )}
-
-          {/* Cancel */}
-          {!isTerminal && role === "admin" && (
-            <div className="bg-red-50 rounded-2xl border border-red-100 p-5">
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-white border border-red-200 flex items-center justify-center text-red-500 shrink-0">
-                  <AlertTriangle size={15} />
-                </div>
-                <h3 className="text-sm font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-                  Danger Zone
-                </h3>
-              </div>
-              <p className="text-xs text-red-700/60 leading-relaxed mb-4">
-                Cancelling this order is irreversible.
-              </p>
-              <CancelOrderButton orderId={order.id} orderNumber={order.order_number} />
-            </div>
-          )}
+        {/* ── Right Column — WhatsApp + Actions (1/3 width) ── */}
+        <div className="xl:col-span-1 space-y-5">
 
           {/* WhatsApp Messages */}
           <WhatsAppPanel
