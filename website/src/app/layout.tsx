@@ -10,6 +10,7 @@ import ErrorBoundary from "@/components/error/ErrorBoundary";
 import ThemeProvider from "@/components/ui/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { headers } from "next/headers";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,11 +50,14 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://ayolafoods.com"),
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const isAdminRoute = headersList.get("x-is-admin") === "1";
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Restaurant",
@@ -99,11 +103,11 @@ export default function RootLayout({
           <TooltipProvider>
             <ErrorBoundary>
               <CartProvider>
-                <Navbar />
-                <CartSidebar />
+                {!isAdminRoute && <Navbar />}
+                {!isAdminRoute && <CartSidebar />}
                 <main>{children}</main>
-                <Footer />
-                <FloatingWhatsApp />
+                {!isAdminRoute && <Footer />}
+                {!isAdminRoute && <FloatingWhatsApp />}
                 <Toaster richColors position="bottom-right" />
               </CartProvider>
             </ErrorBoundary>

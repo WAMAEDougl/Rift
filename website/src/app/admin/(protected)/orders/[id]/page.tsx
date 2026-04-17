@@ -93,7 +93,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const progressPercent = currentStepIndex <= 0 ? 0 : (currentStepIndex / (STEPS.length - 1)) * 100
 
   return (
-    <div className="space-y-6 mb-16">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between pb-4 border-b border-gray-100">
         <div>

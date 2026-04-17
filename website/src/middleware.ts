@@ -1,8 +1,16 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+  const response = await updateSession(request);
+  // Signal to the root layout that this is an admin route
+  // so it can suppress the public Navbar/Footer
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    const res = response instanceof NextResponse ? response : NextResponse.next();
+    res.headers.set("x-is-admin", "1");
+    return res;
+  }
+  return response;
 }
 
 export const config = {
