@@ -1,4 +1,5 @@
 export type OrderStatus =
+  | "pending_delivery_confirmation" // pre-flow holding state
   | "pending"
   | "confirmed"
   | "preparing"
@@ -18,7 +19,8 @@ export type NotificationType =
   | "new_order"
   | "payment_completed"
   | "payment_failed"
-  | "order_cancelled";
+  | "order_cancelled"
+  | "delivery_negotiation_message";
 
 export type AdminRole = "admin" | "kitchen";
 
@@ -50,3 +52,13 @@ export const ORDER_STATUS_SEQUENCE: OrderStatus[] = [
 ];
 
 export const TERMINAL_STATUSES: OrderStatus[] = ["delivered", "cancelled"];
+
+export interface OrderAuditLogEntry {
+  id: string;
+  order_id: string;
+  event_type: string;
+  delivery_fee: number;
+  authorized_by_id: string;
+  authorized_by_name: string;
+  created_at: string;
+}

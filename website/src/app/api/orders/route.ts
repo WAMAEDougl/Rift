@@ -2,6 +2,7 @@ import { createOrderSchema } from "@/lib/utils/validation";
 import { getServiceClient, apiError, apiSuccess, checkRateLimit } from "@/lib/utils/api";
 import { generateOrderNumber, calculateDeliveryFee, validateOrderItems } from "@/lib/order-utils";
 import { createNotification } from "@/lib/admin/notifications";
+import { sendMessage, formatOrderConfirmationMessage, formatDeliveryInquiryMessage } from "@/lib/wasender";
 
 export async function POST(request: Request) {
   // Rate limit by IP
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
         total,
         payment_method: data.payment_method,
         payment_status: "processing",
-        status: "pending",
+        status: "pending_delivery_confirmation",
       })
       .select("id, order_number")
       .single();
@@ -76,6 +77,18 @@ export async function POST(request: Request) {
       await supabase.from("orders").delete().eq("id", order.id);
       return apiError("Failed to create order items", 500);
     }
+
+    // Fire-and-forget — do not await, do not block response
+    sendMessage(data.customer_phone, formatOrderConfirmationMessage({
+      order_number: order.order_number,
+      items: validation.validatedItems,
+      subtotal: validation.subtotal,
+      total,
+    })).catch((e) => console.error("[Orders API] WhatsApp order confirmation failed:", e));
+
+    sendMessage(data.customer_phone, formatDeliveryInquiryMessage({
+      order_number: order.order_number,
+    })).catch((e) => console.error("[Orders API] WhatsApp delivery inquiry failed:", e));
 
     createNotification(
       "new_order",

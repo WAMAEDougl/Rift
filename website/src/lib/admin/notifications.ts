@@ -4,7 +4,8 @@ export type NotificationType =
   | "new_order"
   | "payment_completed"
   | "payment_failed"
-  | "order_cancelled";
+  | "order_cancelled"
+  | "delivery_negotiation_message";
 
 export async function createNotification(
   type: NotificationType,

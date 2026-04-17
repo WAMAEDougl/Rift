@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/utils/api";
 import type { STKCallbackData } from "@/lib/mpesa";
 import { createNotification } from "@/lib/admin/notifications";
+import { sendMessage, formatPaymentConfirmationMessage, formatDeliveryReceiptMessage } from "@/lib/wasender";
 
 export async function POST(request: Request) {
   try {
@@ -56,6 +57,31 @@ export async function POST(request: Request) {
         `M-Pesa payment confirmed. Receipt: ${receiptNumber}`,
         order.id
       );
+
+      // Fetch full order for WhatsApp confirmation message
+      const { data: fullOrder } = await supabase
+        .from("orders")
+        .select("order_number, total, delivery_fee, customer_phone, mpesa_receipt_number")
+        .eq("id", order.id)
+        .single();
+
+      if (fullOrder) {
+        const message = fullOrder.delivery_fee > 0
+          ? formatDeliveryReceiptMessage({
+              order_number: fullOrder.order_number,
+              mpesa_receipt_number: String(receiptNumber || ""),
+              total: fullOrder.total,
+              delivery_fee: fullOrder.delivery_fee,
+            })
+          : formatPaymentConfirmationMessage({
+              order_number: fullOrder.order_number,
+              mpesa_receipt_number: String(receiptNumber || ""),
+              total: fullOrder.total,
+            });
+
+        sendMessage(fullOrder.customer_phone, message)
+          .catch((e) => console.error("[Callback] WhatsApp send failed:", e));
+      }
     } else {
       // Payment failed
       await supabase

@@ -11,6 +11,10 @@ import StatusBadge from "@/components/admin/StatusBadge"
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters"
 import { OrderStatusControl } from "./OrderStatusControl"
 import { CancelOrderButton } from "./CancelOrderButton"
+import { WhatsAppPanel } from "./WhatsAppPanel"
+import { AdminSTKPushPanel } from "./AdminSTKPushPanel"
+import { AuditLogPanel } from "./AuditLogPanel"
+import { getMessageHistory } from "@/lib/wasender"
 
 const STEPS = [
   { key: "pending",    label: "Pending",    icon: Clock },
@@ -51,14 +55,20 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const admin = getAdminClient()
 
-  const [{ data: order }, { data: profile }] = await Promise.all([
+  const [{ data: order }, { data: profile }, { data: auditLogs }] = await Promise.all([
     admin.from("orders")
       .select("id, order_number, status, payment_status, customer_name, customer_phone, customer_email, customer_id, delivery_address, delivery_city, delivery_type, order_notes, subtotal, delivery_fee, total, payment_method, mpesa_receipt_number, created_at, order_items(id, product_id, product_name, product_price, quantity, line_total)")
       .eq("id", id).single(),
     admin.from("profiles").select("role").eq("id", user!.id).single(),
+    admin.from("order_audit_logs").select("*").eq("order_id", id).order("created_at", { ascending: false }),
   ])
 
   if (!order) notFound()
+
+  // Fetch message history sequentially — needs phone from order.
+  // A failure here must NOT prevent the rest of the page from rendering;
+  // WhatsAppPanel handles the error gracefully via initialError.
+  const whatsappResult = await getMessageHistory(order.customer_phone)
 
   const role = (profile?.role ?? "admin") as "admin" | "kitchen"
   const isCancelled = order.status === "cancelled"
@@ -66,7 +76,10 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const isTerminal = isCancelled || isDelivered
 
   const stepKeys = STEPS.map((s) => s.key)
-  const currentStepIndex = isCancelled ? -1 : stepKeys.indexOf(order.status)
+  // "pending_delivery_confirmation" is not in STEPS — treat it like pre-pending (index -1)
+  const currentStepIndex = isCancelled || order.status === "pending_delivery_confirmation"
+    ? -1
+    : stepKeys.indexOf(order.status)
   const progressPercent = currentStepIndex <= 0 ? 0 : (currentStepIndex / (STEPS.length - 1)) * 100
 
   return (
@@ -92,6 +105,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
         {/* ── Left Column ── */}
         <div className="lg:col-span-8 space-y-5">
+
+          {/* Pending delivery confirmation status banner */}
+          {order.status === "pending_delivery_confirmation" && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-800">
+              <p className="font-semibold">Awaiting delivery fee confirmation</p>
+              <p className="text-sm mt-1">Review the WhatsApp conversation, agree on a delivery fee, then use the STK Push panel to request payment.</p>
+            </div>
+          )}
 
           {/* Status Progress */}
           <SectionCard title="Order Progress" icon={<Clock size={17} />}>
@@ -297,6 +318,25 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <CancelOrderButton orderId={order.id} orderNumber={order.order_number} />
             </div>
           )}
+
+          {/* WhatsApp Messages */}
+          <WhatsAppPanel
+            initialMessages={whatsappResult.success ? whatsappResult.data : []}
+            initialError={whatsappResult.success ? null : whatsappResult.error}
+            phone={order.customer_phone}
+            orderId={order.id}
+          />
+
+          {/* Admin STK Push */}
+          <AdminSTKPushPanel
+            orderId={order.id}
+            orderNumber={order.order_number}
+            subtotal={order.subtotal}
+            orderStatus={order.status}
+          />
+
+          {/* Audit Log */}
+          <AuditLogPanel entries={auditLogs ?? []} />
         </div>
       </div>
     </div>
