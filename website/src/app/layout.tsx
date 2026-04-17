@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Ayola Foods Kenya",
   },
-  metadataBase: new URL("https://ayola-foods-ke.vercel.app"),
+  metadataBase: new URL("https://ayolafoods.com"),
 };
 
 export default function RootLayout({
@@ -61,7 +61,7 @@ export default function RootLayout({
     alternateName: "Ayola Foods Limited",
     description:
       "Health food restaurant and packaged food products in Kahawa Sukari, Nairobi. Probiotic beverages, heritage flour blends, and ready meals formulated by a food scientist.",
-    url: "https://ayola-foods-ke.vercel.app",
+    url: "https://ayolafoods.com",
     telephone: "+254713280550",
     email: "ayola.foods.kenya@gmail.com",
     address: {

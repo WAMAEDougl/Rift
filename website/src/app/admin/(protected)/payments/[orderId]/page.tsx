@@ -23,7 +23,7 @@ export default async function PaymentLogPage({ params }: Props) {
 
   const { data: logs } = await admin
     .from("payment_logs")
-    .select("*")
+    .select("id, order_id, provider, event_type, raw_payload, created_at")
     .eq("order_id", orderId)
     .order("created_at", { ascending: false })
 

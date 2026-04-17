@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import ReactMarkdown from "react-markdown";
-import { recipes, getRecipeBySlug, recipeCategories } from "@/lib/recipes";
+import { recipeCategories } from "@/lib/recipes";
+import { getPublishedRecipeBySlug, getAllRecipeSlugs } from "@/lib/recipes-db";
 import { getProductBySlug } from "@/lib/products";
 import VideoEmbed from "@/components/recipes/VideoEmbed";
-import { Clock, Users, ChefHat, ArrowLeft, ShoppingCart } from "lucide-react";
+import { Clock, Users, ChefHat, ArrowLeft, ShoppingCart, ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
 
 export async function generateStaticParams() {
-  return recipes.map((r) => ({ slug: r.slug }));
+  const slugs = await getAllRecipeSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -17,11 +18,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const recipe = getRecipeBySlug(slug);
+  const recipe = await getPublishedRecipeBySlug(slug);
   if (!recipe) return { title: "Recipe Not Found" };
   return {
     title: `${recipe.title} | Ayola Foods KE Recipes`,
     description: recipe.excerpt,
+    openGraph: recipe.coverImageUrl
+      ? { images: [{ url: recipe.coverImageUrl }] }
+      : undefined,
   };
 }
 
@@ -31,7 +35,7 @@ export default async function RecipePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const recipe = getRecipeBySlug(slug);
+  const recipe = await getPublishedRecipeBySlug(slug);
 
   if (!recipe) notFound();
 
@@ -64,7 +68,7 @@ export default async function RecipePage({
         </div>
       </div>
 
-      {/* Hero with Video */}
+      {/* Hero — cover image or video */}
       <section className="pb-8 bg-sand">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
@@ -78,10 +82,16 @@ export default async function RecipePage({
                 {recipe.difficulty}
               </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-earth mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-earth dark:text-white mb-4">
               {recipe.title}
             </h1>
-            <p className="text-lg text-muted-foreground mb-4">{recipe.excerpt}</p>
+            {/* Excerpt rendered as HTML */}
+            {recipe.excerpt && (
+              <div
+                className="text-lg text-muted-foreground mb-4 prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: recipe.excerpt }}
+              />
+            )}
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <ChefHat className="w-4 h-4" /> {recipe.author}
@@ -106,13 +116,27 @@ export default async function RecipePage({
             </div>
           </div>
 
-          {/* Video */}
-          <VideoEmbed
-            url={recipe.video.url}
-            platform={recipe.video.platform}
-            title={recipe.title}
-            thumbnailUrl={recipe.video.thumbnailUrl}
-          />
+          {/* Cover image (if no video) */}
+          {!recipe.video && recipe.coverImageUrl && (
+            <div className="rounded-2xl overflow-hidden aspect-video bg-muted">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={recipe.coverImageUrl}
+                alt={recipe.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          {/* Video embed */}
+          {recipe.video && (
+            <VideoEmbed
+              url={recipe.video.url}
+              platform={recipe.video.platform}
+              title={recipe.title}
+              thumbnailUrl={recipe.video.thumbnailUrl ?? recipe.coverImageUrl}
+            />
+          )}
         </div>
       </section>
 
@@ -122,34 +146,38 @@ export default async function RecipePage({
           <div className="grid lg:grid-cols-3 gap-10">
             {/* Main content */}
             <div className="lg:col-span-2">
-              <article className="prose prose-lg max-w-none prose-headings:text-earth prose-h2:text-2xl prose-h3:text-xl prose-a:text-primary">
-                <ReactMarkdown>{recipe.content}</ReactMarkdown>
-              </article>
+              {/* Render content as HTML (admin uses rich text editor) */}
+              <article
+                className="prose prose-lg max-w-none prose-headings:text-earth prose-h2:text-2xl prose-h3:text-xl prose-a:text-primary prose-img:rounded-xl"
+                dangerouslySetInnerHTML={{ __html: recipe.content }}
+              />
 
               {/* Tags */}
-              <div className="mt-8 pt-6 border-t border-border">
-                <p className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">
-                  Tags
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {recipe.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
+              {recipe.tags.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-border">
+                  <p className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">
+                    Tags
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {recipe.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Sidebar */}
             <aside className="space-y-6">
               {/* Ingredients */}
               {recipe.ingredients && recipe.ingredients.length > 0 && (
-                <div className="bg-amber-50 rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-earth mb-4">
+                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-6 border border-transparent dark:border-amber-900/50">
+                  <h3 className="text-lg font-bold text-earth dark:text-amber-400 mb-4">
                     Ingredients
                   </h3>
                   <ul className="space-y-2">
@@ -165,35 +193,43 @@ export default async function RecipePage({
                 </div>
               )}
 
-              {/* Related Product */}
+              {/* Related Product — proper link to product page */}
               {relatedProduct && (
-                <div className="bg-green-50 rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-earth mb-2">
-                    Try This Product
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-3">
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+                  <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-2">
+                    Featured in this recipe
+                  </p>
+                  <h3 className="text-base font-bold text-earth mb-2">
                     {relatedProduct.name}
-                  </p>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {relatedProduct.description}
-                  </p>
+                  </h3>
+                  {relatedProduct.description && (
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {relatedProduct.description}
+                    </p>
+                  )}
                   {relatedProduct.price > 0 && (
-                    <p className="text-lg font-bold text-primary mb-3">
+                    <p className="text-lg font-bold text-primary mb-4">
                       KES {relatedProduct.price.toLocaleString()}
                     </p>
                   )}
                   <Link
-                    href="/products"
-                    className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors"
+                    href={`/products/${relatedProduct.slug}`}
+                    className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors w-full justify-center"
                   >
                     <ShoppingCart className="w-4 h-4" /> View Product
+                  </Link>
+                  <Link
+                    href="/products"
+                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mt-2 justify-center w-full"
+                  >
+                    Browse all products <ExternalLink className="w-3 h-3" />
                   </Link>
                 </div>
               )}
 
               {/* Share */}
               <div className="bg-muted/50 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-earth mb-3">
+                <h3 className="text-lg font-bold text-earth dark:text-white mb-3">
                   Share This Recipe
                 </h3>
                 <div className="flex gap-2">
@@ -201,7 +237,7 @@ export default async function RecipePage({
                     href={`https://wa.me/?text=${encodeURIComponent(recipe.title + " — Ayola Foods Kenya")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
+                    className="flex-1 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors text-center"
                   >
                     WhatsApp
                   </a>
@@ -209,7 +245,7 @@ export default async function RecipePage({
                     href={`https://www.facebook.com/sharer/sharer.php?quote=${encodeURIComponent(recipe.title)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+                    className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors text-center"
                   >
                     Facebook
                   </a>

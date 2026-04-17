@@ -1,16 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { AlertTriangle, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Trash2, AlertTriangle } from "lucide-react"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog"
 
 interface Props {
@@ -19,7 +13,6 @@ interface Props {
 }
 
 export function CancelOrderButton({ orderId, orderNumber }: Props) {
-  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState("")
   const [loading, setLoading] = useState(false)
@@ -32,17 +25,15 @@ export function CancelOrderButton({ orderId, orderNumber }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason: reason || undefined }),
       })
-
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
-        toast.error(json?.error ?? "Failed to cancel order")
+        toast.error(json?.error?.message ?? "Failed to cancel order")
         return
       }
-
       toast.success(`Order ${orderNumber} cancelled`)
       setOpen(false)
       setReason("")
-      router.refresh()
+      window.location.reload()
     } catch {
       toast.error("An error occurred. Please try again.")
     } finally {
@@ -52,68 +43,44 @@ export function CancelOrderButton({ orderId, orderNumber }: Props) {
 
   return (
     <>
-      {/* ── Danger Zone Card ── */}
-      <div className="bg-red-50/60 rounded-3xl p-8 border border-red-100">
-        <h3
-          className="font-bold text-lg text-red-600 mb-4 flex items-center gap-2"
-          style={{ fontFamily: "var(--font-manrope, sans-serif)" }}
-        >
-          <AlertTriangle size={18} />
-          Danger Zone
-        </h3>
-        <p className="text-xs text-red-400/80 mb-6 leading-relaxed">
-          Cancelling this order will notify the customer. This action cannot be
-          undone.
-        </p>
-        <button
-          onClick={() => setOpen(true)}
-          className="w-full border-2 border-red-500 text-red-600 py-3 rounded-xl font-bold text-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2"
-        >
-          <X size={16} />
-          Cancel Order
-        </button>
-      </div>
+      <button
+        onClick={() => setOpen(true)}
+        className="w-full py-2.5 rounded-xl text-sm font-semibold bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2"
+      >
+        <Trash2 size={14} />
+        Cancel Order
+      </button>
 
-      {/* ── Confirmation Dialog ── */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cancel order {orderNumber}?</DialogTitle>
+        <DialogContent className="max-w-md rounded-2xl p-6 border border-gray-100 shadow-xl bg-white">
+          <DialogHeader className="mb-4">
+            <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-500 mb-3">
+              <AlertTriangle size={18} />
+            </div>
+            <DialogTitle className="text-xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+              Cancel order {orderNumber}?
+            </DialogTitle>
+            <p className="text-sm text-gray-400 mt-1">This action cannot be undone.</p>
           </DialogHeader>
-          <p className="text-sm text-slate-600">
-            Are you sure you want to cancel this order? This action cannot be
-            undone.
-          </p>
-          <div className="mt-2">
-            <label className="text-sm font-medium text-slate-600 block mb-1">
-              Reason (optional)
-            </label>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Reason (optional)</label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="e.g. Out of stock, customer request…"
               rows={3}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-[#1a1a2e] focus:outline-none focus:ring-2 focus:ring-[#22c55e]/40 resize-none"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-600/20 resize-none"
             />
           </div>
-          <DialogFooter className="mt-4 gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setOpen(false)
-                setReason("")
-              }}
-              disabled={loading}
-            >
+          <DialogFooter className="mt-4 flex gap-3">
+            <button onClick={() => { setOpen(false); setReason("") }} disabled={loading}
+              className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-semibold transition-colors">
               Keep Order
-            </Button>
-            <Button
-              onClick={handleCancel}
-              disabled={loading}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
+            </button>
+            <button onClick={handleCancel} disabled={loading}
+              className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50">
               {loading ? "Cancelling…" : "Cancel Order"}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

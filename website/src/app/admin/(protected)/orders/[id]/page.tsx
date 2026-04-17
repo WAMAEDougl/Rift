@@ -1,25 +1,9 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import {
-  ArrowLeft,
-  Clock,
-  CheckCircle2,
-  ChefHat,
-  Package,
-  Truck,
-  MapPin,
-  Printer,
-  ChevronRight,
-  User,
-  CreditCard,
-  Hash,
-  ShieldCheck,
-  Zap,
-  Info,
-  X,
-  Box,
-  Eye,
-  AlertTriangle,
+  ArrowLeft, Clock, CheckCircle2, ChefHat, Package,
+  Truck, MapPin, User, CreditCard, Phone, Mail,
+  Zap, AlertTriangle, Package2,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { getAdminClient } from "@/lib/admin/supabase"
@@ -29,41 +13,49 @@ import { OrderStatusControl } from "./OrderStatusControl"
 import { CancelOrderButton } from "./CancelOrderButton"
 
 const STEPS = [
-  { key: "pending", label: "Pending", icon: Clock },
-  { key: "confirmed", label: "Confirmed", icon: CheckCircle2 },
-  { key: "preparing", label: "Preparing", icon: ChefHat },
-  { key: "ready", label: "Ready", icon: Package },
+  { key: "pending",    label: "Pending",    icon: Clock },
+  { key: "confirmed",  label: "Confirmed",  icon: CheckCircle2 },
+  { key: "preparing",  label: "Preparing",  icon: ChefHat },
+  { key: "ready",      label: "Ready",      icon: Package },
   { key: "dispatched", label: "Dispatched", icon: Truck },
-  { key: "delivered", label: "Delivered", icon: MapPin },
+  { key: "delivered",  label: "Delivered",  icon: MapPin },
 ]
 
 interface PageProps {
   params: Promise<{ id: string }>
 }
 
+function SectionCard({ title, icon, children }: {
+  title: string; icon: React.ReactNode; children: React.ReactNode
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-6">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 shrink-0">
+          {icon}
+        </div>
+        <h3 className="text-base font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+          {title}
+        </h3>
+      </div>
+      {children}
+    </div>
+  )
+}
+
 export default async function OrderDetailPage({ params }: PageProps) {
   const { id } = await params
 
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   const admin = getAdminClient()
 
   const [{ data: order }, { data: profile }] = await Promise.all([
-    admin
-      .from("orders")
-      .select(
-        "*, order_items(id, product_id, product_name, product_price, quantity, line_total)"
-      )
-      .eq("id", id)
-      .single(),
-    admin
-      .from("profiles")
-      .select("role")
-      .eq("id", user!.id)
-      .single(),
+    admin.from("orders")
+      .select("id, order_number, status, payment_status, customer_name, customer_phone, customer_email, customer_id, delivery_address, delivery_city, delivery_type, order_notes, subtotal, delivery_fee, total, payment_method, mpesa_receipt_number, created_at, order_items(id, product_id, product_name, product_price, quantity, line_total)")
+      .eq("id", id).single(),
+    admin.from("profiles").select("role").eq("id", user!.id).single(),
   ])
 
   if (!order) notFound()
@@ -75,407 +67,235 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const stepKeys = STEPS.map((s) => s.key)
   const currentStepIndex = isCancelled ? -1 : stepKeys.indexOf(order.status)
-  const progressPercent =
-    currentStepIndex <= 0 ? 0 : (currentStepIndex / (STEPS.length - 1)) * 100
-  const paymentMethodLabel = order.payment_method === "mpesa" ? "M-Pesa" : order.payment_method.replace(/_/g, " ")
-  const paymentStatusLabel = order.payment_status === "paid" ? "Paid" : order.payment_status.replace(/_/g, " ")
+  const progressPercent = currentStepIndex <= 0 ? 0 : (currentStepIndex / (STEPS.length - 1)) * 100
 
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full px-4 mb-20 max-w-[1600px] mx-auto">
-      {/* ── High-Premium Header ── */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 pb-6 border-b border-slate-50/50">
-        <div className="space-y-1">
-          <Link 
-            href="/admin/orders" 
-            className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-[#22c55e] mb-2 hover:translate-x-[-4px] transition-transform"
-          >
-            <ArrowLeft size={16} />
-            Back to Orders
+    <div className="space-y-6 mb-16">
+      {/* Header */}
+      <div className="flex items-start justify-between pb-4 border-b border-gray-100">
+        <div>
+          <Link href="/admin/orders" className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-amber-700 transition-colors mb-2">
+            <ArrowLeft size={13} /> Back to Orders
           </Link>
-          <h1 className="text-4xl font-black tracking-tighter text-[#1a1a2e]" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
-            Order #{order.order_number}
+          <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            Order {order.order_number}
           </h1>
-          <div className="flex flex-wrap items-center gap-4 text-slate-400">
-             <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full">
-               <span className={`w-1.5 h-1.5 rounded-full ${isCancelled ? "bg-red-500" : isDelivered ? "bg-[#22c55e]" : "bg-[#2b6cb0] animate-pulse"}`} />
-               <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">
-                 {order.status.replace(/_/g, " ")}
-               </span>
-             </div>
-             <div className="h-4 w-px bg-slate-200" />
-             <div className="flex items-center gap-2 px-3 py-1 bg-[#1a1a2e]/5 rounded-full">
-               <span className="text-[10px] font-black uppercase tracking-widest text-[#1a1a2e]">
-                 {paymentMethodLabel} · {paymentStatusLabel}
-               </span>
-             </div>
-             <div className="h-4 w-px bg-slate-200" />
-             <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">
-               Placed {formatRelativeTime(order.created_at)}
-             </p>
+          <div className="flex flex-wrap items-center gap-3 mt-1.5">
+            <StatusBadge status={order.status} type="order" />
+            <StatusBadge status={order.payment_status} type="payment" />
+            <span className="text-xs text-gray-400">{formatRelativeTime(order.created_at)}</span>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-4 w-full lg:w-auto">
-          <button className="flex-1 lg:flex-none bg-slate-50 hover:bg-slate-100 text-[#1a1a2e] px-8 py-4 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 border border-slate-100">
-            <Printer size={18} />
-            Print Invoice
-          </button>
-          {!isTerminal && (
-            <button className="flex-1 lg:flex-none bg-[#1a1a2e] text-white px-10 py-4 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-[#1a1a2e]/20 flex items-center justify-center gap-3 hover:bg-slate-800 hover:scale-[1.02] active:scale-95 transition-all overflow-hidden relative group">
-              <CheckCircle2 size={18} className="group-hover:scale-110 transition-transform" />
-              <span className="relative z-10">Next Stage</span>
-            </button>
-          )}
         </div>
       </div>
 
-      {/* ── Asymmetric Bento Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        
-        {/* ── Left Column (8 cols) ── */}
-        <div className="lg:col-span-8 space-y-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-          {/* Sequential Progression */}
-          <section className="bg-white p-12 rounded-[60px] border border-slate-50 shadow-[0_20px_80px_-20px_rgba(26,26,46,0.06)] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-10 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-1000 rotate-12">
-               <Zap size={160} />
-            </div>
-            
-            <div className="mb-12 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#22c55e]">
-                 <Clock size={24} />
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Delivery Status</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Real-time fulfillment tracking</p>
-              </div>
-            </div>
+        {/* ── Left Column ── */}
+        <div className="lg:col-span-8 space-y-5">
 
+          {/* Status Progress */}
+          <SectionCard title="Order Progress" icon={<Clock size={17} />}>
             {isCancelled ? (
-              <div className="p-8 rounded-[32px] bg-red-50 border border-red-100 flex items-center gap-6 animate-in zoom-in duration-500">
-                <div className="w-16 h-16 rounded-3xl bg-white flex items-center justify-center text-red-500 shadow-xl shadow-red-200/50">
-                  <X size={32} />
-                </div>
+              <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
+                <AlertTriangle size={18} className="text-red-500 shrink-0" />
                 <div>
-                  <h4 className="text-lg font-black text-red-900 uppercase tracking-widest leading-none mb-2">Order Cancelled</h4>
-                  <p className="text-sm font-semibold text-red-700/60">{order.order_notes || "This order was cancelled by the administrator."}</p>
+                  <p className="text-sm font-semibold text-red-700">Order Cancelled</p>
+                  {order.order_notes && (
+                    <p className="text-xs text-red-500 mt-0.5">{order.order_notes}</p>
+                  )}
                 </div>
               </div>
             ) : (
-              <div className="relative pt-4 pb-8">
-                {/* Background track */}
-                <div className="absolute top-8 left-0 right-0 h-1 bg-slate-50 rounded-full" />
-                {/* Active progress fill */}
+              <div className="relative pt-2 pb-6">
+                {/* Track */}
+                <div className="absolute top-6 left-0 right-0 h-1 bg-gray-100 rounded-full" />
                 <div
-                  className="absolute top-8 left-0 h-1 bg-[#22c55e] transition-all duration-1000 ease-out rounded-full shadow-[0_0_20px_rgba(34,197,94,0.4)]"
+                  className="absolute top-6 left-0 h-1 bg-amber-600 rounded-full transition-all duration-700"
                   style={{ width: `${progressPercent}%` }}
                 />
-
                 <div className="relative flex justify-between">
                   {STEPS.map((step, idx) => {
-                    const StepIcon = step.icon
+                    const Icon = step.icon
                     const isCompleted = idx < currentStepIndex
                     const isCurrent = idx === currentStepIndex
-
                     return (
-                      <div key={step.key} className="flex flex-col items-center gap-6 flex-1">
-                        <div
-                          className={`w-16 h-16 rounded-[24px] flex items-center justify-center transition-all duration-700 relative group/step ${
-                            isCompleted
-                              ? "bg-[#22c55e] text-white shadow-xl shadow-[#22c55e]/20"
-                              : isCurrent
-                                ? "bg-[#1a1a2e] text-white ring-[12px] ring-[#1a1a2e]/5 shadow-2xl scale-110"
-                                : "bg-white border border-slate-100 text-slate-200"
-                          }`}
-                        >
-                          <StepIcon size={24} strokeWidth={isCompleted || isCurrent ? 2.5 : 2} />
-                          {isCurrent && (
-                             <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#22c55e] rounded-full border-2 border-white animate-ping" />
-                          )}
+                      <div key={step.key} className="flex flex-col items-center gap-3 flex-1">
+                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${
+                          isCompleted ? "bg-amber-600 text-white shadow-sm"
+                          : isCurrent ? "bg-gray-900 text-white ring-4 ring-gray-900/10 scale-110"
+                          : "bg-white border border-gray-200 text-gray-300"
+                        }`}>
+                          <Icon size={18} />
                         </div>
-                        <div className="text-center space-y-1">
-                          <p className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isCompleted || isCurrent ? "text-[#1a1a2e]" : "text-slate-300"}`}>
-                            {step.label}
-                          </p>
-                          {isCurrent && (
-                             <p className="text-[9px] font-bold text-[#22c55e] uppercase tracking-widest animate-pulse">In Progress</p>
-                          )}
-                        </div>
+                        <p className={`text-[10px] font-semibold uppercase tracking-wide text-center ${
+                          isCompleted || isCurrent ? "text-gray-700" : "text-gray-300"
+                        }`}>
+                          {step.label}
+                        </p>
                       </div>
                     )
                   })}
                 </div>
               </div>
             )}
-          </section>
+          </SectionCard>
 
           {/* Order Items */}
-          <section className="bg-white p-12 rounded-[60px] border border-slate-50 shadow-[0_20px_80px_-20px_rgba(26,26,46,0.06)]">
-             <div className="mb-10 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#22c55e]">
-                 <Hash size={24} />
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Order Items</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Details of products ordered</p>
-              </div>
-            </div>
-
-            <div className="overflow-hidden border border-slate-50 rounded-[40px] mb-12">
+          <SectionCard title="Order Items" icon={<Package2 size={17} />}>
+            <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-slate-50/50">
-                  <tr>
-                    <th className="py-6 px-8 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Product Details</th>
-                    <th className="py-6 px-8 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Unit Price</th>
-                    <th className="py-6 px-8 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 text-center">Qty</th>
-                    <th className="py-6 px-8 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 text-right">Total</th>
+                <thead>
+                  <tr className="bg-gray-50/60">
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Product</th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Unit Price</th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">Qty</th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {order.order_items.map((item: any) => (
-                    <tr key={item.id} className="group hover:bg-slate-50/50 transition-all duration-300">
-                      <td className="py-6 px-8">
-                        <div className="flex items-center gap-4">
-                           <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-200 group-hover:text-[#22c55e] transition-colors">
-                              <Box size={20} />
-                           </div>
-                           <div>
-                              <p className="text-sm font-black text-[#1a1a2e]">{item.product_name}</p>
-                              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">ID: {item.product_id.split("-")[0]}</p>
-                           </div>
+                <tbody className="divide-y divide-gray-50">
+                  {order.order_items.map((item: {
+                    id: string; product_id: string; product_name: string;
+                    product_price: number; quantity: number; line_total: number
+                  }) => (
+                    <tr key={item.id} className="hover:bg-amber-50/20 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
+                            <Package2 size={14} />
+                          </div>
+                          <p className="text-sm font-medium text-gray-800">{item.product_name}</p>
                         </div>
                       </td>
-                      <td className="py-6 px-8">
-                        <p className="text-sm font-bold text-slate-500">{formatKES(item.product_price)}</p>
-                      </td>
-                      <td className="py-6 px-8 text-center">
-                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-slate-100 text-sm font-black text-[#1a1a2e] shadow-sm">
+                      <td className="px-4 py-3 text-sm text-gray-500">{formatKES(item.product_price)}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 text-sm font-semibold text-gray-700">
                           {item.quantity}
                         </span>
                       </td>
-                      <td className="py-6 px-8 text-right">
-                        <p className="text-sm font-black text-[#1a1a2e]">{formatKES(item.line_total)}</p>
-                      </td>
+                      <td className="px-4 py-3 text-right text-sm font-semibold text-gray-800">{formatKES(item.line_total)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Price Calculations */}
-            <div className="flex justify-end pr-8">
-              <div className="w-full md:w-96 space-y-6">
-                <div className="flex justify-between items-center text-slate-400">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">Subtotal</span>
-                  <span className="text-sm font-bold">{formatKES(order.subtotal)}</span>
+            {/* Totals */}
+            <div className="mt-4 flex justify-end">
+              <div className="w-full sm:w-72 space-y-2">
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Subtotal</span>
+                  <span>{formatKES(order.subtotal)}</span>
                 </div>
-                <div className="flex justify-between items-center text-slate-400">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">Delivery Fee</span>
-                  <span className="text-sm font-bold">{formatKES(order.delivery_fee)}</span>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Delivery Fee</span>
+                  <span>{formatKES(order.delivery_fee)}</span>
                 </div>
-                <div className="pt-8 border-t border-slate-100 flex justify-between items-center bg-[#1a1a2e] p-8 rounded-[40px] shadow-2xl shadow-[#1a1a2e]/20 group/total transition-transform hover:scale-[1.02] duration-700">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]">Final Balance</span>
-                    <p className="text-2xl font-black text-[#22c55e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Total Amount</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-3xl font-black text-white tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>
-                      {formatKES(order.total)}
-                    </p>
-                  </div>
+                <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                  <span className="text-sm font-bold text-gray-900">Total</span>
+                  <span className="text-xl font-bold text-amber-700">{formatKES(order.total)}</span>
                 </div>
               </div>
             </div>
-          </section>
+          </SectionCard>
 
           {/* Order Notes */}
           {order.order_notes && (
-            <section className="bg-slate-50/50 p-12 rounded-[60px] border border-slate-100 group transition-all duration-700">
-              <div className="mb-8 flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-300">
-                  <span className="material-symbols-outlined">description</span>
-                </div>
-                <h3 className="text-2xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Order Notes</h3>
-              </div>
-              <div className="p-8 bg-white border border-slate-100 rounded-[32px] shadow-sm relative overflow-hidden">
-                <p className="text-sm font-medium text-slate-600 leading-relaxed relative z-10">{order.order_notes}</p>
-                <div className="absolute -bottom-10 -right-10 opacity-[0.02] group-hover:scale-125 transition-transform duration-[2s]">
-                    <Info size={120} />
-                </div>
-              </div>
-            </section>
+            <div className="bg-amber-50 rounded-2xl border border-amber-100 p-5">
+              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Order Notes</p>
+              <p className="text-sm text-gray-700 leading-relaxed">{order.order_notes}</p>
+            </div>
           )}
         </div>
 
-        {/* ── Right Column (4 cols) ── */}
-        <div className="lg:col-span-4 space-y-10">
+        {/* ── Right Column ── */}
+        <div className="lg:col-span-4 space-y-5">
 
-          {/* Customer Details */}
-          <section className="bg-white p-10 rounded-[48px] border border-slate-50 shadow-xl relative overflow-hidden group">
-            <div className="mb-10 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#22c55e]">
-                   <User size={20} />
+          {/* Customer */}
+          <SectionCard title="Customer" icon={<User size={17} />}>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 text-sm font-bold shrink-0">
+                  {order.customer_name?.charAt(0).toUpperCase()}
                 </div>
-                <h3 className="text-xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Customer Details</h3>
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{order.customer_name}</p>
+                  {order.customer_id && (
+                    <Link href={`/admin/customers/${order.customer_id}`} className="text-xs text-amber-700 hover:underline">
+                      View profile →
+                    </Link>
+                  )}
+                </div>
               </div>
-              {order.customer_id && (
-                <Link
-                  href={`/admin/customers/${order.customer_id}`}
-                  className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-[#22c55e] hover:bg-[#1a1a2e] hover:text-white transition-all shadow-sm"
-                >
-                  <ChevronRight size={18} />
-                </Link>
+
+              {order.customer_email && (
+                <div className="flex items-center gap-2.5 text-sm text-gray-600">
+                  <Mail size={14} className="text-gray-400 shrink-0" />
+                  {order.customer_email}
+                </div>
               )}
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex items-center gap-5 p-6 rounded-[32px] bg-slate-50/50 border border-slate-100 animate-in slide-in-from-right-8 duration-700">
-                 <div className="w-16 h-16 rounded-[20px] bg-white border border-slate-100 flex items-center justify-center shadow-xl shadow-slate-200/50">
-                    <span className="text-2xl font-black text-[#1a1a2e] leading-none">{order.customer_name[0]}</span>
-                 </div>
-                 <div>
-                    <p className="text-base font-black text-[#1a1a2e] leading-none mb-1">{order.customer_name}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded-full bg-white border border-slate-100 inline-block">Loyalty Member</p>
-                 </div>
+              <div className="flex items-center gap-2.5 text-sm text-gray-600">
+                <Phone size={14} className="text-gray-400 shrink-0" />
+                {order.customer_phone}
               </div>
-
-              <div className="space-y-4 px-2">
-                <div className="group/item">
-                  <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mb-2 ml-1">Email Address</p>
-                  <div className="flex items-center gap-4 p-5 rounded-2xl bg-slate-50/30 border border-transparent group-hover/item:border-slate-100 transition-all">
-                    <div className="text-[#1a1a2e]/30 group-hover/item:text-[#22c55e] transition-colors"><span className="material-symbols-outlined text-[20px]">mail</span></div>
-                    <p className="text-sm font-bold text-[#1a1a2e]">{order.customer_email || "Not Provided"}</p>
-                  </div>
-                </div>
-
-                <div className="group/item">
-                   <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mb-2 ml-1">Phone Number</p>
-                   <div className="flex items-center gap-4 p-5 rounded-2xl bg-slate-50/30 border border-transparent group-hover/item:border-slate-100 transition-all">
-                    <div className="text-[#1a1a2e]/30 group-hover/item:text-[#22c55e] transition-colors"><span className="material-symbols-outlined text-[20px]">phone_enabled</span></div>
-                    <p className="text-sm font-bold text-[#1a1a2e] font-mono">{order.customer_phone}</p>
-                  </div>
-                </div>
-
-                <div className="group/item">
-                   <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mb-2 ml-1">Delivery Address</p>
-                   <div className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50/30 border border-transparent group-hover/item:border-slate-100 transition-all">
-                    <div className="text-[#1a1a2e]/30 group-hover/item:text-[#22c55e] transition-colors mt-0.5"><span className="material-symbols-outlined text-[20px]">location_on</span></div>
-                    <p className="text-sm font-bold text-[#1a1a2e] leading-relaxed">
-                      {order.delivery_address}
-                      {order.delivery_city && <span className="block text-[10px] text-slate-400 mt-1 uppercase font-black">{order.delivery_city} Region</span>}
-                    </p>
-                  </div>
-                </div>
+              <div className="flex items-start gap-2.5 text-sm text-gray-600">
+                <MapPin size={14} className="text-gray-400 shrink-0 mt-0.5" />
+                <span>{order.delivery_address}, {order.delivery_city}</span>
               </div>
-
-              <div className="pt-4 animate-in fade-in duration-1000 delay-500">
+              <div className="pt-1">
                 <StatusBadge status={order.delivery_type} type="delivery" />
               </div>
             </div>
-            <div className="absolute bottom-0 right-0 p-8 opacity-[0.02] group-hover:scale-150 transition-transform duration-[3s]">
-                <User size={160} />
-            </div>
-          </section>
+          </SectionCard>
 
-          {/* Payment Details */}
-          <section className="bg-[#1a1a2e] p-10 rounded-[48px] shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-1000">
-                <CreditCard size={120} className="text-white" />
-            </div>
-            
-            <div className="relative z-10 space-y-10">
+          {/* Payment */}
+          <SectionCard title="Payment" icon={<CreditCard size={17} />}>
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-black text-white tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Payment Details</h3>
-                  <p className="text-[9px] font-bold text-white/40 uppercase tracking-[0.2em] mt-1">Order transaction info</p>
-                </div>
-                <Link
-                  href={`/admin/payments/${order.id}`}
-                  className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-[#22c55e] hover:bg-[#22c55e] hover:text-white transition-all shadow-lg"
-                >
-                  <Eye size={18} />
-                </Link>
+                <span className="text-xs text-gray-400">Method</span>
+                <span className="text-sm font-medium text-gray-700 capitalize">
+                  {order.payment_method === "cash_on_delivery" ? "Cash on Delivery" : "M-Pesa"}
+                </span>
               </div>
-
-              <div className="space-y-6">
-                 <div className="p-6 rounded-[32px] bg-white/5 border border-white/5 group-hover:border-white/10 transition-all duration-700">
-                    <div className="flex items-center justify-between mb-4">
-                       <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">Method</p>
-                       <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-[#22c55e] text-white animate-pulse shadow-lg shadow-[#22c55e]/20">VERIFIED</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                       <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-[#22c55e]">
-                          <span className="material-symbols-outlined text-2xl">account_balance_wallet</span>
-                       </div>
-                       <div>
-                          <p className="text-lg font-black text-white leading-none uppercase">{paymentMethodLabel}</p>
-                          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Transaction ID: {order.id.split("-")[0]}</p>
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="grid grid-cols-2 gap-4">
-                    <div className="p-5 rounded-[28px] bg-white/5 border border-white/5">
-                       <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-2">Status</p>
-                       <StatusBadge status={order.payment_status} type="payment" />
-                    </div>
-                    {order.mpesa_receipt_number && (
-                      <div className="p-5 rounded-[28px] bg-white/5 border border-white/5">
-                        <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-2">M-Pesa Receipt</p>
-                        <p className="text-xs font-black text-[#22c55e] tracking-tight">{order.mpesa_receipt_number}</p>
-                      </div>
-                    )}
-                 </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400">Status</span>
+                <StatusBadge status={order.payment_status} type="payment" />
               </div>
-              
-              {order.mpesa_checkout_request_id && (
-                <div className="p-6 rounded-[28px] bg-white/5 border border-white/5 group-hover:bg-[#22c55e]/5 transition-all">
-                   <div className="flex items-center gap-3 mb-2">
-                      <ShieldCheck size={14} className="text-[#22c55e]" />
-                      <p className="text-[9px] font-black text-white uppercase tracking-widest">Process ID</p>
-                   </div>
-                   <p className="text-[9px] font-medium text-white/20 break-all font-mono leading-relaxed">{order.mpesa_checkout_request_id}</p>
+              {order.mpesa_receipt_number && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">Receipt</span>
+                  <span className="text-xs font-mono font-semibold text-green-700">{order.mpesa_receipt_number}</span>
                 </div>
               )}
-            </div>
-          </section>
-
-          {/* Order Actions */}
-          <section className="bg-white p-10 rounded-[48px] border border-slate-50 shadow-xl relative group">
-            <div className="mb-10 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#22c55e]">
-                 <Zap size={20} />
+              <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                <span className="text-xs text-gray-400">Placed</span>
+                <span className="text-xs text-gray-600">{formatDate(order.created_at)}</span>
               </div>
-              <h3 className="text-xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Quick Actions</h3>
             </div>
-            
-            <div className="px-2">
-              {!isTerminal ? (
-                <OrderStatusControl orderId={order.id} currentStatus={order.status} role={role} />
-              ) : (
-                <div className="flex items-center gap-3 p-6 rounded-[32px] bg-slate-50/50 border border-slate-100">
-                   <Info size={18} className="text-slate-300" />
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Order finalized: no further actions</p>
-                </div>
-              )}
-            </div>
-          </section>
+          </SectionCard>
 
-          {/* Cancel Order */}
+          {/* Actions */}
+          {!isTerminal && (
+            <SectionCard title="Update Status" icon={<Zap size={17} />}>
+              <OrderStatusControl orderId={order.id} currentStatus={order.status} role={role} />
+            </SectionCard>
+          )}
+
+          {/* Cancel */}
           {!isTerminal && role === "admin" && (
-            <section className="bg-red-50/50 p-10 rounded-[48px] border border-red-100 transition-all duration-700 group/abort">
-               <div className="mb-8 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-white border border-red-100 flex items-center justify-center text-red-500 shadow-sm">
-                   <AlertTriangle size={20} />
+            <div className="bg-red-50 rounded-2xl border border-red-100 p-5">
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-white border border-red-200 flex items-center justify-center text-red-500 shrink-0">
+                  <AlertTriangle size={15} />
                 </div>
-                <h3 className="text-xl font-black text-[#1a1a2e] tracking-tighter" style={{ fontFamily: "var(--font-manrope, sans-serif)" }}>Danger Zone</h3>
+                <h3 className="text-sm font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+                  Danger Zone
+                </h3>
               </div>
-              <div className="space-y-6">
-                 <p className="text-xs font-semibold text-red-800/50 leading-relaxed px-2">Cancelling this order will stop fulfillment and notify the customer. This action is irreversible.</p>
-                 <CancelOrderButton orderId={order.id} orderNumber={order.order_number} />
-              </div>
-            </section>
+              <p className="text-xs text-red-700/60 leading-relaxed mb-4">
+                Cancelling this order is irreversible.
+              </p>
+              <CancelOrderButton orderId={order.id} orderNumber={order.order_number} />
+            </div>
           )}
         </div>
       </div>

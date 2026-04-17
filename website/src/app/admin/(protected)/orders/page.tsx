@@ -12,6 +12,7 @@ import {
   Plus,
   X,
   AlertTriangle,
+  FileDown,
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -21,8 +22,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { toast } from "sonner"
 import StatusBadge from "@/components/admin/StatusBadge"
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters"
+import { useAdminRole } from "@/lib/admin/useAdminRole"
 
 interface OrderRow {
   id: string
@@ -55,6 +58,7 @@ interface OrdersResponse {
 export default function OrdersPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { isKitchen } = useAdminRole()
 
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [pagination, setPagination] = useState<Pagination | null>(null)
@@ -63,6 +67,7 @@ export default function OrdersPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [cancelReason, setCancelReason] = useState("")
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   const q = searchParams.get("q") ?? ""
   const status = searchParams.get("status") ?? ""
@@ -183,6 +188,114 @@ export default function OrdersPage() {
     }
   }
 
+  const handleDownloadPDF = async () => {
+    setDownloading(true)
+    try {
+      const params = new URLSearchParams()
+      if (q) params.set("q", q)
+      if (status) params.set("status", status)
+      if (paymentStatus) params.set("payment_status", paymentStatus)
+      if (deliveryType) params.set("delivery_type", deliveryType)
+      if (from) params.set("from", from)
+      if (to) params.set("to", to)
+      params.set("per_page", "1000")
+      params.set("export", "true")
+
+      const res = await fetch(`/api/admin/orders?${params.toString()}`)
+      if (!res.ok) throw new Error("Failed to fetch orders")
+
+      const data = await res.json()
+      const allOrders = data.data?.items || []
+
+      if (allOrders.length === 0) {
+        toast.error("No orders to export")
+        return
+      }
+
+      const printWindow = window.open("", "_blank")
+      if (!printWindow) {
+        alert("Please allow popups to export PDF")
+        return
+      }
+
+      const style = `
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; color: #1a1a2e; }
+        .header { text-align: center; margin-bottom: 32px; }
+        .logo { font-size: 28px; font-weight: 800; color: #22c55e; }
+        .title { font-size: 20px; font-weight: 600; margin-top: 8px; }
+        .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 12px; }
+        th { background: #1a1a2e; color: white; padding: 12px 8px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
+        td { padding: 10px 8px; border-bottom: 1px solid #e2e8f0; }
+        tr:nth-child(even) { background: #f8fafc; }
+        .total-cell { font-weight: 700; }
+        .status { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-confirmed { background: #dbeafe; color: #1e40af; }
+        .status-preparing { background: #dbeafe; color: #1e40af; }
+        .status-ready { background: #dbeafe; color: #1e40af; }
+        .status-dispatched { background: #dbeafe; color: #1e40af; }
+        .status-delivered { background: #dcfce7; color: #166534; }
+        .status-cancelled { background: #f1f5f9; color: #64748b; }
+        .footer { text-align: center; margin-top: 32px; font-size: 11px; color: #94a3b8; }
+        @media print { body { padding: 20px; } }
+      `
+
+      const rows = allOrders.map((o: OrderRow) => `
+        <tr>
+          <td>${o.order_number}</td>
+          <td>${o.customer_name}</td>
+          <td>${o.customer_phone}</td>
+          <td style="text-align:center">${o.item_count}</td>
+          <td class="total-cell">KES ${o.total.toLocaleString()}</td>
+          <td><span class="status status-${o.status}">${o.status}</span></td>
+          <td style="text-align:right">${new Date(o.created_at).toLocaleDateString()}</td>
+        </tr>
+      `).join("")
+
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Orders Report - Ayola Foods</title>
+            <style>${style}</style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="logo">Ayola Foods</div>
+              <div class="title">Orders Report</div>
+              <div class="subtitle">Generated on ${new Date().toLocaleString()}</div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th style="text-align:center">Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th style="text-align:right">Date</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <div class="footer">
+              <p>Ayola Foods KE - www.ayolafoods.com</p>
+              <p>Total Orders: ${allOrders.length}</p>
+            </div>
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
+      setTimeout(() => printWindow.print(), 400)
+    } catch (error) {
+      console.error("Download error:", error)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   const getPageNumbers = (): (number | "...")[] => {
     if (!pagination) return []
     const { total_pages } = pagination
@@ -200,25 +313,6 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1
-            className="text-3xl font-bold text-gray-900"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
-          >
-            Orders
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">
-            {pagination?.total.toLocaleString()} total &middot; Sales history
-          </p>
-        </div>
-        <button className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors">
-          <Plus size={16} />
-          Create Order
-        </button>
-      </div>
-
       {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
         <input
@@ -269,6 +363,14 @@ export default function OrdersPage() {
           className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1"
         >
           Clear
+        </button>
+        <button
+          onClick={handleDownloadPDF}
+          disabled={downloading || orders.length === 0}
+          className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50 ml-auto"
+        >
+          <FileDown size={16} />
+          {downloading ? "Generating..." : "Export PDF"}
         </button>
       </div>
 
@@ -478,13 +580,15 @@ export default function OrdersPage() {
             >
               Confirm Orders
             </button>
-            <button
-              onClick={() => setShowCancelDialog(true)}
-              disabled={bulkLoading}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
-            >
-              Cancel Orders
-            </button>
+            {!isKitchen && (
+              <button
+                onClick={() => setShowCancelDialog(true)}
+                disabled={bulkLoading}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+              >
+                Cancel Orders
+              </button>
+            )}
           </div>
           <button
             onClick={() => setSelectedIds(new Set())}

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { getAdminClient } from "@/lib/admin/supabase";
 import { ok, err } from "@/lib/admin/response";
-import { TERMINAL_STATUSES } from "@/lib/admin/status";
+import { TERMINAL_STATUSES, OrderStatus } from "@/lib/admin/types";
 
 const bulkStatusSchema = z.object({
   ids: z.array(z.string().uuid()).min(1).max(50),
@@ -45,10 +45,10 @@ export async function POST(request: Request) {
 
   // Separate terminal (skip) from non-terminal (update)
   const skippedOrders = foundOrders.filter((o) =>
-    TERMINAL_STATUSES.includes(o.status as never)
+    TERMINAL_STATUSES.includes(o.status as OrderStatus)
   );
   const toUpdate = foundOrders.filter(
-    (o) => !TERMINAL_STATUSES.includes(o.status as never)
+    (o) => !TERMINAL_STATUSES.includes(o.status as OrderStatus)
   );
 
   const skipped_ids = skippedOrders.map((o) => o.id);

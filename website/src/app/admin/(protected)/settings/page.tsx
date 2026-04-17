@@ -5,7 +5,7 @@ export default async function SettingsPage() {
   const supabase = getAdminClient();
 
   const [{ data: settings }, { data: adminUsers }] = await Promise.all([
-    supabase.from("store_settings").select("*").eq("id", 1).single(),
+    supabase.from("store_settings").select("id, store_name, support_email, support_phone, default_delivery_fee, delivery_cities, order_notification_emails, updated_at").eq("id", 1).single(),
     supabase
       .from("profiles")
       .select("id, full_name, email, role, created_at")

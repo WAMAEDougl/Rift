@@ -190,7 +190,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          order_number: string;
+          order_number?: string;
           customer_id?: string | null;
           status?: string;
           customer_name: string;
@@ -218,6 +218,12 @@ export interface Database {
           confirmed_at?: string | null;
           completed_at?: string | null;
           updated_at?: string;
+          customer_name?: string;
+          customer_phone?: string;
+          customer_email?: string | null;
+          delivery_address?: string;
+          delivery_city?: string;
+          delivery_type?: string;
         };
         Relationships: [
           {
@@ -368,6 +374,80 @@ export interface Database {
             referencedColumns: ["id"];
           },
         ];
+      };
+      recipes: {
+        Row: {
+          id: string;
+          slug: string;
+          title: string;
+          excerpt: string;
+          content: string;
+          cover_image_url: string | null;
+          category: "cooking-demo" | "beverage" | "how-to" | "health-tip";
+          video_url: string | null;
+          video_platform: "youtube" | "facebook" | "instagram" | "tiktok";
+          video_thumbnail_url: string | null;
+          prep_time: string | null;
+          servings: string | null;
+          difficulty: "Easy" | "Medium" | "Advanced";
+          ingredients: string[] | null;
+          tags: string[];
+          author: string;
+          date: string;
+          featured: boolean;
+          related_product: string | null;
+          is_published: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          title: string;
+          excerpt: string;
+          content: string;
+          cover_image_url?: string | null;
+          category: "cooking-demo" | "beverage" | "how-to" | "health-tip";
+          video_url?: string | null;
+          video_platform?: "youtube" | "facebook" | "instagram" | "tiktok";
+          video_thumbnail_url?: string | null;
+          prep_time?: string | null;
+          servings?: string | null;
+          difficulty: "Easy" | "Medium" | "Advanced";
+          ingredients?: string[] | null;
+          tags?: string[];
+          author: string;
+          date: string;
+          featured?: boolean;
+          related_product?: string | null;
+          is_published?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          title?: string;
+          excerpt?: string;
+          content?: string;
+          cover_image_url?: string | null;
+          category?: "cooking-demo" | "beverage" | "how-to" | "health-tip";
+          video_url?: string | null;
+          video_platform?: "youtube" | "facebook" | "instagram" | "tiktok";
+          video_thumbnail_url?: string | null;
+          prep_time?: string | null;
+          servings?: string | null;
+          difficulty?: "Easy" | "Medium" | "Advanced";
+          ingredients?: string[] | null;
+          tags?: string[];
+          author?: string;
+          date?: string;
+          featured?: boolean;
+          related_product?: string | null;
+          is_published?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

@@ -21,7 +21,7 @@ export async function GET(
     // Fetch orders by phone
     const { data: orders, error: ordersError } = await admin
       .from("orders")
-      .select("*")
+      .select("id, order_number, status, payment_status, customer_name, customer_phone, customer_email, delivery_address, delivery_city, total, created_at")
       .eq("customer_phone", phone)
       .order("created_at", { ascending: false })
       .limit(200);
@@ -38,7 +38,7 @@ export async function GET(
     // Try to find a matching profile
     const { data: profile } = await admin
       .from("profiles")
-      .select("*")
+      .select("id, full_name, email, phone, role, default_city, created_at")
       .eq("phone", phone)
       .single();
 
@@ -75,7 +75,7 @@ export async function GET(
   // UUID: lookup by profile ID
   const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("*")
+    .select("id, full_name, email, phone, role, default_city, created_at")
     .eq("id", id)
     .single();
 
@@ -86,7 +86,7 @@ export async function GET(
   // Fetch orders — try by customer_id first, then by phone fallback
   let { data: orders, error: ordersError } = await admin
     .from("orders")
-    .select("*")
+    .select("id, order_number, status, payment_status, customer_name, customer_phone, customer_email, delivery_address, delivery_city, total, created_at")
     .eq("customer_id", id)
     .order("created_at", { ascending: false })
     .limit(200);
@@ -95,7 +95,7 @@ export async function GET(
   if (!orders || orders.length === 0) {
     const { data: phoneOrders } = await admin
       .from("orders")
-      .select("*")
+      .select("id, order_number, status, payment_status, customer_name, customer_phone, customer_email, delivery_address, delivery_city, total, created_at")
       .eq("customer_phone", profile.phone ?? "")
       .order("created_at", { ascending: false })
       .limit(200);

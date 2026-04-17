@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Pencil, Trash2, Plus, FolderOpen } from "lucide-react"
+import { Pencil, Trash2, Plus, FolderOpen, Download } from "lucide-react"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -60,32 +60,47 @@ export default function CategoriesPage() {
     fetchCategories()
   }
 
+  function downloadReport() {
+    if (categories.length === 0) { toast.error("No categories to export"); return }
+    const rows = [
+      ["Name", "Slug", "Tagline", "Icon", "Ships Countrywide", "Product Count", "Sort Order"],
+      ...categories.map((c) => [
+        c.name, c.slug, c.tagline ?? "", c.icon ?? "",
+        c.ships_countrywide ? "Yes" : "No",
+        String(c.product_count), String(c.sort_order),
+      ]),
+    ]
+    const csv = rows.map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `categories-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success("Report downloaded")
+  }
+
   return (
     <div className="space-y-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1
-            className="text-3xl font-bold text-gray-900"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
-          >
-            Categories
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">
-            {categories.length} total &middot; Manage how products are organized on the storefront
-          </p>
-        </div>
-        <Link
-          href="/admin/categories/new"
-          className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
-        >
-          <Plus size={16} />
-          Add Category
-        </Link>
-      </div>
-
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+        <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-end gap-3">
+          <button
+            onClick={downloadReport}
+            className="inline-flex items-center gap-2 border border-gray-200 hover:border-amber-300 hover:bg-amber-50 text-gray-600 hover:text-amber-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <Download size={15} />
+            Download Report
+          </button>
+          <Link
+            href="/admin/categories/new"
+            className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <Plus size={16} />
+            Add Category
+          </Link>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatKES } from "@/lib/admin/formatters"
+import { useAdminRole } from "@/lib/admin/useAdminRole"
 
 interface Product {
   id: string
@@ -51,24 +52,22 @@ interface PaginationMeta {
   total_pages: number
 }
 
-function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: () => void }) {
-  return (
-    <button
-      onClick={onChange}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-        checked ? "bg-amber-600" : "bg-gray-200"
-      }`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-          checked ? "translate-x-6" : "translate-x-1"
-        }`}
-      />
-    </button>
+function StatusBadge({ active, labelOn, labelOff }: { active: boolean; labelOn: string; labelOff: string }) {
+  return active ? (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
+      <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+      {labelOn}
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-400 border border-gray-200">
+      <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+      {labelOff}
+    </span>
   )
 }
 
 export default function ProductsPage() {
+  const { isKitchen } = useAdminRole()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [pagination, setPagination] = useState<PaginationMeta | null>(null)
@@ -77,6 +76,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("")
   const [stockFilter, setStockFilter] = useState("")
+  const [activeFilter, setActiveFilter] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
@@ -95,6 +95,8 @@ export default function ProductsPage() {
     if (categoryFilter) params.set("category_id", categoryFilter)
     if (stockFilter === "in_stock") params.set("in_stock", "true")
     if (stockFilter === "out_of_stock") params.set("in_stock", "false")
+    if (activeFilter === "active") params.set("is_active", "true")
+    if (activeFilter === "inactive") params.set("is_active", "false")
 
     const res = await fetch(`/api/admin/products?${params.toString()}`)
     const json = await res.json()
@@ -103,7 +105,7 @@ export default function ProductsPage() {
       setPagination(json.data.pagination as PaginationMeta)
     }
     setLoading(false)
-  }, [page, search, categoryFilter, stockFilter])
+  }, [page, search, categoryFilter, stockFilter, activeFilter])
 
   useEffect(() => {
     fetchCategories()
@@ -156,6 +158,7 @@ export default function ProductsPage() {
     setSearch("")
     setCategoryFilter("")
     setStockFilter("")
+    setActiveFilter("")
     setPage(1)
   }
 
@@ -203,6 +206,48 @@ export default function ProductsPage() {
         </Link>
       </div>
 
+      {/* Summary stat cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
+              <TrendingUp size={16} className="text-green-700" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Catalog Value</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {formatKES(totalValuation)}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Calculated from listed prices</p>
+        </div>
+
+        <div className="bg-amber-50 rounded-2xl border border-amber-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+              <Package size={16} className="text-amber-700" />
+            </div>
+            <p className="text-xs text-amber-700 font-medium uppercase tracking-wide">Live Products</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {products.length}
+          </p>
+          <p className="text-xs text-amber-600 mt-1">On this page</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
+              <AlertCircle size={16} className="text-red-500" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Stock Alerts</p>
+          </div>
+          <p className="text-2xl font-bold text-red-600" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+            {stockAlerts}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Items out of stock</p>
+        </div>
+      </div>
+
       {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
         <div className="flex items-center gap-2 flex-1 min-w-[180px]">
@@ -239,7 +284,25 @@ export default function ProductsPage() {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              {v === "" ? "All" : v === "in_stock" ? "In Stock" : "Out"}
+              {v === "" ? "All Stock" : v === "in_stock" ? "In Stock" : "Out of Stock"}
+            </button>
+          ))}
+        </div>
+        {/* Active filter toggle */}
+        <div className="flex items-center bg-gray-50 rounded-xl p-1 gap-1">
+          {(["", "active", "inactive"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => { setActiveFilter(v); setPage(1) }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                activeFilter === v
+                  ? v === "inactive"
+                    ? "bg-gray-500 text-white"
+                    : "bg-amber-700 text-white"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {v === "" ? "All Status" : v === "active" ? "Active" : "Inactive"}
             </button>
           ))}
         </div>
@@ -249,6 +312,15 @@ export default function ProductsPage() {
         >
           Clear
         </button>
+        {!isKitchen && (
+          <Link
+            href="/admin/products/new"
+            className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors ml-auto"
+          >
+            <Plus size={16} />
+            Add Product
+          </Link>
+        )}
       </div>
 
       {/* Table */}
@@ -262,7 +334,9 @@ export default function ProductsPage() {
                 <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Price</th>
                 <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">In Stock</th>
                 <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">Active</th>
-                <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                {!isKitchen && (
+                  <th className="px-6 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -317,41 +391,45 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center">
-                          <ToggleSwitch
-                            checked={product.in_stock}
-                            onChange={() => handleToggle(product, "in_stock")}
+                          <StatusBadge
+                            active={product.in_stock}
+                            labelOn="In Stock"
+                            labelOff="Out of Stock"
                           />
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center">
-                          <ToggleSwitch
-                            checked={product.is_active}
-                            onChange={() => handleToggle(product, "is_active")}
+                          <StatusBadge
+                            active={product.is_active}
+                            labelOn="Active"
+                            labelOff="Inactive"
                           />
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-100 transition-opacity">
-                          {/* <Link
-                            href={`/admin/products/${product.id}/view`}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                          >
-                            <Eye size={15} />
-                          </Link> */}
-                          <Link
-                            href={`/admin/products/${product.id}/edit`}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                          >
-                            <Pencil size={15} />
-                          </Link>
-                          <button
-                            onClick={() => setDeleteTarget(product)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
+                        {!isKitchen && (
+                          <div className="flex items-center justify-end gap-2 opacity-100 transition-opacity">
+                            {/* <Link
+                              href={`/admin/products/${product.id}/view`}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                            >
+                              <Eye size={15} />
+                            </Link> */}
+                            <Link
+                              href={`/admin/products/${product.id}/edit`}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                            >
+                              <Pencil size={15} />
+                            </Link>
+                            <button
+                              onClick={() => setDeleteTarget(product)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -409,48 +487,6 @@ export default function ProductsPage() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Summary stat cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
-              <TrendingUp size={16} className="text-green-700" />
-            </div>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Catalog Value</p>
-          </div>
-          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-            {formatKES(totalValuation)}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">Calculated from listed prices</p>
-        </div>
-
-        <div className="bg-amber-50 rounded-2xl border border-amber-100 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
-              <Package size={16} className="text-amber-700" />
-            </div>
-            <p className="text-xs text-amber-700 font-medium uppercase tracking-wide">Live Products</p>
-          </div>
-          <p className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-            {products.length}
-          </p>
-          <p className="text-xs text-amber-600 mt-1">On this page</p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
-              <AlertCircle size={16} className="text-red-500" />
-            </div>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Stock Alerts</p>
-          </div>
-          <p className="text-2xl font-bold text-red-600" style={{ fontFamily: "var(--font-playfair, serif)" }}>
-            {stockAlerts}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">Items out of stock</p>
-        </div>
       </div>
 
       {/* Delete confirmation dialog */}

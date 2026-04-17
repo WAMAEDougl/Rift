@@ -13,7 +13,7 @@ export default async function CustomerDetailPage({ params }: Props) {
   const { id } = await params
   const admin = getAdminClient()
 
-  const { data: profile } = await admin.from("profiles").select("*").eq("id", id).single()
+  const { data: profile } = await admin.from("profiles").select("id, full_name, email, phone, role, default_address, default_city, created_at").eq("id", id).single()
   if (!profile) notFound()
 
   const { data: orders } = await admin

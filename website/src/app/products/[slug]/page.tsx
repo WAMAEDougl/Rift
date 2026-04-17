@@ -34,11 +34,10 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (fallbackProduct) return; // Already have it from hardcoded data
     setLoading(true);
-    fetch("/api/products")
+    fetch(`/api/products/${slug}`)
       .then(async (r) => {
         const json = await r.json();
-        const dbProducts = json.data?.products ?? [];
-        const found = dbProducts.find((p: any) => p.slug === slug);
+        const found = json.product;
         if (found) {
           return {
             id: String(found.legacy_id || found.id),

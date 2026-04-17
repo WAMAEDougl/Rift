@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import {
   LayoutDashboard, ShoppingCart, Users, Package, Tag,
-  CreditCard, Bell, Settings, LogOut, Leaf,
+  CreditCard, Bell, Settings, LogOut, Leaf, BookOpen,
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -18,13 +18,14 @@ const allNavItems = [
   { label: "Orders",        href: "/admin/orders",         icon: ShoppingCart,    exact: false },
   { label: "Customers",     href: "/admin/customers",      icon: Users,           exact: false },
   { label: "Products",      href: "/admin/products",       icon: Package,         exact: false },
+  { label: "Recipes",       href: "/admin/recipes",        icon: BookOpen,        exact: false },
   { label: "Categories",    href: "/admin/categories",     icon: Tag,             exact: false },
   { label: "Payments",      href: "/admin/payments",       icon: CreditCard,      exact: false },
   { label: "Notifications", href: "/admin/notifications",  icon: Bell,            exact: false },
   { label: "Settings",      href: "/admin/settings",       icon: Settings,        exact: false },
 ]
 
-const kitchenNavItems = ["/admin", "/admin/orders"]
+const kitchenNavItems = ["/admin", "/admin/orders", "/admin/products", "/admin/notifications"]
 
 export default function AdminSidebar({ role, userName, userRole }: AdminSidebarProps) {
   const pathname = usePathname()
@@ -75,7 +76,7 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto no-scrollbar">
         {navItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item)
