@@ -76,7 +76,15 @@ export async function POST(request: Request): Promise<Response> {
       .maybeSingle();
 
     if (!order) {
-      console.log(`[Webhook/WaSender] No pending order for phone: ${phoneWithout} or ${phoneWithPlus}`);
+      // Debug: check if any order exists for this phone at all
+      const { data: anyOrder } = await supabase
+        .from("orders")
+        .select("id, order_number, status, customer_phone")
+        .in("customer_phone", [phoneWithPlus, phoneWithout])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      console.log(`[Webhook/WaSender] No pending order for phone: ${phoneWithout}. Most recent order:`, anyOrder ?? "none found");
       continue;
     }
 

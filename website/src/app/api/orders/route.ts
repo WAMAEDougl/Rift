@@ -2,7 +2,7 @@ import { createOrderSchema } from "@/lib/utils/validation";
 import { getServiceClient, apiError, apiSuccess, checkRateLimit } from "@/lib/utils/api";
 import { generateOrderNumber, validateOrderItems } from "@/lib/order-utils";
 import { createNotification } from "@/lib/admin/notifications";
-import { sendMessage, formatOrderConfirmationMessage, formatDeliveryInquiryMessage } from "@/lib/wasender";
+import { sendMessage, formatDeliveryInquiryMessage } from "@/lib/wasender";
 
 export async function POST(request: Request) {
   // Rate limit by IP
@@ -78,20 +78,11 @@ export async function POST(request: Request) {
       return apiError("Failed to create order items", 500);
     }
 
-    // Fire-and-forget — send delivery inquiry first (most important for the flow)
-    // Then send order confirmation after 65s delay to avoid WaSender free-plan rate limit (1 msg/min)
+    // Fire-and-forget — send delivery inquiry only.
+    // Order confirmation with full breakdown is sent after payment is confirmed.
     sendMessage(data.customer_phone, formatDeliveryInquiryMessage({
       order_number: order.order_number,
     })).catch((e) => console.error("[Orders API] WhatsApp delivery inquiry failed:", e));
-
-    setTimeout(() => {
-      sendMessage(data.customer_phone, formatOrderConfirmationMessage({
-        order_number: order.order_number,
-        items: validation.validatedItems,
-        subtotal: validation.subtotal,
-        total,
-      })).catch((e) => console.error("[Orders API] WhatsApp order confirmation failed:", e));
-    }, 65_000);
 
     createNotification(
       "new_order",
