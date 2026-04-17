@@ -31,6 +31,9 @@ export async function sendMessage(
     return { success: false, error: "WASENDER_API_TOKEN is not configured" };
   }
 
+  // WaSender requires +254... format
+  const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -41,7 +44,7 @@ export async function sendMessage(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ phone, message: body }),
+      body: JSON.stringify({ phone: formattedPhone, message: body }),
       signal: controller.signal,
     });
 
@@ -78,12 +81,15 @@ export async function getMessageHistory(
     return { success: false, error: "WASENDER_API_TOKEN is not configured" };
   }
 
+  // WaSender requires +254... format
+  const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     const res = await fetch(
-      `${baseUrl}/messages?phone=${encodeURIComponent(phone)}`,
+      `${baseUrl}/messages?phone=${encodeURIComponent(formattedPhone)}`,
       {
         method: "GET",
         headers: {

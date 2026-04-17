@@ -102,11 +102,11 @@ export default function CheckoutPage() {
     };
   }, []);
 
-  const deliveryFee = totalPrice >= 2000 || form.delivery_type === "pickup" ? 0 : 200;
-  const grandTotal = totalPrice + deliveryFee;
+  const deliveryFee = form.delivery_type === "pickup" ? 0 : null; // negotiated via WhatsApp
+  const grandTotal = totalPrice; // delivery fee added later by admin
 
   const buildWhatsAppMessage = () =>
-    `Hi Ayola Foods! I'd like to order:\n\n${items.map((i) => `• ${i.quantity}x ${i.product.name} — KES ${(i.product.price * i.quantity).toLocaleString()}`).join("\n")}\n\nTotal: KES ${grandTotal.toLocaleString()}`;
+    `Hi Ayola Foods! I'd like to order:\n\n${items.map((i) => `• ${i.quantity}x ${i.product.name} — KES ${(i.product.price * i.quantity).toLocaleString()}`).join("\n")}\n\nSubtotal: KES ${totalPrice.toLocaleString()}`;
 
   // Empty cart
   if (items.length === 0 && step === "form") {
@@ -397,8 +397,8 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               )}
-              {deliveryFee === 0 && form.delivery_type !== "pickup" && (
-                <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-2">✓ Free delivery — your order is over KES 2,000!</p>
+              {deliveryFee === 0 && form.delivery_type === "pickup" && (
+                <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-2">✓ No delivery fee — you&apos;re picking up!</p>
               )}
             </div>
 
@@ -438,7 +438,7 @@ export default function CheckoutPage() {
               {loading ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Placing Order...</>
               ) : (
-                <>Place Order — {formatPrice(grandTotal)} <ArrowRight className="w-5 h-5" /></>
+                <>Place Order — {formatPrice(totalPrice)} <ArrowRight className="w-5 h-5" /></>
               )}
             </button>
 
@@ -489,15 +489,15 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Delivery</span>
-                  <span className={deliveryFee === 0 ? "text-green-600 dark:text-green-400 font-medium" : "text-foreground"}>
-                    {deliveryFee === 0 ? "FREE" : formatPrice(deliveryFee)}
+                  <span className={form.delivery_type === "pickup" ? "text-green-600 dark:text-green-400 font-medium" : "text-amber-600 dark:text-amber-400 font-medium"}>
+                    {form.delivery_type === "pickup" ? "FREE (Pickup)" : "Confirmed via WhatsApp"}
                   </span>
                 </div>
-                {totalPrice < 2000 && form.delivery_type !== "pickup" && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400">Add {formatPrice(2000 - totalPrice)} more for free delivery</p>
+                {form.delivery_type !== "pickup" && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">Delivery fee will be agreed with you over WhatsApp</p>
                 )}
                 <div className="flex justify-between text-base font-bold pt-2 border-t border-border">
-                  <span className="text-foreground">Total</span>
+                  <span className="text-foreground">Subtotal</span>
                   <span className="text-primary">{formatPrice(grandTotal)}</span>
                 </div>
               </div>
