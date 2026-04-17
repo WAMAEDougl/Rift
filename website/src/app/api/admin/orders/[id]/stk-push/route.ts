@@ -82,10 +82,14 @@ export async function POST(
     return err(message, "INTERNAL_ERROR", 500);
   }
 
-  // 7a. Update order with delivery_fee and total
+  // 7a. Update order with delivery_fee, total, and checkout_request_id
   await admin
     .from("orders")
-    .update({ delivery_fee, total: amount })
+    .update({
+      delivery_fee,
+      total: amount,
+      mpesa_checkout_request_id: stkResponse.CheckoutRequestID,
+    })
     .eq("id", order.id);
 
   // 8. Insert payment log
