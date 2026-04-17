@@ -88,8 +88,19 @@ export async function POST(request: Request) {
               items: fullOrder.order_items as Array<{ product_name: string; quantity: number; line_total: number }>,
             });
 
-        sendMessage(fullOrder.customer_phone, message)
-          .catch((e) => console.error("[Callback] WhatsApp send failed:", e));
+        // Send receipt — retry once after 65s if rate-limited (free plan: 1 msg/min)
+        const sendReceipt = async (attempt = 1) => {
+          const result = await sendMessage(fullOrder.customer_phone, message);
+          if (result.success) {
+            console.log(`[Callback] WhatsApp receipt sent for order ${fullOrder.order_number}`);
+          } else if (result.error.includes("429") && attempt === 1) {
+            console.warn(`[Callback] WhatsApp rate limited — retrying in 65s for order ${fullOrder.order_number}`);
+            setTimeout(() => sendReceipt(2), 65_000);
+          } else {
+            console.error(`[Callback] WhatsApp receipt failed (attempt ${attempt}):`, result.error);
+          }
+        };
+        sendReceipt().catch((e) => console.error("[Callback] WhatsApp send error:", e));
       }
     } else {
       // Payment failed
