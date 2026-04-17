@@ -14,7 +14,7 @@ import {
   Plus, Minus, Trash2, Smartphone, ArrowRight,
 } from "lucide-react";
 
-type Step = "form" | "awaiting_payment" | "confirmed";
+type Step = "form" | "awaiting_payment" | "confirmed" | "pending_delivery";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -183,7 +183,7 @@ export default function CheckoutPage() {
             <Check className="w-10 h-10 text-green-600 dark:text-green-400" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Order Confirmed!</h1>
-          <p className="text-muted-foreground mb-6">Your order has been placed successfully.</p>
+          <p className="text-muted-foreground mb-6">Your order has been confirmed. Please check your WhatsApp for further instructions and payment details.</p>
           <div className="bg-card rounded-2xl p-6 text-left mb-6 space-y-3 border border-border">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Order</span>
@@ -204,6 +204,59 @@ export default function CheckoutPage() {
     );
   }
 
+  // Pending delivery confirmation — order placed, awaiting admin to negotiate fee and send STK push
+  if (step === "pending_delivery" && orderResult) {
+    return (
+      <div className="pt-28 pb-20">
+        <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
+          <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <MessageCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Order Received!</h1>
+          <p className="text-muted-foreground mb-2">
+            We&apos;ve received your order and sent you a WhatsApp message on <strong>{form.phone}</strong>.
+          </p>
+          <p className="text-muted-foreground mb-6">
+            Please reply with your specific location so we can calculate the delivery fee. Once agreed, we&apos;ll send you an M-Pesa payment prompt.
+          </p>
+
+          <div className="bg-card rounded-2xl p-6 text-left mb-6 space-y-3 border border-border">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Order</span>
+              <span className="font-bold text-foreground font-mono">{orderResult.order_number}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="font-bold text-foreground">{formatPrice(orderResult.total)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Delivery fee</span>
+              <span className="text-amber-600 font-medium">To be confirmed via WhatsApp</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Status</span>
+              <span className="text-amber-600 font-medium">Awaiting delivery confirmation</span>
+            </div>
+          </div>
+
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-sm text-green-800 dark:text-green-300 mb-6 text-left">
+            <p className="font-semibold mb-1">What happens next?</p>
+            <ol className="list-decimal list-inside space-y-1 text-green-700 dark:text-green-400/80 text-xs">
+              <li>Reply to our WhatsApp message with your exact location</li>
+              <li>We&apos;ll confirm the delivery fee with you</li>
+              <li>You&apos;ll receive an M-Pesa prompt for the total amount</li>
+              <li>Enter your PIN to complete payment</li>
+            </ol>
+          </div>
+
+          <Link href="/products" className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors">
+            Continue Shopping <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const handlePlaceOrder = async () => {
     if (!form.name.trim()) { setError("Enter your name"); return; }
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 9) { setError("Enter a valid phone number"); return; }
@@ -213,15 +266,22 @@ export default function CheckoutPage() {
     setError("");
     setItem(STORAGE_KEYS.CUSTOMER, { name: form.name, phone: form.phone, address: form.address, city: form.city });
 
-    const phone = form.phone.replace(/\D/g, "");
-    const normalizedPhone = phone.startsWith("0") ? `254${phone.slice(1)}` : phone.startsWith("+") ? phone.slice(1) : phone;
+    // Normalise to +254... format for storage and WaSender
+    const digits = form.phone.replace(/\D/g, "");
+    const normalizedPhone = digits.startsWith("254")
+      ? `+${digits}`
+      : digits.startsWith("0")
+      ? `+254${digits.slice(1)}`
+      : form.phone.startsWith("+")
+      ? form.phone
+      : `+${digits}`;
 
     try {
-      // Step 1: Create order
+      // Create order — status will be set to pending_delivery_confirmation by the API
       const res = await fetch("/api/orders", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customer_name: form.name, customer_phone: form.phone,
+          customer_name: form.name, customer_phone: normalizedPhone,
           delivery_address: form.delivery_type === "pickup" ? "Pickup — Ruhan Plaza, Kahawa Sukari" : form.address,
           delivery_city: form.city, delivery_type: form.delivery_type, order_notes: form.notes || null,
           payment_method: form.payment_method,
@@ -231,33 +291,13 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Order failed. Please try again."); setLoading(false); return; }
 
-      const orderId = data.order.id;
-
-      // Step 2: Trigger M-Pesa STK push
-      const mpesaRes = await fetch("/api/payments/mpesa/initiate", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order_id: orderId, phone: normalizedPhone }),
+      // Order created — admin will negotiate delivery fee and trigger STK push via WhatsApp
+      setOrderResult({
+        order_number: data.order.order_number,
+        order_id: data.order.id,
+        total: data.order.total,
       });
-      const mpesaData = await mpesaRes.json();
-
-      if (mpesaRes.ok && mpesaData.data?.checkout_request_id) {
-        // Step 3: Show awaiting payment, start polling
-        setOrderResult({
-          order_number: data.order.order_number,
-          order_id: orderId,
-          total: data.order.total,
-          checkout_request_id: mpesaData.data.checkout_request_id,
-        });
-        setPollingMsg("Waiting for M-Pesa confirmation...");
-        setStep("awaiting_payment");
-        startPolling(orderId);
-      } else {
-        // STK push failed — show error, do NOT checkout
-        const errMsg = mpesaData.error?.message ?? mpesaData.data?.message ?? "M-Pesa payment could not be initiated. Please try again.";
-        setError(errMsg);
-        setLoading(false);
-        return;
-      }
+      setStep("pending_delivery");
     } catch {
       setError("Network error. Please check your connection and try again.");
     } finally { setLoading(false); }
@@ -297,9 +337,21 @@ export default function CheckoutPage() {
               <div className="space-y-3">
                 <input type="text" placeholder="Your name" value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} />
-                <input type="tel" placeholder="712 345 678" value={form.phone}
+                <div className="space-y-1">
+                  <label htmlFor="whatsapp-phone" className="block text-sm font-medium text-foreground">
+                    WhatsApp Phone Number
+                  </label>
+                  <input
+                    id="whatsapp-phone"
+                    type="tel"
+                    placeholder="+254712345678"
+                    value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className={inputCls} />
+                    aria-label="WhatsApp Phone Number"
+                    className={inputCls}
+                  />
+                  <p className="text-xs text-muted-foreground/60">Use international format starting with +254</p>
+                </div>
               </div>
             </div>
 
@@ -360,7 +412,7 @@ export default function CheckoutPage() {
                 <span className="text-sm font-medium text-green-800 dark:text-green-300">M-Pesa</span>
               </div>
               <p className="text-xs text-green-600 dark:text-green-400/70 mt-2">
-                ✓ You&apos;ll receive an M-Pesa prompt on your phone to complete payment
+                ✓ After confirming your delivery fee via WhatsApp, you&apos;ll receive an M-Pesa prompt to complete payment
               </p>
             </div>
 
@@ -386,12 +438,12 @@ export default function CheckoutPage() {
               {loading ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Placing Order...</>
               ) : (
-                <>Pay with M-Pesa — {formatPrice(grandTotal)}</>
+                <>Place Order — {formatPrice(grandTotal)} <ArrowRight className="w-5 h-5" /></>
               )}
             </button>
 
             <p className="text-xs text-muted-foreground/60 text-center">
-              You&apos;ll get an M-Pesa prompt. We&apos;ll confirm once payment is received.
+              We&apos;ll confirm the delivery fee via WhatsApp, then send you an M-Pesa prompt.
             </p>
 
             <div className="flex items-center justify-center gap-5 text-[11px] text-muted-foreground/50 pt-1">
