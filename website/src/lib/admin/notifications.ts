@@ -5,7 +5,8 @@ export type NotificationType =
   | "payment_completed"
   | "payment_failed"
   | "order_cancelled"
-  | "delivery_negotiation_message";
+  | "delivery_negotiation_message"
+  | "whatsapp_sent";
 
 export async function createNotification(
   type: NotificationType,
