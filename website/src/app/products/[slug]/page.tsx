@@ -25,14 +25,14 @@ export default function ProductDetailPage() {
   const fallbackProduct = getProductBySlug(slug);
 
   const [product, setProduct] = useState<Product | undefined>(fallbackProduct);
-  const [loading, setLoading] = useState(!fallbackProduct);
+  const [loading, setLoading] = useState(true); // always fetch from DB
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [activeTab, setActiveTab] = useState<"details" | "nutrition" | "preparation">("details");
   const { addItem } = useCart();
 
   useEffect(() => {
-    if (fallbackProduct) return; // Already have it from hardcoded data
+    // Always fetch from DB — hardcoded data is only a loading placeholder
     setLoading(true);
     fetch(`/api/products/${slug}`)
       .then(async (r) => {
@@ -60,10 +60,15 @@ export default function ProductDetailPage() {
         return null;
       })
       .then((p) => {
-        setProduct(p ?? undefined);
+        // If DB has the product use it, otherwise fall back to hardcoded
+        setProduct(p ?? fallbackProduct ?? undefined);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        // On error keep the hardcoded fallback if available
+        setProduct(fallbackProduct ?? undefined);
+        setLoading(false);
+      });
   }, [slug, fallbackProduct]);
 
   if (loading) {
