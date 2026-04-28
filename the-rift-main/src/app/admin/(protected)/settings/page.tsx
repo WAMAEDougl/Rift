@@ -1291,14 +1291,36 @@ function PersonalizationTab() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className={labelCls}>Logo URL</label>
-                <input
-                  type="url"
-                  value={settings.logo_url}
-                  onChange={(e) => set("logo_url", e.target.value)}
-                  placeholder="https://..."
-                  className={inputCls}
-                />
+                <label className={labelCls}>Logo / Brand Badge</label>
+                <div className="flex gap-2 items-start">
+                  <input
+                    type="url"
+                    value={settings.logo_url}
+                    onChange={(e) => set("logo_url", e.target.value)}
+                    placeholder="https://... or upload below"
+                    className={inputCls}
+                  />
+                  <label className="shrink-0 cursor-pointer inline-flex items-center gap-1.5 border border-border text-muted-foreground hover:text-primary hover:border-primary font-semibold text-xs px-3 py-2.5 rounded-xl transition-colors whitespace-nowrap">
+                    Upload
+                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const fd = new FormData();
+                      fd.append("file", file);
+                      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+                      const json = await res.json();
+                      if (res.ok) { set("logo_url", json.data.url); toast.success("Logo uploaded"); }
+                      else toast.error("Upload failed");
+                    }} />
+                  </label>
+                </div>
+                {settings.logo_url && (
+                  <div className="mt-3 flex items-center gap-3 p-3 bg-muted/30 rounded-xl">
+                    <img src={settings.logo_url} alt="Logo preview" className="h-10 w-auto object-contain rounded-lg border border-border" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    <p className="text-xs text-muted-foreground truncate">{settings.logo_url}</p>
+                  </div>
+                )}
+              
               </div>
               <div>
                 <label className={labelCls}>Favicon URL</label>

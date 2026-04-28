@@ -4,7 +4,8 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard, ShoppingCart, Users, Package, Tag,
-  CreditCard, Bell, Settings, LogOut,
+  CreditCard, Bell, Settings, LogOut, Image, BookOpen,
+  Info, Heart,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -19,8 +20,11 @@ const allNavItems = [
   { label: "Customers",     href: "/admin/customers",     icon: Users,           exact: false },
   { label: "Products",      href: "/admin/products",      icon: Package,         exact: false },
   { label: "Categories",    href: "/admin/categories",    icon: Tag,             exact: false },
+  { label: "Banners",       href: "/admin/banners",       icon: Image,           exact: false },
+  { label: "Recipes",       href: "/admin/recipes",       icon: BookOpen,        exact: false },
   { label: "Payments",      href: "/admin/payments",      icon: CreditCard,      exact: false },
   { label: "Notifications", href: "/admin/notifications", icon: Bell,            exact: false },
+  { label: "Content",       href: "/admin/content",       icon: Info,            exact: false },
   { label: "Settings",      href: "/admin/settings",      icon: Settings,        exact: false },
 ];
 

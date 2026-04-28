@@ -1,8 +1,9 @@
 import Link from "next/link";
 import {
-  ShoppingCart, TrendingUp, Clock, Users, AlertCircle,
+  ShoppingCart, TrendingUp, Clock, Users,
   ChevronRight, Package, Tag as TagIcon, Bell as BellIcon,
   Settings as SettingsIcon, ArrowUpRight, CreditCard,
+  Image as ImageIcon, BookOpen, Info,
 } from "lucide-react";
 import { getAdminClient } from "@/lib/admin/supabase";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
@@ -20,7 +21,6 @@ export default async function AdminDashboardPage() {
     { count: pendingOrders },
     { count: totalCustomers },
     { data: recentOrdersData },
-    { data: lowStockProducts },
     { count: totalProducts },
   ] = await Promise.all([
     supabase.from("orders").select("*", { count: "exact", head: true }),
@@ -31,7 +31,6 @@ export default async function AdminDashboardPage() {
       .select("id, order_number, customer_name, total, status, payment_status, created_at, order_items(id)")
       .order("created_at", { ascending: false })
       .limit(8),
-    supabase.from("products").select("id, name").eq("in_stock", false).limit(5),
     supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", true),
   ]);
 
@@ -179,6 +178,26 @@ export default async function AdminDashboardPage() {
               statColor: "text-muted-foreground",
             },
             {
+              label: "Banners",
+              desc: "Storefront banners & promotions",
+              href: "/admin/banners",
+              icon: ImageIcon,
+              iconBg: "bg-purple-500/10",
+              iconColor: "text-purple-600",
+              stat: "Manage",
+              statColor: "text-muted-foreground",
+            },
+            {
+              label: "Recipes",
+              desc: "Blog recipes & cooking guides",
+              href: "/admin/recipes",
+              icon: BookOpen,
+              iconBg: "bg-orange-500/10",
+              iconColor: "text-orange-600",
+              stat: "Manage",
+              statColor: "text-muted-foreground",
+            },
+            {
               label: "Notifications",
               desc: "Alerts & store activity",
               href: "/admin/notifications",
@@ -186,6 +205,16 @@ export default async function AdminDashboardPage() {
               iconBg: "bg-amber-500/10",
               iconColor: "text-amber-600",
               stat: "View all",
+              statColor: "text-muted-foreground",
+            },
+            {
+              label: "Content",
+              desc: "About, Community & site pages",
+              href: "/admin/content",
+              icon: Info,
+              iconBg: "bg-blue-500/10",
+              iconColor: "text-blue-600",
+              stat: "Edit pages",
               statColor: "text-muted-foreground",
             },
             {
@@ -197,18 +226,6 @@ export default async function AdminDashboardPage() {
               iconColor: "text-muted-foreground",
               stat: "Configure",
               statColor: "text-muted-foreground",
-            },
-            {
-              label: "Inventory",
-              desc: lowStockProducts && lowStockProducts.length > 0
-                ? `${lowStockProducts.length} item${lowStockProducts.length > 1 ? "s" : ""} out of stock`
-                : "All products in stock",
-              href: "/admin/products",
-              icon: AlertCircle,
-              iconBg: lowStockProducts && lowStockProducts.length > 0 ? "bg-destructive/10" : "bg-green-500/10",
-              iconColor: lowStockProducts && lowStockProducts.length > 0 ? "text-destructive" : "text-green-600",
-              stat: lowStockProducts && lowStockProducts.length > 0 ? "Needs attention" : "All stocked",
-              statColor: lowStockProducts && lowStockProducts.length > 0 ? "text-destructive" : "text-green-600 dark:text-green-400",
             },
           ].map((mod) => {
             const Icon = mod.icon;
