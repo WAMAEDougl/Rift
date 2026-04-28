@@ -26,7 +26,7 @@ export default async function AdminProtectedLayout({
             userName={userName}
             userRole={profile.role}
           />
-          <div className="flex-1 flex flex-col min-w-0 ml-60 h-screen overflow-hidden">
+          <div className="flex-1 flex flex-col min-w-0 ml-60 overflow-hidden">
             <AdminTopbar
               user={{ name: userName, role: profile.role as "admin" | "kitchen" }}
             />
@@ -67,7 +67,7 @@ export default async function AdminProtectedLayout({
         userName={userName}
         userRole={profile.role}
       />
-      <div className="flex-1 flex flex-col min-w-0 ml-60 h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 ml-60 overflow-hidden">
         <AdminTopbar
           user={{ name: userName, role: profile.role as "admin" | "kitchen" }}
         />
