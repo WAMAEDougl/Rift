@@ -71,20 +71,20 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
   })).filter((g) => g.items.length > 0);
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-60 flex flex-col z-50 ink-gradient">
+    <aside className="fixed left-0 top-0 h-full w-60 flex flex-col z-50" style={{ background: "linear-gradient(180deg, #1c1917 0%, #1a1f1a 100%)" }}>
 
       {/* Brand */}
-      <div className="px-5 py-5 border-b border-background/10 shrink-0">
+      <div className="px-5 py-5 border-b border-white/8 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#c8a96e]/15 border border-[#c8a96e]/25 flex items-center justify-center shrink-0">
             <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
               <path d="M9 15.5C9 15.5 3.5 11.5 3.5 7C3.5 4.515 6.015 2.5 9 2.5C11.985 2.5 14.5 4.515 14.5 7C14.5 11.5 9 15.5 9 15.5Z" fill="#c8a96e" fillOpacity="0.9"/>
               <line x1="9" y1="15.5" x2="9" y2="9" stroke="#1a1a1a" strokeWidth="1.4" strokeLinecap="round"/>
             </svg>
           </div>
           <div>
-            <p className="text-background font-display text-sm font-medium leading-none">Rift &amp; Root</p>
-            <p className="text-accent/50 text-[9px] uppercase tracking-[0.2em] mt-0.5">Admin Portal</p>
+            <p className="text-white font-display text-sm font-medium leading-none">Rift &amp; Root</p>
+            <p className="text-[#c8a96e]/50 text-[9px] uppercase tracking-[0.2em] mt-0.5">Admin Portal</p>
           </div>
         </div>
       </div>
@@ -93,7 +93,7 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
       <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4 scrollbar-none">
         {visibleGroups.map((group) => (
           <div key={group.label}>
-            <p className="px-2 mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-background/30">
+            <p className="px-2 mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white/25">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -106,13 +106,13 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
                     href={item.href}
                     className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
                       active
-                        ? "bg-background/15 text-background"
-                        : "text-background/55 hover:bg-background/8 hover:text-background/90"
+                        ? "bg-white/10 text-white"
+                        : "text-white/50 hover:bg-white/6 hover:text-white/80"
                     }`}
                   >
                     <Icon
                       size={15}
-                      className={active ? "text-accent shrink-0" : "shrink-0 opacity-70"}
+                      className={active ? "text-[#c8a96e] shrink-0" : "shrink-0"}
                     />
                     {item.label}
                   </Link>
@@ -124,22 +124,22 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
       </nav>
 
       {/* Footer — user + logout */}
-      <div className="px-3 pb-4 pt-3 border-t border-background/10 space-y-1 shrink-0">
+      <div className="px-3 pb-4 pt-3 border-t border-white/8 space-y-1 shrink-0">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-[13px] font-medium text-background/50 hover:bg-background/10 hover:text-background transition-all"
+          className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-[13px] font-medium text-white/40 hover:bg-white/8 hover:text-white/70 transition-all"
         >
           <LogOut size={15} className="shrink-0" />
           Sign Out
         </button>
 
-        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-background/10">
-          <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-foreground text-[11px] font-bold shrink-0">
+        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/8">
+          <div className="w-7 h-7 rounded-full bg-[#c8a96e] flex items-center justify-center text-[#1c1917] text-[11px] font-bold shrink-0">
             {initials}
           </div>
           <div className="overflow-hidden">
-            <p className="text-background text-xs font-semibold truncate leading-tight">{displayName}</p>
-            <p className="text-accent/50 text-[10px] capitalize truncate">{displayRole}</p>
+            <p className="text-white text-xs font-semibold truncate leading-tight">{displayName}</p>
+            <p className="text-white/35 text-[10px] capitalize truncate">{displayRole}</p>
           </div>
         </div>
       </div>
