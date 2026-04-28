@@ -6,11 +6,32 @@ import { ok, err } from "@/lib/admin/response";
 const settingsSchema = z
   .object({
     store_name: z.string().min(1).optional(),
+    tagline: z.string().optional(),
     support_email: z.string().email().optional(),
     support_phone: z.string().optional(),
+    whatsapp_number: z.string().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    country: z.string().optional(),
+    currency: z.string().optional(),
     default_delivery_fee: z.number().int().min(0).optional(),
     delivery_cities: z.array(z.string()).optional(),
     order_notification_emails: z.array(z.string().email()).optional(),
+    mpesa_shortcode: z.string().optional(),
+    mpesa_environment: z.enum(["sandbox", "production"]).optional(),
+    wasender_api_key: z.string().optional(),
+    wasender_phone_id: z.string().optional(),
+    tax_rate: z.number().min(0).max(100).optional(),
+    free_shipping_threshold: z.number().int().min(0).optional(),
+    low_stock_threshold: z.number().int().min(0).optional(),
+    tax_inclusive: z.boolean().optional(),
+    allow_guest_checkout: z.boolean().optional(),
+    new_order_sound_enabled: z.boolean().optional(),
+    new_message_sound_enabled: z.boolean().optional(),
+    primary_color: z.string().optional(),
+    secondary_color: z.string().optional(),
+    font_heading: z.string().optional(),
+    font_body: z.string().optional(),
   })
   .strict();
 
