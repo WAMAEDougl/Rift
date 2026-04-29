@@ -4,9 +4,6 @@ import { getAdminClient } from "@/lib/admin/supabase";
 import { ok, err } from "@/lib/admin/response";
 import { productSchema, productPatchSchema } from "../schema";
 
-// Re-export for backward compatibility
-export { productSchema };
-
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
