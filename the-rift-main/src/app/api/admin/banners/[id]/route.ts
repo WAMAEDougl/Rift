@@ -35,8 +35,7 @@ export async function PATCH(
   const admin = getAdminClient();
   const { data, error } = await admin
     .from("banners")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .update({ ...parsed.data, updated_at: new Date().toISOString() } as any)
+    .update(parsed.data)
     .eq("id", id)
     .select()
     .single();
