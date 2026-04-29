@@ -80,8 +80,6 @@ export default function VisitUsPage() {
           </div>
         </div>
       </section>
-        </div>
-      </section>
 
       {/* Location Details */}
       <section className="py-16">

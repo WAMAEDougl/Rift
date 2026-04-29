@@ -6,11 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 
-export const metadata = {
-  title: "Sign In — AyolaFoods",
-  description: "Sign in to your Ayola Foods account to view your orders.",
-};
-
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
