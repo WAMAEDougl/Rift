@@ -26,61 +26,39 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh session if expired
+  // Refresh session
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
 
-  console.log("[middleware] path:", request.nextUrl.pathname, "user:", user?.id ?? null, "err:", userError?.message ?? null);
-
-  // For profile lookups that bypass RLS, use bare client with service_role key
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
   // Protect admin routes
   if (request.nextUrl.pathname.startsWith("/admin")) {
     const isLoginPage = request.nextUrl.pathname === "/admin/login";
-
-    // Allow hardcoded session cookie to bypass Supabase auth check
-    const hardcodedSession = request.cookies.get("admin_hardcoded_session");
-    if (hardcodedSession) {
-      try {
-        const profile = JSON.parse(hardcodedSession.value);
-        if (profile?.role && ["admin", "kitchen"].includes(profile.role)) {
-          // Valid hardcoded session — allow through, redirect away from login
-          if (isLoginPage) {
-            return NextResponse.redirect(new URL("/admin", request.url));
-          }
-          return supabaseResponse;
-        }
-      } catch {
-        // Invalid cookie, fall through to Supabase check
-      }
-    }
 
     if (!user) {
       if (isLoginPage) return supabaseResponse;
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
 
-    // Check admin/kitchen role bypassing RLS
-    const { data: profile, error: profileError } = await supabaseAdmin
+    // Check admin/kitchen role using service role to bypass RLS
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
-
-    console.log("[middleware] profile:", profile?.role ?? null, "err:", profileError?.message ?? null);
 
     if (!profile || !["admin", "kitchen"].includes(profile.role)) {
       if (isLoginPage) return supabaseResponse;
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // Already authenticated admin hitting login page → redirect to dashboard
+    // Authenticated admin hitting login page → redirect to dashboard
     if (isLoginPage) {
       return NextResponse.redirect(new URL("/admin", request.url));
     }

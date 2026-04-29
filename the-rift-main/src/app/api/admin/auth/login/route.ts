@@ -9,24 +9,6 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-// TODO: replace with Supabase auth once accounts are set up
-const HARDCODED_ADMINS = [
-  {
-    id: "hardcoded-admin-1",
-    email: "admin@riftandroot.com",
-    password: "Admin@1234",
-    full_name: "Admin",
-    role: "admin",
-  },
-  {
-    id: "hardcoded-kitchen-1",
-    email: "kitchen@riftandroot.com",
-    password: "Kitchen@1234",
-    full_name: "Kitchen Staff",
-    role: "kitchen",
-  },
-];
-
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -42,33 +24,7 @@ export async function POST(request: Request) {
 
   const { email, password } = parsed.data;
 
-  // ── Hardcoded credential check (temporary) ──
-  const hardcoded = HARDCODED_ADMINS.find(
-    (u) => u.email === email && u.password === password
-  );
-  if (hardcoded) {
-    const cookieStore = await cookies();
-    cookieStore.set("admin_hardcoded_session", JSON.stringify({
-      id: hardcoded.id,
-      email: hardcoded.email,
-      full_name: hardcoded.full_name,
-      role: hardcoded.role,
-    }), {
-      httpOnly: true,
-      path: "/",
-      maxAge: 60 * 60 * 24, // 24 hours
-      sameSite: "lax",
-    });
-
-    return ok({
-      id: hardcoded.id,
-      email: hardcoded.email,
-      full_name: hardcoded.full_name,
-      role: hardcoded.role,
-    });
-  }
-
-  // ── Supabase auth fallback ──
+  // Sign in via Supabase Auth
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
@@ -79,6 +35,7 @@ export async function POST(request: Request) {
     return err("Invalid email or password", "UNAUTHORIZED", 401);
   }
 
+  // Check the user has admin or kitchen role
   const admin = getAdminClient();
   const { data: profile } = await admin
     .from("profiles")
@@ -88,7 +45,7 @@ export async function POST(request: Request) {
 
   if (!profile || !["admin", "kitchen"].includes(profile.role)) {
     await supabase.auth.signOut();
-    return err("Access denied", "FORBIDDEN", 403);
+    return err("Access denied. Admin or kitchen role required.", "FORBIDDEN", 403);
   }
 
   return ok({

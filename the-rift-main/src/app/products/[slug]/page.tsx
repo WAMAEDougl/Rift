@@ -3,16 +3,24 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Check, ShieldCheck, Beaker, Truck } from "lucide-react";
-import { getProductBySlug, getCategoryBySlug, formatPrice } from "@/lib/products";
+import { getProductBySlug, getCategoryBySlug, formatPrice, getProductsFromDB } from "@/lib/products";
 import AddToCartButton from "./AddToCartButton";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
+async function getProduct(slug: string) {
+  // Try DB first, fall back to static
+  const dbProducts = await getProductsFromDB();
+  const dbProduct = dbProducts.find((p) => p.slug === slug);
+  if (dbProduct) return dbProduct;
+  return getProductBySlug(slug);
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProduct(slug);
   if (!product) return { title: "Product Not Found" };
   return {
     title: product.name,
@@ -27,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProduct(slug);
 
   if (!product) notFound();
 
@@ -62,14 +70,20 @@ export default async function ProductDetailPage({ params }: Props) {
               <div
                 className={`aspect-square rounded-3xl bg-gradient-to-br ${category?.color || "from-amber-200 to-orange-300"} overflow-hidden relative`}
               >
-                <Image
-                  src={product.image || "/images/products/placeholder.jpg"}
-                  alt={product.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover"
-                  priority
-                />
+                {product.image ? (
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                    priority
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-8xl opacity-30">
+                    🍽️
+                  </div>
+                )}
               </div>
 
               {/* Badges */}
