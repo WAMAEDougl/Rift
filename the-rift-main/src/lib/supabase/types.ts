@@ -9,6 +9,57 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      banners: {
+        Row: {
+          id: string;
+          title: string;
+          subtitle: string | null;
+          description: string | null;
+          image_url: string;
+          mobile_image_url: string | null;
+          link_url: string | null;
+          link_text: string | null;
+          position: "hero" | "promo_strip" | "middle" | "footer";
+          sort_order: number;
+          is_active: boolean;
+          starts_at: string | null;
+          ends_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          subtitle?: string | null;
+          description?: string | null;
+          image_url: string;
+          mobile_image_url?: string | null;
+          link_url?: string | null;
+          link_text?: string | null;
+          position: "hero" | "promo_strip" | "middle" | "footer";
+          sort_order?: number;
+          is_active?: boolean;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          subtitle?: string | null;
+          description?: string | null;
+          image_url?: string;
+          mobile_image_url?: string | null;
+          link_url?: string | null;
+          link_text?: string | null;
+          position?: "hero" | "promo_strip" | "middle" | "footer";
+          sort_order?: number;
+          is_active?: boolean;
+          starts_at?: string | null;
+          ends_at?: string | null;
+        };
+        Relationships: [];
+      };
       categories: {
         Row: {
           id: string;
