@@ -304,6 +304,8 @@ export interface Database {
           mpesa_receipt_number?: string | null;
           confirmed_at?: string | null;
           completed_at?: string | null;
+          delivery_fee?: number;
+          total?: number;
           updated_at?: string;
         };
         Relationships: [
