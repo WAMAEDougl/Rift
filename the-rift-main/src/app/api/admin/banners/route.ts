@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   if (session instanceof Response) return session;
 
   const url = new URL(request.url);
-  const position = url.searchParams.get("position");
+  const position = url.searchParams.get("position") as "hero" | "promo_strip" | "middle" | "footer" | null;
 
   const admin = getAdminClient();
   let query = admin.from("banners").select("*").order("sort_order", { ascending: true });
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   const admin = getAdminClient();
   const { data, error } = await admin
     .from("banners")
-    .insert({ ...parsed.data, updated_at: new Date().toISOString() })
+    .insert(parsed.data)
     .select()
     .single();
 
