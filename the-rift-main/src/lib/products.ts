@@ -219,8 +219,12 @@ export function formatPrice(price: number): string {
 
 export async function getProductsFromDB(): Promise<Product[]> {
   try {
+    // Use VERCEL_URL (set automatically by Vercel) or NEXT_PUBLIC_SITE_URL
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || ""}/api/products`,
+      `${baseUrl}/api/products`,
       { next: { revalidate: 60 } }
     );
     if (!res.ok) throw new Error("API error");
@@ -233,8 +237,11 @@ export async function getProductsFromDB(): Promise<Product[]> {
 
 export async function getCategoriesFromDB(): Promise<Category[]> {
   try {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || ""}/api/categories`,
+      `${baseUrl}/api/categories`,
       { next: { revalidate: 60 } }
     );
     if (!res.ok) throw new Error("API error");

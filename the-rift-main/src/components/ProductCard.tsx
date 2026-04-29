@@ -53,13 +53,22 @@ export default function ProductCard({
           <div
             className={`relative h-48 bg-gradient-to-br ${categoryColor} overflow-hidden cursor-pointer`}
           >
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover group-hover:scale-110 transition-transform duration-500"
-            />
+            {product.image ? (
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-40">
+                🍽️
+              </div>
+            )}
 
             {/* Badges */}
             <div className="absolute top-3 left-3 flex flex-col gap-1.5">
