@@ -74,8 +74,9 @@ export async function POST(
   // Log the STK Push event
   await admin.from("payment_logs").insert({
     order_id: id,
+    provider: "mpesa",
     event_type: "admin_stk_push_initiated",
-    raw_payload: stkResponse,
+    raw_payload: stkResponse as unknown as import("@/lib/supabase/types").Json,
   });
 
   return ok({

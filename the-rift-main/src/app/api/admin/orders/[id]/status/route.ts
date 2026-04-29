@@ -84,8 +84,7 @@ export async function PATCH(
 
   const { data: updatedOrder, error: updateError } = await admin
     .from("orders")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .update(updateObj as any)
+    .update(updateObj)
     .eq("id", id)
     .select()
     .single();
