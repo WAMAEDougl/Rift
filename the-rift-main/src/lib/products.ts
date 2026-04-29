@@ -220,10 +220,16 @@ export function formatPrice(price: number): string {
 export async function getProductsFromDB(): Promise<Product[]> {
   try {
     const { createClient } = await import("@supabase/supabase-js");
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!url || !key) {
+      console.error("[products] Missing Supabase env vars");
+      return products;
+    }
+
+    const supabase = createClient(url, key);
 
     const { data, error } = await supabase
       .from("products")
@@ -231,9 +237,20 @@ export async function getProductsFromDB(): Promise<Product[]> {
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
 
-    if (error || !data || data.length === 0) throw new Error("No data");
+    if (error) {
+      console.error("[products] Supabase error:", error.message);
+      return products;
+    }
+
+    if (!data || data.length === 0) {
+      console.warn("[products] No products returned from DB");
+      return products;
+    }
+
+    console.log(`[products] Loaded ${data.length} products from DB`);
     return mapDBProducts(data as Record<string, unknown>[]);
-  } catch {
+  } catch (e) {
+    console.error("[products] Unexpected error:", e);
     return products;
   }
 }
