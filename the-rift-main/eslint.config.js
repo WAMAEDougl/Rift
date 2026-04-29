@@ -3,6 +3,7 @@ import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
+import nextPlugin from "@next/eslint-plugin-next";
 
 export default tseslint.config(
   { ignores: ["dist", ".output", ".vinxi"] },
@@ -15,11 +16,20 @@ export default tseslint.config(
     },
     plugins: {
       "react-hooks": reactHooks,
+      "@next/next": nextPlugin,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      ...nextPlugin.configs.recommended.rules,
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
-  eslintPluginPrettier,
+  // Prettier formatting — warn only, never block the build
+  {
+    ...eslintPluginPrettier,
+    rules: {
+      ...eslintPluginPrettier.rules,
+      "prettier/prettier": "warn",
+    },
+  },
 );
