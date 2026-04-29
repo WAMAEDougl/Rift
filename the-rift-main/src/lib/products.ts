@@ -219,17 +219,20 @@ export function formatPrice(price: number): string {
 
 export async function getProductsFromDB(): Promise<Product[]> {
   try {
-    // Use VERCEL_URL (set automatically by Vercel) or NEXT_PUBLIC_SITE_URL
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
-    const res = await fetch(
-      `${baseUrl}/api/products`,
-      { next: { revalidate: 60 } }
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    if (!res.ok) throw new Error("API error");
-    const data = await res.json();
-    return mapDBProducts(data.products);
+
+    const { data, error } = await supabase
+      .from("products")
+      .select("*, category:categories(*)")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    if (error || !data || data.length === 0) throw new Error("No data");
+    return mapDBProducts(data as Record<string, unknown>[]);
   } catch {
     return products;
   }
@@ -237,16 +240,30 @@ export async function getProductsFromDB(): Promise<Product[]> {
 
 export async function getCategoriesFromDB(): Promise<Category[]> {
   try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
-    const res = await fetch(
-      `${baseUrl}/api/categories`,
-      { next: { revalidate: 60 } }
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    if (!res.ok) throw new Error("API error");
-    const data = await res.json();
-    return data.categories;
+
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("sort_order", { ascending: true });
+
+    if (error || !data || data.length === 0) throw new Error("No data");
+
+    return data.map((c) => ({
+      slug: c.slug,
+      name: c.name,
+      tagline: c.tagline ?? "",
+      icon: c.icon ?? "🍽️",
+      color: c.color ?? "from-amber-500 to-orange-600",
+      bgColor: c.bg_color ?? "bg-amber-50",
+      description: c.description ?? "",
+      shipsCountrywide: c.ships_countrywide,
+      priceFrom: c.price_from ?? undefined,
+    }));
   } catch {
     return categories;
   }
