@@ -60,6 +60,42 @@ export interface Database {
         };
         Relationships: [];
       };
+      delivery_zones: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          areas: string[];
+          fee: number;
+          free_above: number | null;
+          estimated_days: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          areas?: string[];
+          fee: number;
+          free_above?: number | null;
+          estimated_days?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          areas?: string[];
+          fee?: number;
+          free_above?: number | null;
+          estimated_days?: string | null;
+          is_active?: boolean;
+        };
+        Relationships: [];
+      };
       categories: {
         Row: {
           id: string;
