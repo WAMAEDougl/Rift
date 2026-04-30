@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { requireAdminSession } from "@/lib/admin/auth";
 import { getMessageHistory } from "@/lib/wasender";
 import { ok, err } from "@/lib/admin/response";

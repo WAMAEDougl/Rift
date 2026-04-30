@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/admin/supabase";

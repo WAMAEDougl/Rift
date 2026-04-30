@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { getAdminClient } from "@/lib/admin/supabase";

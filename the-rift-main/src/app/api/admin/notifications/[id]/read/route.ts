@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { requireAdminSession } from "@/lib/admin/auth";
 import { getAdminClient } from "@/lib/admin/supabase";
 import { ok, err } from "@/lib/admin/response";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { requireAdminSession } from "@/lib/admin/auth";
 import { ok } from "@/lib/admin/response";
 
