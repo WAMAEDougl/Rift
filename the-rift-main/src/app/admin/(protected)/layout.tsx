@@ -3,6 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/admin/supabase";
 import AdminLayoutClient from "@/components/admin/AdminLayoutClient";
 
+interface Profile {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  role: string;
+}
+
 export default async function AdminProtectedLayout({
   children,
 }: {
@@ -16,11 +23,13 @@ export default async function AdminProtectedLayout({
   if (!user) redirect("/admin/login");
 
   const admin = getAdminClient();
-  const { data: profile } = await admin
+  const { data } = await admin
     .from("profiles")
     .select("id, full_name, email, role")
     .eq("id", user.id)
     .single();
+
+  const profile = data as Profile | null;
 
   if (!profile || !["admin", "kitchen"].includes(profile.role)) {
     redirect("/admin/login");
