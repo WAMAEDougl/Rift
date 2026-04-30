@@ -536,6 +536,9 @@ export interface Database {
         Relationships: [];
       };
       notifications: {
+        Row: {
+          id: string;
+          type: string;
           title: string;
           message: string;
           order_id: string | null;
