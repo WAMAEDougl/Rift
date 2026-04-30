@@ -76,7 +76,7 @@ export async function PATCH(request: Request) {
     const admin = getAdminClient();
     const { data: updatedSettings, error } = await admin
       .from("store_settings")
-      .update(parsed.data)
+      .update(parsed.data as Record<string, unknown>)
       .eq("id", 1)
       .select()
       .single();

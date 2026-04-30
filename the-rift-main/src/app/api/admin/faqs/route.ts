@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   if (!parsed.success) return err(parsed.error.issues[0]?.message ?? "Validation error", "VALIDATION_ERROR", 422);
 
   const admin = getAdminClient();
-  const { data, error } = await admin.from("faqs").insert(parsed.data).select().single();
+  const { data, error } = await admin.from("faqs").insert(parsed.data as Record<string, unknown>).select().single();
   if (error || !data) return err("Failed to create FAQ", "INTERNAL_ERROR", 500);
   return ok(data, 201);
 }

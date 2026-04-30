@@ -84,7 +84,7 @@ export async function PATCH(
 
   const { data: updatedOrder, error: updateError } = await admin
     .from("orders")
-    .update(updateObj)
+    .update(updateObj as Record<string, unknown>)
     .eq("id", id)
     .select()
     .single();

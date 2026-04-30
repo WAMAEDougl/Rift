@@ -64,7 +64,7 @@ export async function PUT(
 
   const { data: category, error } = await admin
     .from("categories")
-    .update(parsed.data)
+    .update(parsed.data as Record<string, unknown>)
     .eq("id", id)
     .select()
     .single();

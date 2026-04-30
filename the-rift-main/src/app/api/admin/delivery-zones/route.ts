@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   const admin = getAdminClient();
   const { data, error } = await admin
     .from("delivery_zones")
-    .insert(parsed.data)
+    .insert(parsed.data as Record<string, unknown>)
     .select()
     .single();
 

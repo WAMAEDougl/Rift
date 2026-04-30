@@ -19,7 +19,7 @@ export async function DELETE(
     const admin = getAdminClient();
     const { data: updatedProfile, error } = await admin
       .from("profiles")
-      .update({ role: "customer" })
+      .update({ role: "customer" } as Record<string, unknown>)
       .eq("id", id)
       .select()
       .single();

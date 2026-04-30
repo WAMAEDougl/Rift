@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     const { error: upsertError } = await admin.from("profiles").upsert(
-      { id: inviteData.user.id, email, role },
+      { id: inviteData.user.id, email, role } as Record<string, unknown>,
       { onConflict: "id" }
     );
 

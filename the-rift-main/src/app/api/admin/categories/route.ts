@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
   const { data: category, error: insertError } = await admin
     .from("categories")
-    .insert(data)
+    .insert(data as Record<string, unknown>)
     .select()
     .single();
 

@@ -26,7 +26,7 @@ export async function PATCH(
   if (!parsed.success) return err(parsed.error.issues[0]?.message ?? "Validation error", "VALIDATION_ERROR", 422);
 
   const admin = getAdminClient();
-  const { data, error } = await admin.from("faqs").update(parsed.data).eq("id", id).select().single();
+  const { data, error } = await admin.from("faqs").update(parsed.data as Record<string, unknown>).eq("id", id).select().single();
   if (error || !data) return err("FAQ not found", "NOT_FOUND", 404);
   return ok(data);
 }

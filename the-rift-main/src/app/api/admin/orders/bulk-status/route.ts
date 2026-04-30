@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   if (toUpdate.length > 0) {
     const { error: updateError } = await admin
       .from("orders")
-      .update({ status })
+      .update({ status } as Record<string, unknown>)
       .in(
         "id",
         toUpdate.map((o) => o.id)

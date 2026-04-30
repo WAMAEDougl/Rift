@@ -38,7 +38,7 @@ export async function PATCH(
 
   const { data: updatedProfile, error } = await admin
     .from("profiles")
-    .update({ role })
+    .update({ role } as Record<string, unknown>)
     .eq("id", id)
     .select()
     .single();

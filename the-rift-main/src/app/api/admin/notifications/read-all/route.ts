@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     // Then update all unread to read
     const { error } = await admin
       .from("notifications")
-      .update({ is_read: true })
+      .update({ is_read: true } as Record<string, unknown>)
       .eq("is_read", false);
 
     if (error) {

@@ -100,7 +100,7 @@ export async function PATCH(
 
   const { error: updateError } = await admin
     .from("orders")
-    .update(parsed.data)
+    .update(parsed.data as Record<string, unknown>)
     .eq("id", id);
 
   if (updateError) {

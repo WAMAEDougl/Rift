@@ -15,7 +15,7 @@ export async function PATCH(
 
     const { error } = await admin
       .from("notifications")
-      .update({ is_read: true })
+      .update({ is_read: true } as Record<string, unknown>)
       .eq("id", id);
 
     if (error) {

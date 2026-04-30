@@ -52,7 +52,7 @@ export async function PUT(
 
   const { data: product, error } = await admin
     .from("products")
-    .update(parsed.data)
+    .update(parsed.data as Record<string, unknown>)
     .eq("id", id)
     .select()
     .single();
@@ -89,7 +89,7 @@ export async function PATCH(
 
   const { data: product, error } = await admin
     .from("products")
-    .update(parsed.data)
+    .update(parsed.data as Record<string, unknown>)
     .eq("id", id)
     .select()
     .single();
@@ -125,7 +125,7 @@ export async function DELETE(
     // Soft-delete: deactivate the product
     const { error: updateError } = await admin
       .from("products")
-      .update({ is_active: false })
+      .update({ is_active: false } as Record<string, unknown>)
       .eq("id", id);
 
     if (updateError) {
