@@ -36,8 +36,25 @@ export default async function AdminDashboardPage() {
 
   const revenueRows = revenueRowsRaw as { total: number | null }[] | null;
 
-  const recentOrders = (recentOrdersData as Record<string, unknown>[] | null)?.map((o) => ({
-    ...o,
+  type RecentOrder = {
+    id: string;
+    order_number: string;
+    customer_name: string;
+    total: number;
+    status: string;
+    payment_status: string;
+    created_at: string;
+    itemCount: number;
+  };
+
+  const recentOrders = (recentOrdersData as Record<string, unknown>[] | null)?.map((o): RecentOrder => ({
+    id: o.id as string,
+    order_number: o.order_number as string,
+    customer_name: o.customer_name as string,
+    total: o.total as number,
+    status: o.status as string,
+    payment_status: o.payment_status as string,
+    created_at: o.created_at as string,
     itemCount: (o.order_items as { id: string }[] | null)?.length ?? 0,
   }));
 
