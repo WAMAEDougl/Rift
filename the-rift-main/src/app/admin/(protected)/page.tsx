@@ -34,9 +34,9 @@ export default async function AdminDashboardPage() {
     supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", true),
   ]);
 
-  const recentOrders = recentOrdersData?.map((o) => ({
+  const recentOrders = (recentOrdersData as Record<string, unknown>[] | null)?.map((o) => ({
     ...o,
-    itemCount: (o.order_items as { id: string }[])?.length ?? 0,
+    itemCount: (o.order_items as { id: string }[] | null)?.length ?? 0,
   }));
 
   const totalRevenueKES = revenueRows?.reduce((sum, r) => sum + (r.total ?? 0), 0) ?? 0;
