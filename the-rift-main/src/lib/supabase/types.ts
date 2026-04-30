@@ -462,10 +462,80 @@ export interface Database {
         };
         Relationships: [];
       };
-      notifications: {
+      faqs: {
         Row: {
           id: string;
-          type: string;
+          question: string;
+          answer: string;
+          category: "ordering" | "shipping" | "products" | "health" | "restaurant" | "wholesale" | "general";
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          question: string;
+          answer: string;
+          category?: "ordering" | "shipping" | "products" | "health" | "restaurant" | "wholesale" | "general";
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          question?: string;
+          answer?: string;
+          category?: "ordering" | "shipping" | "products" | "health" | "restaurant" | "wholesale" | "general";
+          sort_order?: number;
+          is_active?: boolean;
+        };
+        Relationships: [];
+      };
+      testimonials: {
+        Row: {
+          id: string;
+          name: string;
+          role: string | null;
+          location: string | null;
+          quote: string;
+          rating: number;
+          product: string | null;
+          avatar_url: string | null;
+          is_active: boolean;
+          is_featured: boolean;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          role?: string | null;
+          location?: string | null;
+          quote: string;
+          rating?: number;
+          product?: string | null;
+          avatar_url?: string | null;
+          is_active?: boolean;
+          is_featured?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          role?: string | null;
+          location?: string | null;
+          quote?: string;
+          rating?: number;
+          product?: string | null;
+          avatar_url?: string | null;
+          is_active?: boolean;
+          is_featured?: boolean;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      notifications: {
           title: string;
           message: string;
           order_id: string | null;
