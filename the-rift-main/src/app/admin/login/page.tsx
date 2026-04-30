@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
         .eq("id", data.user.id)
         .single();
 
-      if (!profile || !["admin", "kitchen"].includes(profile.role)) {
+      if (!profile || !["admin", "kitchen"].includes((profile as { role: string }).role)) {
         await supabase.auth.signOut();
         setError("Access denied. Admin or kitchen role required.");
         setLoading(false);
