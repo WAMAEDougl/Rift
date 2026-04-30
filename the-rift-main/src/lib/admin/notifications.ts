@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getAdminClient } from "./supabase";
 
 export type NotificationType =

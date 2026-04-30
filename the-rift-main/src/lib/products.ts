@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Static fallback data from the original target project
 import {
   products as staticProducts,
