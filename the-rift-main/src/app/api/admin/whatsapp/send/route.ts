@@ -34,3 +34,4 @@ export async function POST(request: Request) {
 
   return ok({ messageId: result.data.messageId });
 }
+

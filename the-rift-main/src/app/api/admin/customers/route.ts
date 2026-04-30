@@ -101,3 +101,4 @@ export async function GET(request: Request) {
 
   return ok(paginatedResponse(paginated, total, page, per_page));
 }
+

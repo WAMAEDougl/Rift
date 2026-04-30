@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     const { error: upsertError } = await admin.from("profiles").upsert(
-      { id: inviteData.user.id, email, role } as Record<string, unknown>,
+      { id: inviteData.user.id, email, role } as never,
       { onConflict: "id" }
     );
 
@@ -48,3 +48,4 @@ export async function POST(request: Request) {
     return err("Internal server error", "INTERNAL_ERROR", 500);
   }
 }
+

@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   if (toUpdate.length > 0) {
     const { error: updateError } = await admin
       .from("orders")
-      .update({ status } as Record<string, unknown>)
+      .update({ status } as never)
       .in(
         "id",
         toUpdate.map((o) => o.id)
@@ -73,3 +73,4 @@ export async function POST(request: Request) {
     skipped_ids,
   });
 }
+

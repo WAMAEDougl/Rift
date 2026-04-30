@@ -6,3 +6,4 @@ export async function POST(request: Request) {
   await supabase.auth.signOut();
   return ok({ success: true });
 }
+

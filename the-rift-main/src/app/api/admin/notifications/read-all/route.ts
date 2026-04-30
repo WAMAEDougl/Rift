@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     // Then update all unread to read
     const { error } = await admin
       .from("notifications")
-      .update({ is_read: true } as Record<string, unknown>)
+      .update({ is_read: true } as never)
       .eq("is_read", false);
 
     if (error) {
@@ -30,3 +30,4 @@ export async function POST(request: Request) {
     return err("Internal server error", "INTERNAL_ERROR", 500);
   }
 }
+

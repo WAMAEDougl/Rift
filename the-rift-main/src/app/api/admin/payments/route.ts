@@ -58,3 +58,4 @@ export async function GET(request: Request) {
   const total = countResult.count ?? 0;
   return ok(paginatedResponse(itemsResult.data ?? [], total, page, per_page));
 }
+

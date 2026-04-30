@@ -42,3 +42,4 @@ export async function GET(request: Request) {
     total_customers: customersResult.count ?? 0,
   });
 }
+

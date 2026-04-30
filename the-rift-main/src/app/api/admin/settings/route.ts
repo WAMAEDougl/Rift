@@ -76,7 +76,7 @@ export async function PATCH(request: Request) {
     const admin = getAdminClient();
     const { data: updatedSettings, error } = await admin
       .from("store_settings")
-      .update(parsed.data as Record<string, unknown>)
+      .update(parsed.data as never)
       .eq("id", 1)
       .select()
       .single();
@@ -90,3 +90,4 @@ export async function PATCH(request: Request) {
     return err("Internal server error", "INTERNAL_ERROR", 500);
   }
 }
+

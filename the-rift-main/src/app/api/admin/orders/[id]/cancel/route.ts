@@ -56,7 +56,7 @@ export async function POST(
 
   const { data: updatedOrder, error: updateError } = await admin
     .from("orders")
-    .update(updateObj as Record<string, unknown>)
+    .update(updateObj as never)
     .eq("id", id)
     .select()
     .single();

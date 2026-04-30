@@ -40,10 +40,11 @@ export async function POST(request: Request) {
   const admin = getAdminClient();
   const { data, error } = await admin
     .from("delivery_zones")
-    .insert(parsed.data as Record<string, unknown>)
+    .insert(parsed.data as never)
     .select()
     .single();
 
   if (error || !data) return err("Failed to create delivery zone", "INTERNAL_ERROR", 500);
   return ok(data, 201);
 }
+

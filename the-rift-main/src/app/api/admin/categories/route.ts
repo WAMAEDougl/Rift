@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
   const { data: category, error: insertError } = await admin
     .from("categories")
-    .insert(data as Record<string, unknown>)
+    .insert(data as never)
     .select()
     .single();
 
@@ -85,3 +85,4 @@ export async function POST(request: Request) {
 
   return ok(category, 201);
 }
+

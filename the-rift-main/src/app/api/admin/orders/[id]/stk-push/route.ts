@@ -68,7 +68,7 @@ export async function POST(
   // Update order with delivery fee and new total
   await admin
     .from("orders")
-    .update({ delivery_fee, total: amount } as Record<string, unknown>)
+    .update({ delivery_fee, total: amount } as never)
     .eq("id", id);
 
   // Log the STK Push event

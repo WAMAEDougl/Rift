@@ -30,7 +30,7 @@ export async function PATCH(
   const admin = getAdminClient();
   const { data, error } = await admin
     .from("delivery_zones")
-    .update(parsed.data as Record<string, unknown>)
+    .update(parsed.data as never)
     .eq("id", id)
     .select()
     .single();
