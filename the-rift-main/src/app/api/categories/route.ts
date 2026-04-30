@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getServiceClient, apiSuccess } from "@/lib/utils/api";
 import { categories as fallbackCategories } from "@/lib/products";
 

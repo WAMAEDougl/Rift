@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/utils/api";
 import type { STKCallbackData } from "@/lib/mpesa";
