@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/admin/formatters";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 
 interface Banner {
   id: string;
@@ -26,6 +27,9 @@ interface Banner {
   ends_at: string | null;
   created_at: string;
   updated_at: string;
+  title_color: string | null;
+  subtitle_color: string | null;
+  description_color: string | null;
 }
 
 type Position = "hero" | "promo_strip" | "middle" | "footer";
@@ -49,10 +53,76 @@ const emptyForm = {
   title: "", subtitle: "", description: "", image_url: "", mobile_image_url: "",
   link_url: "", link_text: "", position: "hero" as Position,
   sort_order: "0", is_active: true, starts_at: "", ends_at: "",
+  title_color: "#ffffff", subtitle_color: "#e8d5a3", description_color: "#ffffffb3",
 };
 
 const inputCls = "w-full border border-border rounded-xl px-4 py-2.5 text-sm text-foreground bg-background focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-muted-foreground/50 transition-all";
 const labelCls = "block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5";
+
+// ── Color Picker Component ─────────────────────────────────────────────────────
+const PRESET_COLORS = [
+  { label: "White", value: "#ffffff" },
+  { label: "Cream", value: "#fef9ef" },
+  { label: "Gold", value: "#e8d5a3" },
+  { label: "Light Gold", value: "#f5e6c8" },
+  { label: "Black", value: "#1c1917" },
+  { label: "Dark Gray", value: "#44403c" },
+  { label: "Primary", value: "#c8a96e" },
+  { label: "White 70%", value: "#ffffffb3" },
+  { label: "White 50%", value: "#ffffff80" },
+  { label: "White 30%", value: "#ffffff4d" },
+  { label: "Green", value: "#4ade80" },
+  { label: "Red", value: "#f87171" },
+  { label: "Blue", value: "#60a5fa" },
+  { label: "Yellow", value: "#fbbf24" },
+];
+
+function ColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className={labelCls}>{label}</label>
+      <div className="space-y-2">
+        {/* Preset swatches */}
+        <div className="flex flex-wrap gap-1.5">
+          {PRESET_COLORS.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              title={c.label}
+              onClick={() => onChange(c.value)}
+              className={`w-6 h-6 rounded-lg border-2 transition-all hover:scale-110 ${
+                value === c.value ? "border-primary scale-110 shadow-md" : "border-border"
+              }`}
+              style={{ backgroundColor: c.value }}
+            />
+          ))}
+        </div>
+        {/* Hex input + native color picker */}
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={value.length === 7 ? value : "#ffffff"}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-9 h-9 rounded-lg border border-border cursor-pointer bg-background p-0.5"
+          />
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className={inputCls + " font-mono text-xs"}
+            placeholder="#ffffff"
+            maxLength={9}
+          />
+          {/* Live preview */}
+          <div
+            className="w-9 h-9 rounded-lg border border-border shrink-0"
+            style={{ backgroundColor: value }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function BannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -71,8 +141,15 @@ export default function BannersPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (positionFilter) params.set("position", positionFilter);
-    const res = await fetch(`/api/admin/banners?${params.toString()}`);
+    const res = await fetch(`/api/admin/banners?${params.toString()}`, {
+      credentials: "include",
+    });
     const json = await res.json();
+    if (!res.ok) {
+      toast.error(json.error?.message ?? "Failed to load banners");
+      setLoading(false);
+      return;
+    }
     if (json.data) setBanners(json.data);
     setLoading(false);
   }, [positionFilter]);
@@ -100,6 +177,9 @@ export default function BannersPage() {
       is_active: b.is_active,
       starts_at: b.starts_at ? b.starts_at.slice(0, 16) : "",
       ends_at: b.ends_at ? b.ends_at.slice(0, 16) : "",
+      title_color: b.title_color ?? "#ffffff",
+      subtitle_color: b.subtitle_color ?? "#e8d5a3",
+      description_color: b.description_color ?? "#ffffffb3",
     });
     setModalOpen(true);
   }
@@ -126,6 +206,7 @@ export default function BannersPage() {
   async function handleToggleActive(banner: Banner) {
     const res = await fetch(`/api/admin/banners/${banner.id}`, {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: !banner.is_active }),
     });
@@ -150,11 +231,19 @@ export default function BannersPage() {
         is_active: form.is_active,
         starts_at: form.starts_at ? new Date(form.starts_at).toISOString() : null,
         ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
+        title_color: form.title_color || null,
+        subtitle_color: form.subtitle_color || null,
+        description_color: form.description_color || null,
       };
 
       const url = editTarget ? `/api/admin/banners/${editTarget.id}` : "/api/admin/banners";
       const method = editTarget ? "PATCH" : "POST";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const res = await fetch(url, {
+        method,
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       const json = await res.json();
       if (!res.ok) { toast.error(json.error?.message ?? "Save failed"); return; }
       toast.success(editTarget ? "Banner updated" : "Banner created");
@@ -166,7 +255,10 @@ export default function BannersPage() {
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleteLoading(true);
-    const res = await fetch(`/api/admin/banners/${deleteTarget.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/banners/${deleteTarget.id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
     const json = await res.json();
     setDeleteLoading(false);
     if (!res.ok) { toast.error(json.error?.message ?? "Delete failed"); setDeleteTarget(null); return; }
@@ -322,115 +414,190 @@ export default function BannersPage() {
 
       {/* Create / Edit Modal */}
       <Dialog open={modalOpen} onOpenChange={(open) => { if (!open) setModalOpen(false); }}>
-        <DialogContent className="max-w-2xl rounded-2xl p-6 bg-card max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display text-lg font-medium text-foreground">
-              {editTarget ? "Edit Banner" : "New Banner"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSave} className="mt-4 space-y-5">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {/* Left */}
-              <div className="space-y-4">
-                <div>
-                  <label className={labelCls}>Title *</label>
-                  <input type="text" value={form.title} onChange={(e) => set("title", e.target.value)} required className={inputCls} placeholder="Summer Sale" />
-                </div>
-                <div>
-                  <label className={labelCls}>Subtitle</label>
-                  <input type="text" value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} className={inputCls} placeholder="Up to 30% off selected items" />
-                </div>
-                <div>
-                  <label className={labelCls}>Description</label>
-                  <textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={3} className={inputCls + " resize-none"} placeholder="Optional longer description..." />
-                </div>
-                <div>
-                  <label className={labelCls}>Position *</label>
-                  <select value={form.position} onChange={(e) => set("position", e.target.value)} className={inputCls}>
-                    <option value="hero">Hero Banner</option>
-                    <option value="promo_strip">Promo Strip</option>
-                    <option value="middle">Middle Section</option>
-                    <option value="footer">Footer</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelCls}>Link URL</label>
-                    <input type="url" value={form.link_url} onChange={(e) => set("link_url", e.target.value)} className={inputCls} placeholder="https://..." />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Link Text</label>
-                    <input type="text" value={form.link_text} onChange={(e) => set("link_text", e.target.value)} className={inputCls} placeholder="Shop Now" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelCls}>Start Date & Time</label>
-                    <input type="datetime-local" value={form.starts_at} onChange={(e) => set("starts_at", e.target.value)} className={inputCls} />
-                  </div>
-                  <div>
-                    <label className={labelCls}>End Date & Time</label>
-                    <input type="datetime-local" value={form.ends_at} onChange={(e) => set("ends_at", e.target.value)} className={inputCls} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelCls}>Sort Order</label>
-                    <input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} min="0" className={inputCls} />
-                  </div>
-                  <div className="flex items-center gap-3 pt-6">
-                    <button type="button" onClick={() => set("is_active", !form.is_active)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.is_active ? "bg-primary" : "bg-muted"}`}>
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-background shadow transition-transform ${form.is_active ? "translate-x-6" : "translate-x-1"}`} />
-                    </button>
-                    <span className="text-sm font-medium text-foreground">Active</span>
-                  </div>
-                </div>
+        <DialogContent className="max-w-4xl rounded-2xl p-0 bg-card max-h-[92vh] overflow-hidden flex flex-col">
+          {/* Modal Header */}
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="font-display text-xl font-medium text-foreground">
+                {editTarget ? "Edit Banner" : "New Banner"}
+              </DialogTitle>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => set("is_active", !form.is_active)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.is_active ? "bg-primary" : "bg-muted"}`}>
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-background shadow transition-transform ${form.is_active ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
+                <span className="text-sm font-medium text-foreground">{form.is_active ? "Active" : "Inactive"}</span>
               </div>
+            </div>
+          </DialogHeader>
 
-              {/* Right — image */}
-              <div className="space-y-4">
-                <div>
-                  <label className={labelCls}>Image URL *</label>
-                  <div className="flex gap-2">
-                    <input type="url" value={form.image_url} onChange={(e) => set("image_url", e.target.value)} required className={inputCls} placeholder="https://..." />
-                    <button type="button" onClick={() => fileInputRef.current?.click()}
-                      className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors">
-                      {uploading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
-                    </button>
-                  </div>
-                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                </div>
+          <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-hidden">
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-5 min-h-0">
 
-                {/* Live preview */}
-                <div className="rounded-xl border border-border overflow-hidden bg-muted/30 aspect-video flex items-center justify-center">
-                  {form.image_url ? (
-                    <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                  ) : (
-                    <div className="text-center p-4">
-                      <Image size={28} className="text-muted-foreground/20 mx-auto mb-2" />
-                      <p className="text-xs text-muted-foreground">Image preview</p>
+                {/* ── LEFT PANEL: Content (3/5) ── */}
+                <div className="lg:col-span-3 p-6 space-y-6 border-b lg:border-b-0 lg:border-r border-border">
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Content</p>
+
+                  {/* Title */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className={labelCls}>Title *</label>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-muted-foreground">Colour:</span>
+                        <div className="flex gap-1">
+                          {["#ffffff","#e8d5a3","#c8a96e","#1c1917","#fbbf24"].map((c) => (
+                            <button key={c} type="button" onClick={() => set("title_color", c)}
+                              className={`w-5 h-5 rounded-md border-2 transition-all ${form.title_color === c ? "border-primary scale-110" : "border-transparent"}`}
+                              style={{ backgroundColor: c }} />
+                          ))}
+                          <input type="color" value={form.title_color.length === 7 ? form.title_color : "#ffffff"}
+                            onChange={(e) => set("title_color", e.target.value)}
+                            className="w-5 h-5 rounded-md border border-border cursor-pointer p-0" title="Custom colour" />
+                        </div>
+                      </div>
                     </div>
-                  )}
+                    <RichTextEditor value={form.title} onChange={(v) => set("title", v)}
+                      placeholder="Heritage Flavours, Modern Nutrition"
+                      textColor={form.title_color} minHeight="60px" />
+                  </div>
+
+                  {/* Subtitle */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className={labelCls}>Subtitle</label>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-muted-foreground">Colour:</span>
+                        <div className="flex gap-1">
+                          {["#ffffff","#e8d5a3","#c8a96e","#1c1917","#fbbf24"].map((c) => (
+                            <button key={c} type="button" onClick={() => set("subtitle_color", c)}
+                              className={`w-5 h-5 rounded-md border-2 transition-all ${form.subtitle_color === c ? "border-primary scale-110" : "border-transparent"}`}
+                              style={{ backgroundColor: c }} />
+                          ))}
+                          <input type="color" value={form.subtitle_color.length === 7 ? form.subtitle_color : "#e8d5a3"}
+                            onChange={(e) => set("subtitle_color", e.target.value)}
+                            className="w-5 h-5 rounded-md border border-border cursor-pointer p-0" title="Custom colour" />
+                        </div>
+                      </div>
+                    </div>
+                    <RichTextEditor value={form.subtitle} onChange={(v) => set("subtitle", v)}
+                      placeholder="Nairobi's most unconventional food brand"
+                      textColor={form.subtitle_color} minHeight="50px" />
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className={labelCls}>Description</label>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-muted-foreground">Colour:</span>
+                        <div className="flex gap-1">
+                          {["#ffffff","#ffffffb3","#ffffff80","#e8d5a3","#1c1917"].map((c) => (
+                            <button key={c} type="button" onClick={() => set("description_color", c)}
+                              className={`w-5 h-5 rounded-md border-2 transition-all ${form.description_color === c ? "border-primary scale-110" : "border-transparent"}`}
+                              style={{ backgroundColor: c }} />
+                          ))}
+                          <input type="color" value={form.description_color.length === 7 ? form.description_color : "#ffffff"}
+                            onChange={(e) => set("description_color", e.target.value)}
+                            className="w-5 h-5 rounded-md border border-border cursor-pointer p-0" title="Custom colour" />
+                        </div>
+                      </div>
+                    </div>
+                    <RichTextEditor value={form.description} onChange={(v) => set("description", v)}
+                      placeholder="Rabbit, turkey eggs, probiotic beverages and heritage grain flours..."
+                      textColor={form.description_color} minHeight="90px" />
+                  </div>
+
+                  {/* Link */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls}>CTA Link URL</label>
+                      <input type="url" value={form.link_url} onChange={(e) => set("link_url", e.target.value)} className={inputCls} placeholder="https://..." />
+                    </div>
+                    <div>
+                      <label className={labelCls}>CTA Button Text</label>
+                      <input type="text" value={form.link_text} onChange={(e) => set("link_text", e.target.value)} className={inputCls} placeholder="Shop Now" />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className={labelCls}>Mobile Image URL</label>
-                  <input type="url" value={form.mobile_image_url} onChange={(e) => set("mobile_image_url", e.target.value)} className={inputCls} placeholder="Optional mobile-optimised image" />
+                {/* ── RIGHT PANEL: Settings (2/5) ── */}
+                <div className="lg:col-span-2 p-6 space-y-5 bg-muted/20">
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Image & Settings</p>
+
+                  {/* Image */}
+                  <div>
+                    <label className={labelCls}>Image URL *</label>
+                    <div className="flex gap-2 mb-2">
+                      <input type="url" value={form.image_url} onChange={(e) => set("image_url", e.target.value)} required className={inputCls} placeholder="https://..." />
+                      <button type="button" onClick={() => fileInputRef.current?.click()}
+                        className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+                        {uploading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
+                      </button>
+                    </div>
+                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    {/* Preview */}
+                    <div className="rounded-xl border border-border overflow-hidden bg-muted/30 aspect-video flex items-center justify-center">
+                      {form.image_url ? (
+                        <img src={form.image_url} alt="Preview" className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      ) : (
+                        <div className="text-center p-4">
+                          <Image size={24} className="text-muted-foreground/20 mx-auto mb-1" />
+                          <p className="text-xs text-muted-foreground">Image preview</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>Mobile Image URL</label>
+                    <input type="url" value={form.mobile_image_url} onChange={(e) => set("mobile_image_url", e.target.value)} className={inputCls} placeholder="Optional" />
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>Position *</label>
+                    <select value={form.position} onChange={(e) => set("position", e.target.value)} className={inputCls}>
+                      <option value="hero">Hero Banner</option>
+                      <option value="promo_strip">Promo Strip</option>
+                      <option value="middle">Middle Section</option>
+                      <option value="footer">Footer</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls}>Sort Order</label>
+                      <input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} min="0" className={inputCls} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <label className={labelCls}>Start Date & Time</label>
+                      <input type="datetime-local" value={form.starts_at} onChange={(e) => set("starts_at", e.target.value)} className={inputCls} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>End Date & Time</label>
+                      <input type="datetime-local" value={form.ends_at} onChange={(e) => set("ends_at", e.target.value)} className={inputCls} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <DialogFooter className="flex-row gap-3 pt-2 border-t border-border">
+            {/* Sticky footer */}
+            <div className="flex gap-3 px-6 py-4 border-t border-border bg-card shrink-0">
               <button type="button" onClick={() => setModalOpen(false)}
-                className="flex-1 px-4 py-2.5 bg-muted hover:bg-muted/80 text-muted-foreground rounded-xl text-sm font-semibold transition-colors">
+                className="px-5 py-2.5 bg-muted hover:bg-muted/80 text-muted-foreground rounded-xl text-sm font-semibold transition-colors">
                 Cancel
               </button>
               <button type="submit" disabled={saving}
-                className="flex-1 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 hover:opacity-90 flex items-center justify-center gap-2">
+                className="flex-1 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 hover:opacity-90 flex items-center justify-center gap-2">
                 {saving ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : editTarget ? "Save Changes" : "Create Banner"}
               </button>
-            </DialogFooter>
+            </div>
           </form>
         </DialogContent>
       </Dialog>

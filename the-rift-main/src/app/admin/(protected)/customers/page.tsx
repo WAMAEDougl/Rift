@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
+import { adminFetch } from "@/lib/admin/fetch";
 
 interface Customer {
   id: string;
@@ -37,7 +38,7 @@ export default function CustomersPage() {
     params.set("per_page", "20");
     if (search) params.set("q", search);
 
-    const res = await fetch(`/api/admin/customers?${params.toString()}`);
+    const res = await adminFetch(`/api/admin/customers?${params.toString()}`);
     const json = await res.json();
     if (json.data) {
       setCustomers(json.data.items);

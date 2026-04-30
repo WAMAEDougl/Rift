@@ -5,6 +5,7 @@ import { Tag, Plus, Pencil, Trash2, Loader2, X, Package } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { adminFetch } from "@/lib/admin/fetch";
 
 interface Category {
   id: string;
@@ -35,7 +36,7 @@ export default function CategoriesPage() {
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/admin/categories");
+    const res = await adminFetch("/api/admin/categories");
     const json = await res.json();
     if (json.data) setCategories(json.data);
     setLoading(false);
@@ -88,7 +89,7 @@ export default function CategoriesPage() {
       const url = editTarget ? `/api/admin/categories/${editTarget.id}` : "/api/admin/categories";
       const method = editTarget ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -106,7 +107,7 @@ export default function CategoriesPage() {
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleteLoading(true);
-    const res = await fetch(`/api/admin/categories/${deleteTarget.id}`, { method: "DELETE" });
+    const res = await adminFetch(`/api/admin/categories/${deleteTarget.id}`, { method: "DELETE" });
     const json = await res.json();
     setDeleteLoading(false);
     if (!res.ok) { toast.error(json.error?.message ?? "Delete failed"); setDeleteTarget(null); return; }

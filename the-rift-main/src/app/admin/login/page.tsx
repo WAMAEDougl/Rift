@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -18,23 +19,36 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const res = await fetch("/api/admin/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      // Sign in directly via Supabase client — this sets the session cookie
+      const supabase = createClient();
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      const json = await res.json();
+      if (authError || !data.user) {
+        setError(authError?.message ?? "Invalid email or password");
+        setLoading(false);
+        return;
+      }
 
-      if (!res.ok || !json.data) {
-        setError(json.error?.message ?? "Invalid email or password");
+      // Verify the user has admin/kitchen role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      if (!profile || !["admin", "kitchen"].includes(profile.role)) {
+        await supabase.auth.signOut();
+        setError("Access denied. Admin or kitchen role required.");
         setLoading(false);
         return;
       }
 
       // Navigate to admin dashboard
       window.location.replace("/admin");
-    } catch (e) {
+    } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
     }

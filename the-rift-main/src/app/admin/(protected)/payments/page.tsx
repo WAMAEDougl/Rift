@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
+import { adminFetch } from "@/lib/admin/fetch";
 
 interface Payment {
   id: string;
@@ -80,7 +81,7 @@ export default function PaymentsPage() {
     const effectiveStatus = tab === "pending" ? "pending" : tab === "paid" ? "paid" : statusFilter;
     if (effectiveStatus) params.set("payment_status", effectiveStatus);
 
-    const res = await fetch(`/api/admin/payments?${params.toString()}`);
+    const res = await adminFetch(`/api/admin/payments?${params.toString()}`);
     const json = await res.json();
     if (json.data) {
       setPayments(json.data.items);

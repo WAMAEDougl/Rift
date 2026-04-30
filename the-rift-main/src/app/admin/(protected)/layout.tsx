@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/admin/supabase";
-import AdminSidebar from "@/components/admin/AdminSidebar";
-import AdminTopbar from "@/components/admin/AdminTopbar";
+import AdminLayoutClient from "@/components/admin/AdminLayoutClient";
 
 export default async function AdminProtectedLayout({
   children,
@@ -30,18 +29,12 @@ export default async function AdminProtectedLayout({
   const userName = profile.full_name ?? profile.email ?? "Admin";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-muted/30">
-      <AdminSidebar
-        role={profile.role as "admin" | "kitchen"}
-        userName={userName}
-        userRole={profile.role}
-      />
-      <div className="flex-1 flex flex-col min-w-0 ml-60 overflow-hidden">
-        <AdminTopbar
-          user={{ name: userName, role: profile.role as "admin" | "kitchen" }}
-        />
-        <main className="flex-1 overflow-y-auto p-8 lg:p-10">{children}</main>
-      </div>
-    </div>
+    <AdminLayoutClient
+      role={profile.role as "admin" | "kitchen"}
+      userName={userName}
+      userRole={profile.role}
+    >
+      {children}
+    </AdminLayoutClient>
   );
 }

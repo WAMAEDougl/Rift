@@ -2,12 +2,13 @@
 
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Eye, EyeOff, KeyRound, LogOut, X, Loader2 } from "lucide-react";
+import { Eye, EyeOff, KeyRound, LogOut, X, Loader2, Menu } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 interface AdminTopbarProps {
   user: { name: string; role: "admin" | "kitchen" };
+  onMenuClick?: () => void;
 }
 
 function getPageTitle(pathname: string): { title: string; subtitle: string } {
@@ -19,6 +20,7 @@ function getPageTitle(pathname: string): { title: string; subtitle: string } {
   if (pathname.startsWith("/admin/payments")) return { title: "Payments", subtitle: "Review payment logs and transactions." };
   if (pathname.startsWith("/admin/notifications")) return { title: "Notifications", subtitle: "Stay on top of store activity." };
   if (pathname.startsWith("/admin/settings")) return { title: "Settings", subtitle: "Configure your store preferences." };
+  if (pathname.startsWith("/admin/pages")) return { title: "Pages", subtitle: "Manage sections and content for each page." };
   return { title: "Admin", subtitle: "" };
 }
 
@@ -110,7 +112,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function AdminTopbar({ user }: AdminTopbarProps) {
+export default function AdminTopbar({ user, onMenuClick }: AdminTopbarProps) {
   const pathname = usePathname();
   const { title, subtitle } = getPageTitle(pathname);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -134,10 +136,20 @@ export default function AdminTopbar({ user }: AdminTopbarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between px-8 py-4">
-        <div>
-          <h2 className="font-display text-2xl font-medium text-foreground leading-none">{title}</h2>
-          {subtitle && <p className="text-muted-foreground text-xs mt-1">{subtitle}</p>}
+      <header className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 lg:px-8 py-4">
+        <div className="flex items-center gap-3">
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
+          <div>
+            <h2 className="font-display text-xl lg:text-2xl font-medium text-foreground leading-none">{title}</h2>
+            {subtitle && <p className="text-muted-foreground text-xs mt-1 hidden sm:block">{subtitle}</p>}
+          </div>
         </div>
 
         <div className="flex items-center gap-4">

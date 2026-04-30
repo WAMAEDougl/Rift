@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import StatusBadge from "@/components/admin/StatusBadge";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
 import { toast } from "sonner";
+import { adminFetch } from "@/lib/admin/fetch";
 
 interface OrderRow {
   id: string;
@@ -77,7 +78,7 @@ export default function OrdersPage() {
       params.set("page", String(page));
       params.set("per_page", "20");
 
-      const res = await fetch(`/api/admin/orders?${params.toString()}`);
+      const res = await adminFetch(`/api/admin/orders?${params.toString()}`);
       const json = await res.json();
       if (json.data) {
         setOrders(json.data.items);
@@ -107,7 +108,7 @@ export default function OrdersPage() {
   const handleBulkConfirm = async () => {
     setBulkLoading(true);
     try {
-      await fetch("/api/admin/orders/bulk-status", {
+      await adminFetch("/api/admin/orders/bulk-status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: Array.from(selectedIds), status: "confirmed" }),
@@ -120,7 +121,7 @@ export default function OrdersPage() {
   const handleBulkCancel = async () => {
     setBulkLoading(true);
     try {
-      await fetch("/api/admin/orders/bulk-status", {
+      await adminFetch("/api/admin/orders/bulk-status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: Array.from(selectedIds), status: "cancelled", reason: cancelReason || undefined }),

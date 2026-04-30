@@ -1,54 +1,11 @@
 "use client";
 
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { useSlideshow, INTERVAL_MS } from "@/lib/slideshow-context";
 
-const slides = [
-  {
-    src: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=1600&q=80&auto=format&fit=crop",
-    alt: "Steaming clay pot of heritage African stew on a rustic wooden table",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1600&q=80&auto=format&fit=crop",
-    alt: "Vibrant African spices and grains arranged on a market stall",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1600&q=80&auto=format&fit=crop",
-    alt: "Fresh vegetables and herbs from a Kenyan farm",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1600&q=80&auto=format&fit=crop",
-    alt: "Colourful bowl of heritage grains and vegetables",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1574484284002-952d92456975?w=1600&q=80&auto=format&fit=crop",
-    alt: "Kenyan farmer harvesting fresh produce in the Rift Valley",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=1600&q=80&auto=format&fit=crop",
-    alt: "Artisanal food preparation — hand-crafted small batch cooking",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1547592180-85f173990554?w=1600&q=80&auto=format&fit=crop",
-    alt: "Fermented probiotic beverages in glass bottles",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80&auto=format&fit=crop",
-    alt: "Heritage African meal plated with care and precision",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1600&q=80&auto=format&fit=crop",
-    alt: "Organic ingredients laid out on a natural surface",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1600&q=80&auto=format&fit=crop",
-    alt: "Slow-cooked African dish with aromatic spices",
-  },
-];
-
 interface HeroSlideshowProps {
-  /** Gradient direction — defaults to left-to-right for homepage hero */
   gradient?: "left" | "top" | "none";
-  /** Show dot indicators and progress bar */
   showControls?: boolean;
 }
 
@@ -56,7 +13,7 @@ export default function HeroSlideshow({
   gradient = "left",
   showControls = true,
 }: HeroSlideshowProps) {
-  const { current, paused, goTo, setPaused } = useSlideshow();
+  const { slides, current, paused, fromDB, goTo, setPaused } = useSlideshow();
 
   const gradientClass =
     gradient === "left"
@@ -64,6 +21,8 @@ export default function HeroSlideshow({
       : gradient === "top"
       ? "bg-gradient-to-t from-ink/90 via-ink/50 to-ink/10"
       : "";
+
+  const activeSlide = slides[current];
 
   return (
     <div
@@ -74,7 +33,7 @@ export default function HeroSlideshow({
       {/* Slides — crossfade */}
       {slides.map((slide, i) => (
         <div
-          key={slide.src}
+          key={slide.id}
           className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
           style={{ opacity: i === current ? 1 : 0 }}
           aria-hidden={i !== current}
@@ -94,6 +53,45 @@ export default function HeroSlideshow({
       {/* Gradient overlay */}
       {gradient !== "none" && (
         <div className={`absolute inset-0 ${gradientClass}`} />
+      )}
+
+      {/* Per-slide text overlay — only on homepage (showControls=true means full hero mode) */}
+      {fromDB && activeSlide && showControls && (
+        <div className="absolute inset-0 z-10 flex items-center pointer-events-none">
+          <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
+            <div className="max-w-2xl pointer-events-auto">
+              {activeSlide.subtitle && (
+                <div
+                  className="eyebrow block mb-4 [&_*]:inline"
+                  style={{ color: activeSlide.subtitleColor ?? "#e8d5a3" }}
+                  dangerouslySetInnerHTML={{ __html: activeSlide.subtitle }}
+                />
+              )}
+              {activeSlide.title && (
+                <div
+                  className="font-display text-5xl sm:text-6xl lg:text-[5.5rem] font-medium leading-[1.0] tracking-tight mb-6 [&_strong]:font-bold [&_em]:italic"
+                  style={{ color: activeSlide.titleColor ?? "#ffffff" }}
+                  dangerouslySetInnerHTML={{ __html: activeSlide.title }}
+                />
+              )}
+              {activeSlide.description && (
+                <div
+                  className="text-lg leading-relaxed mb-8 max-w-lg [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                  style={{ color: activeSlide.descriptionColor ?? "rgba(255,255,255,0.7)" }}
+                  dangerouslySetInnerHTML={{ __html: activeSlide.description }}
+                />
+              )}
+              {activeSlide.linkUrl && (
+                <Link
+                  href={activeSlide.linkUrl}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground transition hover:opacity-90 shadow-soft"
+                >
+                  {activeSlide.linkText ?? "Shop Now"} <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Dot indicators */}

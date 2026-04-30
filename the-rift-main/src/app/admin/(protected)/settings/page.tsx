@@ -30,6 +30,7 @@ import {
   BadgePercent,
   Clock,
 } from "lucide-react";
+import { adminFetch } from "@/lib/admin/fetch";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -243,7 +244,7 @@ function BusinessTab() {
   const fetchSettings = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/settings");
+      const res = await adminFetch("/api/admin/settings");
       const json = await res.json();
       if (json.data) {
         setSettings({
@@ -281,7 +282,7 @@ function BusinessTab() {
         tax_rate: parseFloat(settings.tax_rate) || 0,
       };
 
-      const res = await fetch("/api/admin/settings", {
+      const res = await adminFetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -626,7 +627,7 @@ function DeliveryZonesTab() {
   const fetchZones = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/delivery-zones");
+      const res = await adminFetch("/api/admin/delivery-zones");
       const json = await res.json();
       if (json.data) setZones(json.data);
     } catch {
@@ -708,7 +709,7 @@ function DeliveryZonesTab() {
         : "/api/admin/delivery-zones";
       const method = editTarget ? "PATCH" : "POST";
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -732,7 +733,7 @@ function DeliveryZonesTab() {
     if (!deleteTarget) return;
     setDeleteLoading(true);
     try {
-      const res = await fetch(`/api/admin/delivery-zones/${deleteTarget.id}`, {
+      const res = await adminFetch(`/api/admin/delivery-zones/${deleteTarget.id}`, {
         method: "DELETE",
       });
       const json = await res.json();
@@ -1139,7 +1140,7 @@ function PersonalizationTab() {
   const fetchSettings = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/settings");
+      const res = await adminFetch("/api/admin/settings");
       const json = await res.json();
       if (json.data) {
         setSettings({
@@ -1172,7 +1173,7 @@ function PersonalizationTab() {
   async function handleSave() {
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/settings", {
+      const res = await adminFetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
@@ -1307,7 +1308,7 @@ function PersonalizationTab() {
                       if (!file) return;
                       const fd = new FormData();
                       fd.append("file", file);
-                      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+                      const res = await adminFetch("/api/admin/upload", { method: "POST", body: fd });
                       const json = await res.json();
                       if (res.ok) { set("logo_url", json.data.url); toast.success("Logo uploaded"); }
                       else toast.error("Upload failed");

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Info, Users, Save, Loader2, Plus, Trash2, Eye } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Info, Users, Save, Loader2, Plus, Trash2, Eye, HelpCircle, Star } from "lucide-react";
 import { toast } from "sonner";
+import { adminFetch } from "@/lib/admin/fetch";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -96,17 +97,22 @@ const sectionCls = "bg-card rounded-2xl border border-border p-6 space-y-5";
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ContentPage() {
-  const [tab, setTab] = useState<"about" | "community">("about");
+  const [tab, setTab] = useState<"about" | "community" | "faqs" | "testimonials">("about");
 
   return (
     <div className="space-y-6 w-full">
       <div>
         <h1 className="font-display text-3xl font-medium text-foreground">Content</h1>
-        <p className="text-xs text-muted-foreground mt-1">Edit the About and Community pages</p>
+        <p className="text-xs text-muted-foreground mt-1">Manage all user-facing content from one place</p>
       </div>
 
-      <div className="flex items-center bg-muted/30 rounded-xl p-1 gap-1 w-fit">
-        {([["about", "About Page", Info], ["community", "Community Page", Users]] as const).map(([val, label, Icon]) => (
+      <div className="flex flex-wrap items-center bg-muted/30 rounded-xl p-1 gap-1 w-fit">
+        {([
+          ["about", "About Page", Info],
+          ["community", "Community Page", Users],
+          ["faqs", "FAQs", HelpCircle],
+          ["testimonials", "Testimonials", Star],
+        ] as const).map(([val, label, Icon]) => (
           <button key={val} onClick={() => setTab(val)}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${tab === val ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
             <Icon size={13} /> {label}
@@ -116,6 +122,8 @@ export default function ContentPage() {
 
       {tab === "about" && <AboutEditor />}
       {tab === "community" && <CommunityEditor />}
+      {tab === "faqs" && <FAQEditor />}
+      {tab === "testimonials" && <TestimonialsEditor />}
     </div>
   );
 }
@@ -431,6 +439,335 @@ function CommunityEditor() {
       </div>
 
       <SaveBar saving={saving} onSave={handleSave} previewHref="/community" />
+    </div>
+  );
+}
+
+// ── FAQ Editor ────────────────────────────────────────────────────────────────
+
+interface FAQItem {
+  id?: string;
+  question: string;
+  answer: string;
+  category: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
+const FAQ_CATEGORIES = [
+  { value: "ordering", label: "Ordering" },
+  { value: "shipping", label: "Shipping & Delivery" },
+  { value: "products", label: "Products" },
+  { value: "health", label: "Health & Nutrition" },
+  { value: "restaurant", label: "Restaurant" },
+  { value: "wholesale", label: "Wholesale" },
+  { value: "general", label: "General" },
+];
+
+function FAQEditor() {
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [newFaq, setNewFaq] = useState<FAQItem>({ question: "", answer: "", category: "ordering", sort_order: 0, is_active: true });
+
+  const fetchFaqs = useCallback(async () => {
+    setLoading(true);
+    const res = await adminFetch("/api/admin/faqs");
+    const json = await res.json();
+    if (json.data) setFaqs(json.data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchFaqs(); }, [fetchFaqs]);
+
+  async function handleSave(faq: FAQItem) {
+    setSaving(faq.id ?? "new");
+    const url = faq.id ? `/api/admin/faqs/${faq.id}` : "/api/admin/faqs";
+    const method = faq.id ? "PATCH" : "POST";
+    const res = await adminFetch(url, { method, body: JSON.stringify(faq) });
+    const json = await res.json();
+    setSaving(null);
+    if (!res.ok) { toast.error(json.error?.message ?? "Save failed"); return; }
+    toast.success(faq.id ? "FAQ updated" : "FAQ created");
+    setAdding(false);
+    setNewFaq({ question: "", answer: "", category: "ordering", sort_order: 0, is_active: true });
+    fetchFaqs();
+  }
+
+  async function handleDelete(id: string) {
+    const res = await adminFetch(`/api/admin/faqs/${id}`, { method: "DELETE" });
+    if (!res.ok) { toast.error("Delete failed"); return; }
+    toast.success("FAQ deleted");
+    fetchFaqs();
+  }
+
+  function updateFaq(i: number, key: keyof FAQItem, value: string | boolean | number) {
+    setFaqs((prev) => prev.map((f, idx) => idx === i ? { ...f, [key]: value } : f));
+  }
+
+  if (loading) return <div className="text-center py-12 text-muted-foreground">Loading FAQs…</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-lg font-medium text-foreground">FAQs</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{faqs.length} questions — shown on the FAQ page</p>
+        </div>
+        <button onClick={() => setAdding(true)}
+          className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-4 py-2.5 rounded-xl hover:opacity-90">
+          <Plus size={14} /> Add FAQ
+        </button>
+      </div>
+
+      {/* New FAQ form */}
+      {adding && (
+        <div className={sectionCls + " border-primary/30"}>
+          <h3 className="font-semibold text-sm text-foreground">New FAQ</h3>
+          <div>
+            <label className={labelCls}>Category</label>
+            <select value={newFaq.category} onChange={(e) => setNewFaq((p) => ({ ...p, category: e.target.value }))} className={inputCls}>
+              {FAQ_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Question *</label>
+            <input type="text" value={newFaq.question} onChange={(e) => setNewFaq((p) => ({ ...p, question: e.target.value }))} className={inputCls} placeholder="How do I place an order?" />
+          </div>
+          <div>
+            <label className={labelCls}>Answer *</label>
+            <textarea value={newFaq.answer} onChange={(e) => setNewFaq((p) => ({ ...p, answer: e.target.value }))} rows={3} className={inputCls + " resize-none"} placeholder="You can order by..." />
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => handleSave(newFaq)} disabled={saving === "new" || !newFaq.question || !newFaq.answer}
+              className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+              {saving === "new" ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : "Save FAQ"}
+            </button>
+            <button onClick={() => setAdding(false)} className="flex-1 py-2.5 bg-muted text-muted-foreground rounded-xl text-sm font-semibold">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Existing FAQs */}
+      <div className="space-y-3">
+        {faqs.map((faq, i) => (
+          <div key={faq.id} className={sectionCls}>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 space-y-3">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                  <div>
+                    <label className={labelCls}>Category</label>
+                    <select value={faq.category} onChange={(e) => updateFaq(i, "category", e.target.value)} className={inputCls}>
+                      {FAQ_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="lg:col-span-2">
+                    <label className={labelCls}>Question</label>
+                    <input type="text" value={faq.question} onChange={(e) => updateFaq(i, "question", e.target.value)} className={inputCls} />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Answer</label>
+                  <textarea value={faq.answer} onChange={(e) => updateFaq(i, "answer", e.target.value)} rows={2} className={inputCls + " resize-none"} />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 pt-2 border-t border-border">
+              <button onClick={() => handleSave(faq)} disabled={saving === faq.id}
+                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-semibold px-4 py-2 rounded-xl disabled:opacity-50">
+                {saving === faq.id ? <><Loader2 size={12} className="animate-spin" /> Saving…</> : <><Save size={12} /> Save</>}
+              </button>
+              <button onClick={() => updateFaq(i, "is_active", !faq.is_active)}
+                className={`text-xs font-semibold px-3 py-2 rounded-xl border ${faq.is_active ? "bg-green-500/10 text-green-600 border-green-500/20" : "bg-muted text-muted-foreground border-border"}`}>
+                {faq.is_active ? "Active" : "Inactive"}
+              </button>
+              <button onClick={() => faq.id && handleDelete(faq.id)}
+                className="ml-auto text-xs text-destructive hover:underline flex items-center gap-1">
+                <Trash2 size={11} /> Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Testimonials Editor ───────────────────────────────────────────────────────
+
+interface TestimonialItem {
+  id?: string;
+  name: string;
+  role: string;
+  location: string;
+  quote: string;
+  rating: number;
+  product: string;
+  is_featured: boolean;
+  is_active: boolean;
+  sort_order: number;
+}
+
+function TestimonialsEditor() {
+  const [items, setItems] = useState<TestimonialItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [newItem, setNewItem] = useState<TestimonialItem>({ name: "", role: "", location: "", quote: "", rating: 5, product: "", is_featured: false, is_active: true, sort_order: 0 });
+
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    const res = await adminFetch("/api/admin/testimonials");
+    const json = await res.json();
+    if (json.data) setItems(json.data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  async function handleSave(item: TestimonialItem) {
+    setSaving(item.id ?? "new");
+    const url = item.id ? `/api/admin/testimonials/${item.id}` : "/api/admin/testimonials";
+    const method = item.id ? "PATCH" : "POST";
+    const res = await adminFetch(url, { method, body: JSON.stringify(item) });
+    const json = await res.json();
+    setSaving(null);
+    if (!res.ok) { toast.error(json.error?.message ?? "Save failed"); return; }
+    toast.success(item.id ? "Testimonial updated" : "Testimonial created");
+    setAdding(false);
+    setNewItem({ name: "", role: "", location: "", quote: "", rating: 5, product: "", is_featured: false, is_active: true, sort_order: 0 });
+    fetchItems();
+  }
+
+  async function handleDelete(id: string) {
+    const res = await adminFetch(`/api/admin/testimonials/${id}`, { method: "DELETE" });
+    if (!res.ok) { toast.error("Delete failed"); return; }
+    toast.success("Testimonial deleted");
+    fetchItems();
+  }
+
+  function updateItem(i: number, key: keyof TestimonialItem, value: string | boolean | number) {
+    setItems((prev) => prev.map((t, idx) => idx === i ? { ...t, [key]: value } : t));
+  }
+
+  if (loading) return <div className="text-center py-12 text-muted-foreground">Loading testimonials…</div>;
+
+  const TestimonialForm = ({ item, onChange, onSave, onCancel, savingId }: {
+    item: TestimonialItem;
+    onChange: (key: keyof TestimonialItem, value: string | boolean | number) => void;
+    onSave: () => void;
+    onCancel?: () => void;
+    savingId: string | null;
+  }) => (
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div>
+          <label className={labelCls}>Name *</label>
+          <input type="text" value={item.name} onChange={(e) => onChange("name", e.target.value)} className={inputCls} placeholder="Wanjiru K." />
+        </div>
+        <div>
+          <label className={labelCls}>Role / Title</label>
+          <input type="text" value={item.role} onChange={(e) => onChange("role", e.target.value)} className={inputCls} placeholder="Teacher" />
+        </div>
+        <div>
+          <label className={labelCls}>Location</label>
+          <input type="text" value={item.location} onChange={(e) => onChange("location", e.target.value)} className={inputCls} placeholder="Westlands, Nairobi" />
+        </div>
+      </div>
+      <div>
+        <label className={labelCls}>Quote *</label>
+        <textarea value={item.quote} onChange={(e) => onChange("quote", e.target.value)} rows={2} className={inputCls + " resize-none"} placeholder="The fermented porridge blend has completely changed my mornings..." />
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div>
+          <label className={labelCls}>Rating (1-5)</label>
+          <select value={item.rating} onChange={(e) => onChange("rating", parseInt(e.target.value))} className={inputCls}>
+            {[5,4,3,2,1].map((r) => <option key={r} value={r}>{r} ★</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Product</label>
+          <input type="text" value={item.product} onChange={(e) => onChange("product", e.target.value)} className={inputCls} placeholder="Synbiotic Porridge" />
+        </div>
+        <div className="flex items-center gap-2 pt-6">
+          <button type="button" onClick={() => onChange("is_featured", !item.is_featured)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.is_featured ? "bg-primary" : "bg-muted"}`}>
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-background shadow transition-transform ${item.is_featured ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
+          <span className="text-xs font-medium">Featured</span>
+        </div>
+        <div className="flex items-center gap-2 pt-6">
+          <button type="button" onClick={() => onChange("is_active", !item.is_active)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.is_active ? "bg-green-500" : "bg-muted"}`}>
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-background shadow transition-transform ${item.is_active ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
+          <span className="text-xs font-medium">Active</span>
+        </div>
+      </div>
+      <div className="flex gap-3 pt-2 border-t border-border">
+        <button onClick={onSave} disabled={savingId !== null || !item.name || !item.quote}
+          className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+          {savingId !== null ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : <><Save size={14} /> Save</>}
+        </button>
+        {onCancel && <button onClick={onCancel} className="flex-1 py-2.5 bg-muted text-muted-foreground rounded-xl text-sm font-semibold">Cancel</button>}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-lg font-medium text-foreground">Testimonials</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{items.filter(t => t.is_featured).length} featured — shown on homepage</p>
+        </div>
+        <button onClick={() => setAdding(true)}
+          className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-4 py-2.5 rounded-xl hover:opacity-90">
+          <Plus size={14} /> Add Testimonial
+        </button>
+      </div>
+
+      {adding && (
+        <div className={sectionCls + " border-primary/30"}>
+          <h3 className="font-semibold text-sm text-foreground">New Testimonial</h3>
+          <TestimonialForm
+            item={newItem}
+            onChange={(k, v) => setNewItem((p) => ({ ...p, [k]: v }))}
+            onSave={() => handleSave(newItem)}
+            onCancel={() => setAdding(false)}
+            savingId={saving === "new" ? "new" : null}
+          />
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {items.map((item, i) => (
+          <div key={item.id} className={sectionCls}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{item.name.charAt(0)}</div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">{item.location}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {item.is_featured && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">Featured</span>}
+                <button onClick={() => item.id && handleDelete(item.id)} className="text-destructive hover:bg-destructive/10 w-7 h-7 flex items-center justify-center rounded-lg transition-colors">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+            <TestimonialForm
+              item={item}
+              onChange={(k, v) => updateItem(i, k, v)}
+              onSave={() => handleSave(item)}
+              savingId={saving === item.id ? item.id : null}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

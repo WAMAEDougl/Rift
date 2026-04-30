@@ -224,7 +224,29 @@ VALUES
   ('Heritage Flavours, Modern Nutrition', 'Nairobi''s most unconventional food brand', 'Rabbit, turkey eggs, probiotic beverages and heritage grain flours — crafted by a food scientist.',
    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80&auto=format&fit=crop',
    'hero', 1, true, '/shop', 'Shop Now'),
-  ('Free Delivery on Orders Over KES 2,000', 'Within Nairobi', NULL,
+
+  ('Gut Health Starts Here', 'Kenya''s first plantain probiotic kvass', 'Science-backed fermented beverages that heal your gut and boost immunity. Made fresh in Nairobi.',
+   'https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=1200&q=80&auto=format&fit=crop',
+   'hero', 2, true, '/shop', 'Try Our Beverages'),
+
+  ('Heritage Grains, Delivered Anywhere', 'Stone-ground finger millet & sorghum flour', 'Sourced from smallholder farms in the Rift Valley. Ships to all 47 counties.',
+   'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=1200&q=80&auto=format&fit=crop',
+   'hero', 3, true, '/shop', 'Order Flour'),
+
+  ('Rabbit Wet Fry — Try Something New', 'High protein, low fat, deeply flavourful', 'Free-range rabbit slow-cooked in a rich tomato and herb sauce. The most sustainable protein you''ve never tried.',
+   'https://images.unsplash.com/photo-1547592180-85f173990554?w=1200&q=80&auto=format&fit=crop',
+   'hero', 4, true, '/shop', 'Order Now'),
+
+  ('Free Delivery on Orders Over KES 2,000', 'Within Nairobi — same day delivery available', NULL,
    'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=1200&q=80&auto=format&fit=crop',
-   'promo_strip', 1, true, '/shop', 'Order Now')
+   'promo_strip', 1, true, '/shop', 'Order Now'),
+
+  ('New: Synbiotic Porridge', 'Science-backed gut health in every bowl', 'Fermented finger millet with live probiotic cultures. Formulated by our in-house food scientist.',
+   'https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=1200&q=80&auto=format&fit=crop',
+   'middle', 1, true, '/products/synbiotic-porridge', 'Learn More'),
+
+  ('Visit Us in Kahawa Sukari', 'Ruhan Plaza, Ground Floor, Room 23', 'Open Mon–Sat 7AM–8PM. Come taste the full menu in person.',
+   'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&q=80&auto=format&fit=crop',
+   'footer', 1, true, '/visit-us', 'Get Directions')
+
 ON CONFLICT DO NOTHING;

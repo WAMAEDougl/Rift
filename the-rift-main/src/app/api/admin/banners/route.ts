@@ -16,6 +16,9 @@ const bannerSchema = z.object({
   is_active: z.boolean().default(true),
   starts_at: z.string().optional().nullable(),
   ends_at: z.string().optional().nullable(),
+  title_color: z.string().optional().nullable(),
+  subtitle_color: z.string().optional().nullable(),
+  description_color: z.string().optional().nullable(),
 });
 
 export async function GET(request: Request) {

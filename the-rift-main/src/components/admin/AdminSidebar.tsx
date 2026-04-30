@@ -2,19 +2,21 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useEffect } from "react";
 import {
   LayoutDashboard, ShoppingCart, Users, Package, Tag,
   CreditCard, Bell, Settings, LogOut, Image, BookOpen,
-  Info,
+  Info, X, Layout,
 } from "lucide-react";
 
 interface AdminSidebarProps {
   role: "admin" | "kitchen";
   userName?: string;
   userRole?: string;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-// Grouped nav — dividers between sections
 const navGroups = [
   {
     label: "Store",
@@ -37,6 +39,7 @@ const navGroups = [
   {
     label: "System",
     items: [
+      { label: "Pages",         href: "/admin/pages",         icon: Layout,   exact: false },
       { label: "Notifications", href: "/admin/notifications", icon: Bell,     exact: false },
       { label: "Content",       href: "/admin/content",       icon: Info,     exact: false },
       { label: "Settings",      href: "/admin/settings",      icon: Settings, exact: false },
@@ -46,8 +49,29 @@ const navGroups = [
 
 const kitchenAllowed = ["/admin", "/admin/orders"];
 
-export default function AdminSidebar({ role, userName, userRole }: AdminSidebarProps) {
+export default function AdminSidebar({
+  role,
+  userName,
+  userRole,
+  mobileOpen = false,
+  onMobileClose,
+}: AdminSidebarProps) {
   const pathname = usePathname();
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    onMobileClose?.();
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   function isActive(href: string, exact: boolean) {
     if (exact) return pathname === href;
@@ -70,11 +94,13 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
       : g.items,
   })).filter((g) => g.items.length > 0);
 
-  return (
-    <aside className="fixed left-0 top-0 h-full w-60 flex flex-col z-50" style={{ background: "linear-gradient(180deg, #1c1917 0%, #1a1f1a 100%)" }}>
-
+  const sidebarContent = (
+    <aside
+      className="h-full w-64 flex flex-col"
+      style={{ background: "linear-gradient(180deg, #1c1917 0%, #1a1f1a 100%)" }}
+    >
       {/* Brand */}
-      <div className="px-5 py-5 border-b border-white/8 shrink-0">
+      <div className="px-5 py-5 border-b border-white/8 shrink-0 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[#c8a96e]/15 border border-[#c8a96e]/25 flex items-center justify-center shrink-0">
             <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
@@ -87,9 +113,18 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
             <p className="text-[#c8a96e]/50 text-[9px] uppercase tracking-[0.2em] mt-0.5">Admin Portal</p>
           </div>
         </div>
+        {/* Close button — mobile only */}
+        {onMobileClose && (
+          <button
+            onClick={onMobileClose}
+            className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        )}
       </div>
 
-      {/* Nav — scrollable */}
+      {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4 scrollbar-none">
         {visibleGroups.map((group) => (
           <div key={group.label}>
@@ -104,16 +139,13 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+                    className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150 ${
                       active
                         ? "bg-white/10 text-white"
                         : "text-white/50 hover:bg-white/6 hover:text-white/80"
                     }`}
                   >
-                    <Icon
-                      size={15}
-                      className={active ? "text-[#c8a96e] shrink-0" : "shrink-0"}
-                    />
+                    <Icon size={15} className={active ? "text-[#c8a96e] shrink-0" : "shrink-0"} />
                     {item.label}
                   </Link>
                 );
@@ -123,7 +155,7 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
         ))}
       </nav>
 
-      {/* Footer — user + logout */}
+      {/* Footer */}
       <div className="px-3 pb-4 pt-3 border-t border-white/8 space-y-1 shrink-0">
         <button
           onClick={handleLogout}
@@ -132,7 +164,6 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
           <LogOut size={15} className="shrink-0" />
           Sign Out
         </button>
-
         <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/8">
           <div className="w-7 h-7 rounded-full bg-[#c8a96e] flex items-center justify-center text-[#1c1917] text-[11px] font-bold shrink-0">
             {initials}
@@ -144,5 +175,29 @@ export default function AdminSidebar({ role, userName, userRole }: AdminSidebarP
         </div>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible on lg+ */}
+      <div className="hidden lg:block fixed left-0 top-0 h-full w-64 z-50">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile sidebar — slide-in drawer */}
+      {mobileOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            onClick={onMobileClose}
+          />
+          {/* Drawer */}
+          <div className="lg:hidden fixed left-0 top-0 h-full z-50 w-64 shadow-2xl">
+            {sidebarContent}
+          </div>
+        </>
+      )}
+    </>
   );
 }

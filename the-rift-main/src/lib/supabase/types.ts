@@ -26,6 +26,9 @@ export interface Database {
           ends_at: string | null;
           created_at: string;
           updated_at: string;
+          title_color: string | null;
+          subtitle_color: string | null;
+          description_color: string | null;
         };
         Insert: {
           id?: string;
@@ -43,6 +46,9 @@ export interface Database {
           ends_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          title_color?: string | null;
+          subtitle_color?: string | null;
+          description_color?: string | null;
         };
         Update: {
           title?: string;
@@ -57,6 +63,9 @@ export interface Database {
           is_active?: boolean;
           starts_at?: string | null;
           ends_at?: string | null;
+          title_color?: string | null;
+          subtitle_color?: string | null;
+          description_color?: string | null;
         };
         Relationships: [];
       };

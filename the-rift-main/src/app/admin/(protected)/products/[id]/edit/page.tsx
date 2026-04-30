@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Upload, X, Loader2, Package, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { adminFetch } from "@/lib/admin/fetch";
 
 interface Category { id: string; name: string; }
 
@@ -91,7 +92,7 @@ export default function EditProductPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const res = await adminFetch("/api/admin/upload", { method: "POST", body: fd });
       const json = await res.json();
       if (!res.ok) { toast.error(json.error?.message ?? "Upload failed"); return; }
       set("image_url", json.data.url);
@@ -126,7 +127,7 @@ export default function EditProductPage() {
           : [],
       };
 
-      const res = await fetch(`/api/admin/products/${id}`, {
+      const res = await adminFetch(`/api/admin/products/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

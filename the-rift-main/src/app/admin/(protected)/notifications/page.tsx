@@ -5,6 +5,7 @@ import { Bell, CheckCheck, Circle, ChevronLeft, ChevronRight, ShoppingBag, Credi
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatRelativeTime } from "@/lib/admin/formatters";
 import { toast } from "sonner";
+import { adminFetch } from "@/lib/admin/fetch";
 
 interface Notification {
   id: string;
@@ -46,7 +47,7 @@ export default function NotificationsPage() {
     params.set("per_page", "20");
     if (filter !== "") params.set("is_read", filter);
 
-    const res = await fetch(`/api/admin/notifications?${params.toString()}`);
+    const res = await adminFetch(`/api/admin/notifications?${params.toString()}`);
     const json = await res.json();
     if (json.data) {
       setNotifications(json.data.items);
@@ -59,14 +60,14 @@ export default function NotificationsPage() {
   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
   async function markRead(id: string) {
-    await fetch(`/api/admin/notifications/${id}/read`, { method: "PATCH" });
+    await adminFetch(`/api/admin/notifications/${id}/read`, { method: "PATCH" });
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n));
     setUnreadCount((c) => Math.max(0, c - 1));
   }
 
   async function markAllRead() {
     setMarkingAll(true);
-    const res = await fetch("/api/admin/notifications/read-all", { method: "POST" });
+    const res = await adminFetch("/api/admin/notifications/read-all", { method: "POST" });
     const json = await res.json();
     setMarkingAll(false);
     if (!res.ok) { toast.error("Failed to mark all as read"); return; }

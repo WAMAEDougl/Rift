@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
 import type { WaSenderMessage } from "@/lib/wasender";
+import { adminFetch } from "@/lib/admin/fetch";
 
 interface OrderItem {
   id: string;
@@ -63,7 +64,7 @@ function WhatsAppPanel({ phone, messages, loadError }: {
     if (!reply.trim()) return;
     setSending(true);
     try {
-      const res = await fetch("/api/admin/whatsapp/send", {
+      const res = await adminFetch("/api/admin/whatsapp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, message: reply.trim() }),
@@ -168,7 +169,7 @@ function AdminSTKPushPanel({ orderId, subtotal, currentTotal }: {
     if (isNaN(fee) || fee < 0) { toast.error("Enter a valid delivery fee"); return; }
     setSending(true);
     try {
-      const res = await fetch(`/api/admin/orders/${orderId}/stk-push`, {
+      const res = await adminFetch(`/api/admin/orders/${orderId}/stk-push`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ delivery_fee: fee }),
@@ -279,7 +280,7 @@ export default function OrderDetailPage() {
   async function handleStatusChange(newStatus: string) {
     if (!order) return;
     setUpdatingStatus(true);
-    const res = await fetch(`/api/admin/orders/${id}/status`, {
+    const res = await adminFetch(`/api/admin/orders/${id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),

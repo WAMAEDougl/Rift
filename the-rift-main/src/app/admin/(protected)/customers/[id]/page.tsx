@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
 import { toast } from "sonner";
+import { adminFetch } from "@/lib/admin/fetch";
 
 interface CustomerProfile {
   id: string;
@@ -64,7 +65,7 @@ export default function CustomerDetailPage() {
   async function handleRoleChange(newRole: string) {
     if (!profile) return;
     setChangingRole(true);
-    const res = await fetch(`/api/admin/customers/${id}/role`, {
+    const res = await adminFetch(`/api/admin/customers/${id}/role`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role: newRole }),

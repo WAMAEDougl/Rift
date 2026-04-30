@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatKES } from "@/lib/admin/formatters";
+import { adminFetch } from "@/lib/admin/fetch";
 
 interface Product {
   id: string;
@@ -47,7 +48,7 @@ export default function ProductsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchCategories = useCallback(async () => {
-    const res = await fetch("/api/admin/categories");
+    const res = await adminFetch("/api/admin/categories");
     const json = await res.json();
     if (json.data) setCategories(json.data as Category[]);
   }, []);
@@ -62,7 +63,7 @@ export default function ProductsPage() {
     if (stockFilter === "in_stock") params.set("in_stock", "true");
     if (stockFilter === "out_of_stock") params.set("in_stock", "false");
 
-    const res = await fetch(`/api/admin/products?${params.toString()}`);
+    const res = await adminFetch(`/api/admin/products?${params.toString()}`);
     const json = await res.json();
     if (json.data) {
       setProducts(json.data.items as Product[]);
@@ -76,7 +77,7 @@ export default function ProductsPage() {
 
   async function handleToggle(product: Product, field: "in_stock" | "is_active") {
     const value = !product[field];
-    const res = await fetch(`/api/admin/products/${product.id}`, {
+    const res = await adminFetch(`/api/admin/products/${product.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ [field]: value }),
@@ -88,7 +89,7 @@ export default function ProductsPage() {
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleteLoading(true);
-    const res = await fetch(`/api/admin/products/${deleteTarget.id}`, { method: "DELETE" });
+    const res = await adminFetch(`/api/admin/products/${deleteTarget.id}`, { method: "DELETE" });
     const json = await res.json();
     setDeleteLoading(false);
     if (!res.ok) { toast.error(json.error?.message ?? "Delete failed"); setDeleteTarget(null); return; }
