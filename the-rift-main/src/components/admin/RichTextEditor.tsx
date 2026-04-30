@@ -58,7 +58,7 @@ export default function RichTextEditor({
     const current = editor.getHTML();
     const incoming = value || "";
     if (current !== incoming && incoming !== "<p></p>") {
-      editor.commands.setContent(incoming, false);
+      editor.commands.setContent(incoming, { emitUpdate: false });
     }
   }, [value, editor]);
 
