@@ -17,7 +17,7 @@ export default async function AdminDashboardPage() {
 
   const [
     { count: totalOrders },
-    { data: revenueRows },
+    { data: revenueRowsRaw },
     { count: pendingOrders },
     { count: totalCustomers },
     { data: recentOrdersData },
@@ -33,6 +33,8 @@ export default async function AdminDashboardPage() {
       .limit(8),
     supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", true),
   ]);
+
+  const revenueRows = revenueRowsRaw as { total: number | null }[] | null;
 
   const recentOrders = (recentOrdersData as Record<string, unknown>[] | null)?.map((o) => ({
     ...o,
