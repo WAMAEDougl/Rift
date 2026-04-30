@@ -14,6 +14,13 @@ export interface AdminSession {
   };
 }
 
+interface ProfileRow {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  role: string;
+}
+
 export async function requireAdminSession(
   request: Request,
   requiredRole?: "admin"
@@ -31,11 +38,13 @@ export async function requireAdminSession(
 
   // 2. Fetch profile using service role to bypass RLS
   const admin = getAdminClient();
-  const { data: profile } = await admin
+  const { data: profileData } = await admin
     .from("profiles")
     .select("id, full_name, email, role")
     .eq("id", user.id)
     .single();
+
+  const profile = profileData as ProfileRow | null;
 
   if (!profile || !["admin", "kitchen"].includes(profile.role)) {
     await supabase.auth.signOut();
@@ -49,6 +58,11 @@ export async function requireAdminSession(
 
   return {
     user: { id: user.id, email: user.email! },
-    profile: profile as AdminSession["profile"],
+    profile: {
+      id: profile.id,
+      full_name: profile.full_name,
+      email: profile.email,
+      role: profile.role as AdminRole,
+    },
   };
 }

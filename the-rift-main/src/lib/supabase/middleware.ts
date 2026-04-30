@@ -29,7 +29,6 @@ export async function updateSession(request: NextRequest) {
   // Refresh session
   const {
     data: { user },
-    error: userError,
   } = await supabase.auth.getUser();
 
   // Protect admin routes
@@ -47,11 +46,13 @@ export async function updateSession(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { data: profile } = await supabaseAdmin
+    const { data: profileData } = await supabaseAdmin
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
+
+    const profile = profileData as { role: string } | null;
 
     if (!profile || !["admin", "kitchen"].includes(profile.role)) {
       if (isLoginPage) return supabaseResponse;

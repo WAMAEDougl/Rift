@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/admin/supabase";
 import { ok, err } from "@/lib/admin/response";
@@ -8,6 +7,13 @@ const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
+
+interface ProfileRow {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  role: string;
+}
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -37,11 +43,13 @@ export async function POST(request: Request) {
 
   // Check the user has admin or kitchen role
   const admin = getAdminClient();
-  const { data: profile } = await admin
+  const { data: profileData } = await admin
     .from("profiles")
     .select("id, email, full_name, role")
     .eq("id", authData.user.id)
     .single();
+
+  const profile = profileData as ProfileRow | null;
 
   if (!profile || !["admin", "kitchen"].includes(profile.role)) {
     await supabase.auth.signOut();
