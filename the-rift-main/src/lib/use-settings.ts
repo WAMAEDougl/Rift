@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Shared hook for fetching public store settings.
  * Used by user-facing pages to get configurable content.

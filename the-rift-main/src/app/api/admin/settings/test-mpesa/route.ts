@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { requireAdminSession } from "@/lib/admin/auth";
 import { getOAuthToken } from "@/lib/mpesa";
 import { ok } from "@/lib/admin/response";

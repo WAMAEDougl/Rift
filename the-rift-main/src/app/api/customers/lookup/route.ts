@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getServiceClient, apiSuccess, apiError } from "@/lib/utils/api";
 import { normalizePhone } from "@/lib/utils/validation";
 

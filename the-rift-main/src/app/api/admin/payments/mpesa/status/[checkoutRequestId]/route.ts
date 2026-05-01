@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { requireAdminSession } from "@/lib/admin/auth";
 import { querySTKStatus } from "@/lib/mpesa";
 import { ok, err } from "@/lib/admin/response";

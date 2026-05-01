@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createOrderSchema } from "@/lib/utils/validation";
 import { getServiceClient, apiError, apiSuccess, checkRateLimit } from "@/lib/utils/api";
 import { generateOrderNumber, calculateDeliveryFee, validateOrderItems } from "@/lib/order-utils";

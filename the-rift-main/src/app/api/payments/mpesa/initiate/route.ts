@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { z } from "zod";
 import { isMpesaConfigured, initiateSTKPush } from "@/lib/mpesa";
 import { normalizePhone } from "@/lib/utils/validation";

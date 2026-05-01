@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getServiceClient, apiSuccess, apiError } from "@/lib/utils/api";
 
 export async function GET(

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createClient } from "@supabase/supabase-js";
 
 // Generate order number: AY-YYYYMMDD-NNNN

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/auth";
 import { sendMessage } from "@/lib/wasender";
