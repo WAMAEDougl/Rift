@@ -191,7 +191,7 @@ function formatKES(n: number) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<"business" | "zones" | "personalization">("business");
+  const [activeTab, setActiveTab] = useState<"business" | "zones" | "personalization" | "themes">("business");
 
   return (
     <div className="space-y-6 w-full">
@@ -202,12 +202,13 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center bg-muted/30 rounded-xl p-1 gap-1 w-fit">
+      <div className="flex flex-wrap items-center bg-muted/30 rounded-xl p-1 gap-1 w-fit">
         {(
           [
             ["business", "Business", Settings],
             ["zones", "Delivery Zones", MapPin],
             ["personalization", "Personalization", Palette],
+            ["themes", "Themes", Eye],
           ] as const
         ).map(([val, label, Icon]) => (
           <button
@@ -229,6 +230,7 @@ export default function SettingsPage() {
       {activeTab === "business" && <BusinessTab />}
       {activeTab === "zones" && <DeliveryZonesTab />}
       {activeTab === "personalization" && <PersonalizationTab />}
+      {activeTab === "themes" && <ThemesTab />}
     </div>
   );
 }
@@ -1495,6 +1497,192 @@ function PersonalizationTab() {
               Save Personalization
             </>
           )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Themes Tab ───────────────────────────────────────────────────────────────
+
+const THEMES = [
+  {
+    id: "theme-earth",
+    name: "Earth",
+    description: "Warm terracotta, cream & forest green. The original heritage brand palette.",
+    primary: "#c8603a",
+    secondary: "#2d5a3d",
+    accent: "#c8a96e",
+    bg: "#f7f0e6",
+    preview: [
+      { color: "#f7f0e6", label: "Background" },
+      { color: "#c8603a", label: "Primary" },
+      { color: "#2d5a3d", label: "Secondary" },
+      { color: "#c8a96e", label: "Accent" },
+    ],
+  },
+  {
+    id: "theme-forest",
+    name: "Forest",
+    description: "Deep green, sage & lime. Fresh, health-focused, nature-forward.",
+    primary: "#2d6b3a",
+    secondary: "#4a8c5c",
+    accent: "#8ab840",
+    bg: "#f2f7f0",
+    preview: [
+      { color: "#f2f7f0", label: "Background" },
+      { color: "#2d6b3a", label: "Primary" },
+      { color: "#4a8c5c", label: "Secondary" },
+      { color: "#8ab840", label: "Accent" },
+    ],
+  },
+  {
+    id: "theme-midnight",
+    name: "Midnight",
+    description: "Dark charcoal, gold & amber. Premium, sophisticated, evening feel.",
+    primary: "#c8a050",
+    secondary: "#4a7a5c",
+    accent: "#e8c060",
+    bg: "#1a1a2e",
+    preview: [
+      { color: "#1a1a2e", label: "Background" },
+      { color: "#c8a050", label: "Primary" },
+      { color: "#4a7a5c", label: "Secondary" },
+      { color: "#e8c060", label: "Accent" },
+    ],
+  },
+];
+
+function ThemesTab() {
+  const [activeTheme, setActiveTheme] = useState("theme-earth");
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    adminFetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.data?.active_theme) setActiveTheme(json.data.active_theme);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await adminFetch("/api/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ active_theme: activeTheme }),
+      });
+      if (res.ok) {
+        toast.success("Theme saved — reload the site to see changes");
+      } else {
+        toast.error("Failed to save theme");
+      }
+    } catch {
+      toast.error("Failed to save theme");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => <div key={i} className="h-64 bg-muted rounded-2xl animate-pulse" />)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="font-display text-xl font-medium text-foreground">Site Theme</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Choose the visual theme for your public-facing website. Changes apply after saving and reloading.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {THEMES.map((theme) => {
+          const isActive = activeTheme === theme.id;
+          return (
+            <button
+              key={theme.id}
+              onClick={() => setActiveTheme(theme.id)}
+              className={`text-left rounded-2xl border-2 overflow-hidden transition-all hover:shadow-lg ${
+                isActive
+                  ? "border-primary shadow-md ring-2 ring-primary/20"
+                  : "border-border hover:border-primary/40"
+              }`}
+            >
+              {/* Theme preview */}
+              <div
+                className="h-36 p-4 flex flex-col justify-between"
+                style={{ backgroundColor: theme.bg }}
+              >
+                {/* Mock header */}
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full" style={{ backgroundColor: theme.primary }} />
+                  <div className="h-2 w-20 rounded-full" style={{ backgroundColor: theme.primary, opacity: 0.3 }} />
+                </div>
+                {/* Mock content */}
+                <div className="space-y-1.5">
+                  <div className="h-3 w-32 rounded-full" style={{ backgroundColor: theme.primary, opacity: 0.8 }} />
+                  <div className="h-2 w-24 rounded-full" style={{ backgroundColor: theme.secondary, opacity: 0.4 }} />
+                </div>
+                {/* Mock button */}
+                <div className="flex gap-2">
+                  <div className="h-7 w-20 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                    style={{ backgroundColor: theme.primary }}>
+                    Order Now
+                  </div>
+                  <div className="h-7 w-16 rounded-full border-2 flex items-center justify-center text-[10px] font-bold"
+                    style={{ borderColor: theme.accent, color: theme.accent }}>
+                    Menu
+                  </div>
+                </div>
+              </div>
+
+              {/* Theme info */}
+              <div className="p-4 bg-card">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-display text-base font-medium text-foreground">{theme.name}</h3>
+                  {isActive && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">{theme.description}</p>
+                {/* Color swatches */}
+                <div className="flex gap-1.5">
+                  {theme.preview.map((swatch) => (
+                    <div
+                      key={swatch.label}
+                      title={swatch.label}
+                      className="w-5 h-5 rounded-full border border-border/50"
+                      style={{ backgroundColor: swatch.color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center justify-between pt-4 border-t border-border">
+        <p className="text-xs text-muted-foreground">
+          Currently active: <span className="font-semibold text-foreground capitalize">{activeTheme.replace("theme-", "")}</span>
+        </p>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-6 py-3 rounded-xl transition-colors hover:opacity-90 disabled:opacity-50"
+        >
+          {saving ? <><Loader2 size={15} className="animate-spin" /> Saving…</> : <><Save size={15} /> Apply Theme</>}
         </button>
       </div>
     </div>

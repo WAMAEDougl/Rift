@@ -5,7 +5,7 @@
 
 /*
  * AyolaFoods design system
- * Editorial, earth-first sophistication: terracotta + forest + cream.
+ * Three preset themes: Earth (default), Forest, Midnight
  */
 
 @theme inline {
@@ -51,19 +51,22 @@
   --shadow-card: 0 18px 40px -22px color-mix(in oklab, var(--ink) 30%, transparent);
 }
 
-:root {
+/* ═══════════════════════════════════════════════════════
+   THEME 1: EARTH (default) — Terracotta + Cream + Forest
+   Warm, organic, heritage food brand
+   ═══════════════════════════════════════════════════════ */
+:root,
+.theme-earth {
   --radius: 0.5rem;
 
-  /* Brand palette */
-  --cream: oklch(0.965 0.018 78);          /* warm paper */
-  --clay: oklch(0.58 0.16 38);             /* terracotta */
+  --cream: oklch(0.965 0.018 78);
+  --clay: oklch(0.58 0.16 38);
   --clay-deep: oklch(0.45 0.14 35);
-  --forest: oklch(0.35 0.06 145);          /* deep green */
+  --forest: oklch(0.35 0.06 145);
   --forest-soft: oklch(0.55 0.08 150);
-  --ochre: oklch(0.78 0.13 75);            /* mustard accent */
-  --ink: oklch(0.22 0.02 50);              /* near-black warm */
+  --ochre: oklch(0.78 0.13 75);
+  --ink: oklch(0.22 0.02 50);
 
-  /* Semantic mapping */
   --background: var(--cream);
   --foreground: var(--ink);
   --card: oklch(0.99 0.005 80);
@@ -85,7 +88,80 @@
   --ring: var(--clay);
 }
 
-.dark {
+/* ═══════════════════════════════════════════════════════
+   THEME 2: FOREST — Deep Green + Sage + Lime
+   Fresh, health-focused, nature-forward
+   ═══════════════════════════════════════════════════════ */
+.theme-forest {
+  --radius: 0.5rem;
+
+  --cream: oklch(0.96 0.02 130);
+  --clay: oklch(0.38 0.12 145);
+  --clay-deep: oklch(0.28 0.10 145);
+  --forest: oklch(0.55 0.14 155);
+  --forest-soft: oklch(0.65 0.10 150);
+  --ochre: oklch(0.75 0.18 130);
+  --ink: oklch(0.18 0.04 145);
+
+  --background: oklch(0.97 0.015 120);
+  --foreground: oklch(0.18 0.04 145);
+  --card: oklch(0.995 0.005 120);
+  --card-foreground: oklch(0.18 0.04 145);
+  --popover: oklch(0.995 0.005 120);
+  --popover-foreground: oklch(0.18 0.04 145);
+  --primary: oklch(0.38 0.12 145);
+  --primary-foreground: oklch(0.98 0.01 120);
+  --secondary: oklch(0.55 0.14 155);
+  --secondary-foreground: oklch(0.98 0.01 120);
+  --muted: oklch(0.91 0.025 125);
+  --muted-foreground: oklch(0.42 0.05 140);
+  --accent: oklch(0.72 0.18 130);
+  --accent-foreground: oklch(0.18 0.04 145);
+  --destructive: oklch(0.55 0.22 27);
+  --destructive-foreground: oklch(0.99 0.01 80);
+  --border: oklch(0.84 0.03 130);
+  --input: oklch(0.84 0.03 130);
+  --ring: oklch(0.38 0.12 145);
+}
+
+/* ═══════════════════════════════════════════════════════
+   THEME 3: MIDNIGHT — Dark Charcoal + Gold + Amber
+   Premium, sophisticated, evening/event feel
+   ═══════════════════════════════════════════════════════ */
+.theme-midnight {
+  --radius: 0.5rem;
+
+  --cream: oklch(0.96 0.015 80);
+  --clay: oklch(0.72 0.15 65);
+  --clay-deep: oklch(0.58 0.14 60);
+  --forest: oklch(0.55 0.08 150);
+  --forest-soft: oklch(0.65 0.06 150);
+  --ochre: oklch(0.82 0.16 75);
+  --ink: oklch(0.14 0.02 260);
+
+  --background: oklch(0.14 0.02 260);
+  --foreground: oklch(0.95 0.015 80);
+  --card: oklch(0.20 0.025 260);
+  --card-foreground: oklch(0.95 0.015 80);
+  --popover: oklch(0.20 0.025 260);
+  --popover-foreground: oklch(0.95 0.015 80);
+  --primary: oklch(0.72 0.15 65);
+  --primary-foreground: oklch(0.14 0.02 260);
+  --secondary: oklch(0.55 0.08 150);
+  --secondary-foreground: oklch(0.95 0.015 80);
+  --muted: oklch(0.26 0.025 260);
+  --muted-foreground: oklch(0.68 0.02 70);
+  --accent: oklch(0.82 0.16 75);
+  --accent-foreground: oklch(0.14 0.02 260);
+  --destructive: oklch(0.55 0.22 27);
+  --destructive-foreground: oklch(0.99 0.01 80);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.72 0.15 65);
+}
+
+/* Dark mode overrides for Earth theme */
+.dark:not(.theme-forest):not(.theme-midnight) {
   --background: oklch(0.18 0.02 45);
   --foreground: oklch(0.96 0.015 80);
   --card: oklch(0.24 0.025 45);

@@ -8,6 +8,7 @@ import { Footer } from "@/components/site/Footer";
 import CartSidebar from "@/components/CartSidebar";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { Toaster } from "sonner";
+import { createClient } from "@supabase/supabase-js";
 
 const fraunces = Fraunces({
   variable: "--font-display",
@@ -102,8 +103,25 @@ export default function RootLayout({
     sameAs: [],
   };
 
+  // Fetch active theme from DB
+  let activeTheme = "theme-earth";
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const { data } = await supabase
+      .from("store_settings")
+      .select("active_theme")
+      .eq("id", 1)
+      .single();
+    if (data?.active_theme) activeTheme = data.active_theme;
+  } catch {
+    // fallback to earth theme
+  }
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={activeTheme}>
       <head>
         {/* Inline dark-mode detection — runs before first paint to avoid flash */}
         <script
