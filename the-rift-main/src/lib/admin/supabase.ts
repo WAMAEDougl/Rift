@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/types";
+import type { Database } from "@/lib/supabase/types_new";
 
 export function getAdminClient() {
   return createClient<Database>(
