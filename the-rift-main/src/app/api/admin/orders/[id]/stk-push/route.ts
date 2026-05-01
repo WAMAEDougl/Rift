@@ -3,7 +3,6 @@ import { requireAdminSession } from "@/lib/admin/auth";
 import { getAdminClient } from "@/lib/admin/supabase";
 import { ok, err } from "@/lib/admin/response";
 import { initiateSTKPush, isMpesaConfigured, normalizePhone } from "@/lib/mpesa";
-import type { Json } from "@/lib/supabase/types";
 
 const bodySchema = z.object({
   delivery_fee: z.number().int().min(0),
@@ -77,7 +76,7 @@ export async function POST(
     order_id: id,
     provider: "mpesa",
     event_type: "admin_stk_push_initiated",
-    raw_payload: stkResponse as unknown as Json,
+    raw_payload: stkResponse as unknown as Record<string, unknown>,
   });
 
   return ok({
