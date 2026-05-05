@@ -1,11 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./themes.css";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
  * AyolaFoods design system
- * Three preset themes: Earth (default), Forest, Midnight
+ * 25 preset themes
  */
 
 @theme inline {

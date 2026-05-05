@@ -1505,50 +1505,55 @@ function PersonalizationTab() {
 
 // ─── Themes Tab ───────────────────────────────────────────────────────────────
 
-const THEMES = [
+const THEME_GROUPS = [
   {
-    id: "theme-earth",
-    name: "Earth",
-    description: "Warm terracotta, cream & forest green. The original heritage brand palette.",
-    primary: "#c8603a",
-    secondary: "#2d5a3d",
-    accent: "#c8a96e",
-    bg: "#f7f0e6",
-    preview: [
-      { color: "#f7f0e6", label: "Background" },
-      { color: "#c8603a", label: "Primary" },
-      { color: "#2d5a3d", label: "Secondary" },
-      { color: "#c8a96e", label: "Accent" },
+    label: "Warm & Organic",
+    themes: [
+      { id: "theme-earth",    name: "Earth",    description: "Terracotta, cream & forest green. The original heritage palette.", bg: "#f7f0e6", primary: "#c8603a", secondary: "#2d5a3d", accent: "#c8a96e", dark: false },
+      { id: "theme-sahara",   name: "Sahara",   description: "Warm sand, burnt orange & copper. Desert-inspired artisan warmth.", bg: "#f7f2e8", primary: "#c06030", secondary: "#5a6030", accent: "#c89050", dark: false },
+      { id: "theme-ember",    name: "Ember",    description: "Deep burgundy, rust & amber. Rich, smouldering warmth.", bg: "#f7f0ec", primary: "#8a3020", secondary: "#5a4030", accent: "#c87830", dark: false },
+      { id: "theme-copper",   name: "Copper",   description: "Metallic copper, bronze & cream. Refined artisan character.", bg: "#f7f2e5", primary: "#a07040", secondary: "#607040", accent: "#b08050", dark: false },
+      { id: "theme-espresso", name: "Espresso", description: "Deep brown, caramel & cream. Warm coffee-house sophistication.", bg: "#f5f0e8", primary: "#5a3820", secondary: "#4a3828", accent: "#a07030", dark: false },
+      { id: "theme-savanna",  name: "Savanna",  description: "Golden grass, sienna & sky. Open-horizon African warmth.", bg: "#f7f2e0", primary: "#9a7030", secondary: "#3a7870", accent: "#c8a830", dark: false },
     ],
   },
   {
-    id: "theme-forest",
-    name: "Forest",
-    description: "Deep green, sage & lime. Fresh, health-focused, nature-forward.",
-    primary: "#2d6b3a",
-    secondary: "#4a8c5c",
-    accent: "#8ab840",
-    bg: "#f2f7f0",
-    preview: [
-      { color: "#f2f7f0", label: "Background" },
-      { color: "#2d6b3a", label: "Primary" },
-      { color: "#4a8c5c", label: "Secondary" },
-      { color: "#8ab840", label: "Accent" },
+    label: "Nature & Fresh",
+    themes: [
+      { id: "theme-forest",   name: "Forest",   description: "Deep green, sage & lime. Fresh, health-focused, nature-forward.", bg: "#f2f7f0", primary: "#2d6b3a", secondary: "#4a8c5c", accent: "#8ab840", dark: false },
+      { id: "theme-jade",     name: "Jade",     description: "Emerald, mint & lime. Vibrant, energetic, botanical.", bg: "#f0f7f2", primary: "#2a6840", secondary: "#3a8060", accent: "#70b030", dark: false },
+      { id: "theme-citrus",   name: "Citrus",   description: "Bright orange, lemon & lime. Bold, energetic, sun-drenched.", bg: "#fdf8ee", primary: "#c07020", secondary: "#508030", accent: "#d0a010", dark: false },
+      { id: "theme-aurora",   name: "Aurora",   description: "Northern lights — teal, violet & green. Ethereal and vivid.", bg: "#f0f7f5", primary: "#2a7878", secondary: "#5040a0", accent: "#40b060", dark: false },
     ],
   },
   {
-    id: "theme-midnight",
-    name: "Midnight",
-    description: "Dark charcoal, gold & amber. Premium, sophisticated, evening feel.",
-    primary: "#c8a050",
-    secondary: "#4a7a5c",
-    accent: "#e8c060",
-    bg: "#1a1a2e",
-    preview: [
-      { color: "#1a1a2e", label: "Background" },
-      { color: "#c8a050", label: "Primary" },
-      { color: "#4a7a5c", label: "Secondary" },
-      { color: "#e8c060", label: "Accent" },
+    label: "Cool & Professional",
+    themes: [
+      { id: "theme-ocean",    name: "Ocean",    description: "Deep navy, teal & seafoam. Calm, trustworthy, coastal.", bg: "#f0f5f8", primary: "#2a5080", secondary: "#308878", accent: "#40a8b0", dark: false },
+      { id: "theme-arctic",   name: "Arctic",   description: "Ice blue, frost & steel. Clean, minimal, crisp.", bg: "#f5f8fa", primary: "#3a6888", secondary: "#4a8898", accent: "#60a8c0", dark: false },
+      { id: "theme-cobalt",   name: "Cobalt",   description: "Rich blue, navy & sky. Bold, confident, authoritative.", bg: "#f0f3f8", primary: "#2840a0", secondary: "#3868b0", accent: "#5080d0", dark: false },
+      { id: "theme-slate",    name: "Slate",    description: "Cool grey, indigo & silver. Understated, modern, precise.", bg: "#f5f5f8", primary: "#4050a0", secondary: "#5068a0", accent: "#7080c0", dark: false },
+    ],
+  },
+  {
+    label: "Soft & Elegant",
+    themes: [
+      { id: "theme-rose",     name: "Rose",     description: "Dusty rose, blush & mauve. Refined, feminine, graceful.", bg: "#faf5f5", primary: "#b05060", secondary: "#806080", accent: "#d08070", dark: false },
+      { id: "theme-lavender", name: "Lavender", description: "Soft purple, lilac & plum. Calm, creative, distinguished.", bg: "#f8f5fa", primary: "#7050a0", secondary: "#6050a0", accent: "#a070c0", dark: false },
+      { id: "theme-dusk",     name: "Dusk",     description: "Twilight purple, peach & coral. Romantic, warm, evocative.", bg: "#faf5f8", primary: "#9050a0", secondary: "#a05080", accent: "#d07050", dark: false },
+      { id: "theme-ivory",    name: "Ivory",    description: "Warm white, champagne & taupe. Timeless, airy, luxurious.", bg: "#fdfaf5", primary: "#806040", secondary: "#607050", accent: "#c0a060", dark: false },
+      { id: "theme-pearl",    name: "Pearl",    description: "Pure white, soft silver & blush. Pristine, minimal, refined.", bg: "#fefefe", primary: "#907080", secondary: "#608080", accent: "#c09080", dark: false },
+      { id: "theme-stone",    name: "Stone",    description: "Warm stone, pebble & chalk. Grounded, neutral, enduring.", bg: "#f8f6f2", primary: "#807060", secondary: "#708060", accent: "#b0a070", dark: false },
+    ],
+  },
+  {
+    label: "Bold & Dark",
+    themes: [
+      { id: "theme-midnight",  name: "Midnight",  description: "Dark charcoal, gold & amber. Premium, sophisticated, evening.", bg: "#1a1a2e", primary: "#c8a050", secondary: "#4a7a5c", accent: "#e8c060", dark: true },
+      { id: "theme-obsidian",  name: "Obsidian",  description: "Pure black, electric blue & white. Stark, modern, powerful.", bg: "#181820", primary: "#4080e0", secondary: "#3060b0", accent: "#80b0f0", dark: true },
+      { id: "theme-volcanic",  name: "Volcanic",  description: "Dark lava, magma orange & ash. Raw, intense, elemental.", bg: "#1e1410", primary: "#e05020", secondary: "#604030", accent: "#e08030", dark: true },
+      { id: "theme-onyx",      name: "Onyx",      description: "Charcoal, warm grey & platinum. Sleek, executive, timeless.", bg: "#1a1814", primary: "#c0a060", secondary: "#707060", accent: "#c0a060", dark: true },
+      { id: "theme-crimson",   name: "Crimson",   description: "Deep red, scarlet & gold. Bold, passionate, commanding.", bg: "#faf5f5", primary: "#a02030", secondary: "#703030", accent: "#c09020", dark: false },
     ],
   },
 ];
@@ -1576,7 +1581,7 @@ function ThemesTab() {
         body: JSON.stringify({ active_theme: activeTheme }),
       });
       if (res.ok) {
-        toast.success("Theme saved — reload the site to see changes");
+        toast.success("Theme applied — reload the site to see changes");
       } else {
         toast.error("Failed to save theme");
       }
@@ -1587,102 +1592,169 @@ function ThemesTab() {
     }
   }
 
+  const allThemes = THEME_GROUPS.flatMap((g) => g.themes);
+  const activeThemeData = allThemes.find((t) => t.id === activeTheme);
+
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[1, 2, 3].map((i) => <div key={i} className="h-64 bg-muted rounded-2xl animate-pulse" />)}
+      <div className="space-y-8">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="space-y-3">
+            <div className="h-4 w-32 bg-muted rounded-full animate-pulse" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {Array.from({ length: 6 }).map((_, j) => (
+                <div key={j} className="h-44 bg-muted rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="font-display text-xl font-medium text-foreground">Site Theme</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Choose the visual theme for your public-facing website. Changes apply after saving and reloading.
-        </p>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <h2 className="font-display text-xl font-medium text-foreground">Site Theme</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Choose from {allThemes.length} professionally designed themes. Changes apply after saving and reloading.
+          </p>
+        </div>
+        {activeThemeData && (
+          <div className="hidden sm:flex items-center gap-3 shrink-0 bg-card border border-border rounded-2xl px-4 py-3">
+            <div
+              className="w-8 h-8 rounded-xl border border-border/50 shrink-0"
+              style={{ backgroundColor: activeThemeData.bg }}
+            />
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Active Theme</p>
+              <p className="text-sm font-semibold text-foreground">{activeThemeData.name}</p>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {THEMES.map((theme) => {
-          const isActive = activeTheme === theme.id;
-          return (
-            <button
-              key={theme.id}
-              onClick={() => setActiveTheme(theme.id)}
-              className={`text-left rounded-2xl border-2 overflow-hidden transition-all hover:shadow-lg ${
-                isActive
-                  ? "border-primary shadow-md ring-2 ring-primary/20"
-                  : "border-border hover:border-primary/40"
-              }`}
-            >
-              {/* Theme preview */}
-              <div
-                className="h-36 p-4 flex flex-col justify-between"
-                style={{ backgroundColor: theme.bg }}
-              >
-                {/* Mock header */}
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full" style={{ backgroundColor: theme.primary }} />
-                  <div className="h-2 w-20 rounded-full" style={{ backgroundColor: theme.primary, opacity: 0.3 }} />
-                </div>
-                {/* Mock content */}
-                <div className="space-y-1.5">
-                  <div className="h-3 w-32 rounded-full" style={{ backgroundColor: theme.primary, opacity: 0.8 }} />
-                  <div className="h-2 w-24 rounded-full" style={{ backgroundColor: theme.secondary, opacity: 0.4 }} />
-                </div>
-                {/* Mock button */}
-                <div className="flex gap-2">
-                  <div className="h-7 w-20 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                    style={{ backgroundColor: theme.primary }}>
-                    Order Now
-                  </div>
-                  <div className="h-7 w-16 rounded-full border-2 flex items-center justify-center text-[10px] font-bold"
-                    style={{ borderColor: theme.accent, color: theme.accent }}>
-                    Menu
-                  </div>
-                </div>
-              </div>
+      {/* Theme groups */}
+      {THEME_GROUPS.map((group) => (
+        <div key={group.label} className="space-y-4">
+          <div className="flex items-center gap-3">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{group.label}</p>
+            <div className="flex-1 h-px bg-border" />
+          </div>
 
-              {/* Theme info */}
-              <div className="p-4 bg-card">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-display text-base font-medium text-foreground">{theme.name}</h3>
-                  {isActive && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                      Active
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mb-3">{theme.description}</p>
-                {/* Color swatches */}
-                <div className="flex gap-1.5">
-                  {theme.preview.map((swatch) => (
-                    <div
-                      key={swatch.label}
-                      title={swatch.label}
-                      className="w-5 h-5 rounded-full border border-border/50"
-                      style={{ backgroundColor: swatch.color }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+            {group.themes.map((theme) => {
+              const isActive = activeTheme === theme.id;
+              return (
+                <button
+                  key={theme.id}
+                  onClick={() => setActiveTheme(theme.id)}
+                  title={theme.description}
+                  className={`group text-left rounded-2xl border-2 overflow-hidden transition-all duration-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    isActive
+                      ? "border-primary shadow-md ring-2 ring-primary/20"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  {/* Visual preview */}
+                  <div
+                    className="h-28 p-3 flex flex-col justify-between relative overflow-hidden"
+                    style={{ backgroundColor: theme.bg }}
+                  >
+                    {/* Mock nav bar */}
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: theme.primary }} />
+                      <div className="h-1.5 w-12 rounded-full opacity-30" style={{ backgroundColor: theme.primary }} />
+                      <div className="ml-auto flex gap-1">
+                        <div className="h-1.5 w-6 rounded-full opacity-20" style={{ backgroundColor: theme.primary }} />
+                        <div className="h-1.5 w-6 rounded-full opacity-20" style={{ backgroundColor: theme.primary }} />
+                      </div>
+                    </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-border">
+                    {/* Mock hero text */}
+                    <div className="space-y-1">
+                      <div className="h-2.5 w-20 rounded-full opacity-85" style={{ backgroundColor: theme.primary }} />
+                      <div className="h-1.5 w-14 rounded-full opacity-40" style={{ backgroundColor: theme.secondary }} />
+                    </div>
+
+                    {/* Mock CTA */}
+                    <div className="flex gap-1.5">
+                      <div
+                        className="h-5 w-14 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: theme.primary }}
+                      >
+                        <span className="text-[8px] font-bold" style={{ color: theme.dark ? "#1a1a1a" : "#ffffff" }}>
+                          Order
+                        </span>
+                      </div>
+                      <div
+                        className="h-5 w-10 rounded-full border flex items-center justify-center"
+                        style={{ borderColor: theme.accent, backgroundColor: "transparent" }}
+                      >
+                        <span className="text-[8px] font-semibold" style={{ color: theme.accent }}>
+                          More
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Active checkmark */}
+                    {isActive && (
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                        <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 12 12">
+                          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Theme name + swatches */}
+                  <div className="px-3 py-2.5 bg-card">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-xs font-semibold text-foreground">{theme.name}</p>
+                      {isActive && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary leading-none">
+                          ON
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      {[theme.bg, theme.primary, theme.secondary, theme.accent].map((color, i) => (
+                        <div
+                          key={i}
+                          className="w-3.5 h-3.5 rounded-full border border-border/40 shrink-0"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* Footer save bar */}
+      <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border pt-4 pb-2 flex items-center justify-between gap-4">
         <p className="text-xs text-muted-foreground">
-          Currently active: <span className="font-semibold text-foreground capitalize">{activeTheme.replace("theme-", "")}</span>
+          {activeThemeData ? (
+            <>
+              Selected: <span className="font-semibold text-foreground">{activeThemeData.name}</span>
+              <span className="mx-2 text-border">·</span>
+              <span className="text-muted-foreground/70">{activeThemeData.description}</span>
+            </>
+          ) : (
+            "Select a theme above"
+          )}
         </p>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-6 py-3 rounded-xl transition-colors hover:opacity-90 disabled:opacity-50"
+          className="shrink-0 inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-6 py-3 rounded-xl transition-colors hover:opacity-90 disabled:opacity-50"
         >
-          {saving ? <><Loader2 size={15} className="animate-spin" /> Saving…</> : <><Save size={15} /> Apply Theme</>}
+          {saving ? <><Loader2 size={15} className="animate-spin" /> Applying…</> : <><Save size={15} /> Apply Theme</>}
         </button>
       </div>
     </div>
