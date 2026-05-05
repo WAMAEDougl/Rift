@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-const INTERVAL = 5000;
+const INTERVAL = 6000;
 
 export interface BannerSlide {
   id: string;
@@ -26,17 +26,17 @@ export interface BannerSlide {
   descriptionColor?: string | null;
 }
 
-// Fallback slides used when DB has no hero banners
+// Fallback slides — used only if DB returns nothing
 export const FALLBACK_SLIDES: BannerSlide[] = [
   {
     id: "fallback-1",
     src: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=1600&q=80&auto=format&fit=crop",
-    alt: "Steaming clay pot of heritage African stew on a rustic wooden table",
+    alt: "Steaming clay pot of heritage African stew",
   },
   {
     id: "fallback-2",
     src: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1600&q=80&auto=format&fit=crop",
-    alt: "Vibrant African spices and grains arranged on a market stall",
+    alt: "Vibrant African spices and grains",
   },
   {
     id: "fallback-3",
@@ -45,38 +45,13 @@ export const FALLBACK_SLIDES: BannerSlide[] = [
   },
   {
     id: "fallback-4",
-    src: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1600&q=80&auto=format&fit=crop",
-    alt: "Colourful bowl of heritage grains and vegetables",
+    src: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80&auto=format&fit=crop",
+    alt: "Heritage African meal plated with care",
   },
   {
     id: "fallback-5",
     src: "https://images.unsplash.com/photo-1574484284002-952d92456975?w=1600&q=80&auto=format&fit=crop",
-    alt: "Kenyan farmer harvesting fresh produce in the Rift Valley",
-  },
-  {
-    id: "fallback-6",
-    src: "https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=1600&q=80&auto=format&fit=crop",
-    alt: "Artisanal food preparation — hand-crafted small batch cooking",
-  },
-  {
-    id: "fallback-7",
-    src: "https://images.unsplash.com/photo-1547592180-85f173990554?w=1600&q=80&auto=format&fit=crop",
-    alt: "Fermented probiotic beverages in glass bottles",
-  },
-  {
-    id: "fallback-8",
-    src: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80&auto=format&fit=crop",
-    alt: "Heritage African meal plated with care and precision",
-  },
-  {
-    id: "fallback-9",
-    src: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1600&q=80&auto=format&fit=crop",
-    alt: "Organic ingredients laid out on a natural surface",
-  },
-  {
-    id: "fallback-10",
-    src: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1600&q=80&auto=format&fit=crop",
-    alt: "Slow-cooked African dish with aromatic spices",
+    alt: "Kenyan farmer harvesting fresh produce",
   },
 ];
 
@@ -85,6 +60,7 @@ interface SlideshowContextType {
   current: number;
   paused: boolean;
   fromDB: boolean;
+  ready: boolean;
   goTo: (index: number) => void;
   setPaused: (paused: boolean) => void;
 }
@@ -92,12 +68,14 @@ interface SlideshowContextType {
 const SlideshowContext = createContext<SlideshowContextType | undefined>(undefined);
 
 export function SlideshowProvider({ children }: { children: ReactNode }) {
-  const [slides, setSlides] = useState<BannerSlide[]>(FALLBACK_SLIDES);
+  // Start with null — don't show anything until we know what to show
+  const [slides, setSlides] = useState<BannerSlide[]>([]);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [fromDB, setFromDB] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  // Fetch hero banners from DB on mount
+  // Fetch hero banners from DB on mount — set slides once, no mid-play swap
   useEffect(() => {
     fetch("/api/banners?position=hero")
       .then((r) => r.json())
@@ -133,11 +111,19 @@ export function SlideshowProvider({ children }: { children: ReactNode }) {
           );
           setSlides(dbSlides);
           setFromDB(true);
-          setCurrent(0);
+        } else {
+          // No DB banners — use fallbacks
+          setSlides(FALLBACK_SLIDES);
+          setFromDB(false);
         }
       })
       .catch(() => {
-        // Keep fallback slides on error
+        setSlides(FALLBACK_SLIDES);
+        setFromDB(false);
+      })
+      .finally(() => {
+        setCurrent(0);
+        setReady(true);
       });
   }, []);
 
@@ -149,14 +135,15 @@ export function SlideshowProvider({ children }: { children: ReactNode }) {
     setCurrent(index);
   }, []);
 
+  // Only start the timer once slides are ready
   useEffect(() => {
-    if (paused) return;
+    if (!ready || paused || slides.length === 0) return;
     const id = setInterval(next, INTERVAL);
     return () => clearInterval(id);
-  }, [next, paused]);
+  }, [next, paused, ready, slides.length]);
 
   return (
-    <SlideshowContext.Provider value={{ slides, current, paused, fromDB, goTo, setPaused }}>
+    <SlideshowContext.Provider value={{ slides, current, paused, fromDB, ready, goTo, setPaused }}>
       {children}
     </SlideshowContext.Provider>
   );
