@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 
@@ -196,36 +197,46 @@ export function SlideshowProvider({ children }: { children: ReactNode }) {
       .then((r) => r.json())
       .then((data) => {
         if (data.banners && data.banners.length > 0) {
-          const dbSlides: BannerSlide[] = data.banners.map(
-            (b: {
-              id: string;
-              image_url: string;
-              mobile_image_url?: string | null;
-              title: string;
-              subtitle?: string | null;
-              description?: string | null;
-              link_url?: string | null;
-              link_text?: string | null;
-              title_color?: string | null;
-              subtitle_color?: string | null;
-              description_color?: string | null;
-            }) => ({
-              id: b.id,
-              src: b.image_url,
-              mobileSrc: b.mobile_image_url,
-              alt: b.title,
-              title: b.title,
-              subtitle: b.subtitle,
-              description: b.description,
-              linkUrl: b.link_url,
-              linkText: b.link_text,
-              titleColor: b.title_color,
-              subtitleColor: b.subtitle_color,
-              descriptionColor: b.description_color,
-            })
-          );
-          setSlides(dbSlides);
-          setFromDB(true);
+          const dbSlides: BannerSlide[] = data.banners
+            .map(
+              (b: {
+                id: string;
+                image_url: string;
+                mobile_image_url?: string | null;
+                title: string;
+                subtitle?: string | null;
+                description?: string | null;
+                link_url?: string | null;
+                link_text?: string | null;
+                title_color?: string | null;
+                subtitle_color?: string | null;
+                description_color?: string | null;
+              }) => ({
+                id: b.id,
+                src: b.image_url,
+                mobileSrc: b.mobile_image_url,
+                alt: b.title,
+                title: b.title,
+                subtitle: b.subtitle,
+                description: b.description,
+                linkUrl: b.link_url,
+                linkText: b.link_text,
+                titleColor: b.title_color,
+                subtitleColor: b.subtitle_color,
+                descriptionColor: b.description_color,
+              })
+            )
+            // Filter out slides with no valid image URL
+            .filter((s: BannerSlide) => s.src && s.src.startsWith("http"));
+
+          if (dbSlides.length > 0) {
+            setSlides(dbSlides);
+            setFromDB(true);
+          } else {
+            // DB rows exist but none are valid — use fallbacks
+            setSlides(FALLBACK_SLIDES);
+            setFromDB(true);
+          }
         } else {
           // No DB banners — use fallbacks (treat them as DB slides since they have full metadata)
           setSlides(FALLBACK_SLIDES);
@@ -241,15 +252,18 @@ export function SlideshowProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
+  const slidesLengthRef = useRef(slides.length);
+  useEffect(() => { slidesLengthRef.current = slides.length; }, [slides.length]);
+
   const next = useCallback(() => {
-    setCurrent((c) => (c + 1) % slides.length);
-  }, [slides.length]);
+    setCurrent((c) => (c + 1) % slidesLengthRef.current);
+  }, []);
 
   const goTo = useCallback((index: number) => {
     setCurrent(index);
   }, []);
 
-  // Only start the timer once slides are ready
+  // Start the timer once ready; restart only when paused state changes
   useEffect(() => {
     if (!ready || paused || slides.length === 0) return;
     const id = setInterval(next, INTERVAL);
