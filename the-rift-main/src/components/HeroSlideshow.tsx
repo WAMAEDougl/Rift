@@ -23,37 +23,33 @@ export default function HeroSlideshow({
       : "";
 
   const activeSlide = slides[current];
+  const showText = fromDB && ready && activeSlide && showControls;
 
   return (
     <div
-      className="absolute inset-0 z-0 bg-ink"
+      className="absolute inset-0 z-0"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* Slides — fade in only after fetch completes */}
-      <div
-        className="absolute inset-0 transition-opacity duration-700"
-        style={{ opacity: ready ? 1 : 0 }}
-      >
-        {slides.map((slide, i) => (
-          <div
-            key={slide.id}
-            className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-            style={{ opacity: i === current ? 1 : 0 }}
-            aria-hidden={i !== current}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={slide.src}
-              alt={slide.alt}
-              className="h-full w-full object-cover"
-              loading={i === 0 ? "eager" : "lazy"}
-              width={1600}
-              height={900}
-            />
-          </div>
-        ))}
-      </div>
+      {/* Slides — always visible, crossfade between them */}
+      {slides.map((slide, i) => (
+        <div
+          key={slide.id}
+          className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+          style={{ opacity: i === current ? 1 : 0 }}
+          aria-hidden={i !== current}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={slide.src}
+            alt={slide.alt}
+            className="h-full w-full object-cover"
+            loading={i === 0 ? "eager" : "lazy"}
+            width={1600}
+            height={900}
+          />
+        </div>
+      ))}
 
       {/* Gradient overlay */}
       {gradient !== "none" && (
@@ -61,7 +57,7 @@ export default function HeroSlideshow({
       )}
 
       {/* Per-slide text — homepage only, DB banners only */}
-      {fromDB && ready && activeSlide && showControls && (
+      {showText && (
         <div className="absolute inset-0 z-10 flex items-center pointer-events-none">
           <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
             <div className="max-w-2xl pointer-events-auto">
@@ -100,7 +96,7 @@ export default function HeroSlideshow({
       )}
 
       {/* Dot indicators */}
-      {showControls && ready && slides.length > 1 && (
+      {showControls && slides.length > 1 && (
         <div className="absolute bottom-8 left-6 z-10 flex items-center gap-2 lg:left-10">
           {slides.map((_, i) => (
             <button
@@ -118,7 +114,7 @@ export default function HeroSlideshow({
       )}
 
       {/* Progress bar */}
-      {showControls && ready && (
+      {showControls && (
         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10">
           <div
             key={current}

@@ -68,12 +68,12 @@ interface SlideshowContextType {
 const SlideshowContext = createContext<SlideshowContextType | undefined>(undefined);
 
 export function SlideshowProvider({ children }: { children: ReactNode }) {
-  // Start with null — don't show anything until we know what to show
-  const [slides, setSlides] = useState<BannerSlide[]>([]);
+  // Start with fallback slides immediately — swap to DB slides when ready
+  const [slides, setSlides] = useState<BannerSlide[]>(FALLBACK_SLIDES);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [fromDB, setFromDB] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(true); // start ready with fallbacks
 
   // Fetch hero banners from DB on mount — set slides once, no mid-play swap
   useEffect(() => {
@@ -81,8 +81,7 @@ export function SlideshowProvider({ children }: { children: ReactNode }) {
       .then((r) => r.json())
       .then((data) => {
         if (data.banners && data.banners.length > 0) {
-          const dbSlides: BannerSlide[] = data.banners.map(
-            (b: {
+          const dbSlides: BannerSlide[] = data.banners.map(            (b: {
               id: string;
               image_url: string;
               mobile_image_url?: string | null;
@@ -111,15 +110,11 @@ export function SlideshowProvider({ children }: { children: ReactNode }) {
           );
           setSlides(dbSlides);
           setFromDB(true);
-        } else {
-          // No DB banners — use fallbacks
-          setSlides(FALLBACK_SLIDES);
-          setFromDB(false);
         }
+        // If no DB banners, keep fallbacks (already set)
       })
       .catch(() => {
-        setSlides(FALLBACK_SLIDES);
-        setFromDB(false);
+        // Keep fallback slides on error
       })
       .finally(() => {
         setCurrent(0);
