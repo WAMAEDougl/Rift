@@ -30,14 +30,25 @@ const DEFAULT_PAGES: PageConfig[] = [
     label: "Home",
     url: "/",
     sections: [
-      { id: "hero", label: "Hero Slideshow", visible: true, editable: true, fields: {
-        eyebrow: "Earth-first · Est. 2018",
-        headline: "Where the Rift feeds the table.",
-        description: "Heritage African cooking, hand-crafted in small batches from the volcanic soils of the Rift Valley. Delivered to your door with care.",
-        cta_text: "Order Now",
-        cta_url: "/shop",
-        cta2_text: "Our Story",
-        cta2_url: "/story",
+      { id: "hero", label: "Hero Slideshow — Default Screen", visible: true, editable: true, fields: {
+        hero_bg_image_url:    "",
+        hero_eyebrow:         "Earth-first · Est. 2018",
+        hero_headline:        "Where the Rift",
+        hero_headline_accent: "feeds the table.",
+        hero_description:     "Heritage African cooking, hand-crafted in small batches from the volcanic soils of the Rift Valley. Delivered to your door with care.",
+        hero_cta_text:        "Order Now",
+        hero_cta_url:         "/shop",
+        hero_cta2_text:       "Our Story",
+        hero_cta2_url:        "/story",
+        hero_stat1_value:     "100%",
+        hero_stat1_label:     "Organic Heritage",
+        hero_stat1_sub:       "Certified & traceable",
+        hero_stat2_value:     "42",
+        hero_stat2_label:     "Partner Farms",
+        hero_stat2_sub:       "Across the Rift Valley",
+        hero_stat3_value:     "6+",
+        hero_stat3_label:     "Years Crafting",
+        hero_stat3_sub:       "Small-batch, every week",
       }},
       { id: "pillars", label: "Pillars (Regenerative, Slow-Cooked, Small Batch, Science-Backed)", visible: true, editable: false },
       { id: "story", label: "Story / Manifesto Section", visible: true, editable: true, fields: {
@@ -185,6 +196,31 @@ export default function PagesPage() {
 
   const page = pages.find((p) => p.slug === activePage)!;
 
+  // Load saved hero config from DB on mount
+  useEffect(() => {
+    adminFetch("/api/site-config")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data?.config) return;
+        const cfg = data.config as Record<string, string>;
+        setPages((prev) => prev.map((p) => {
+          if (p.slug !== "home") return p;
+          return {
+            ...p,
+            sections: p.sections.map((s) => {
+              if (s.id !== "hero" || !s.fields) return s;
+              const merged: Record<string, string> = { ...s.fields };
+              Object.keys(merged).forEach((k) => {
+                if (cfg[k] != null) merged[k] = cfg[k];
+              });
+              return { ...s, fields: merged };
+            }),
+          };
+        }));
+      })
+      .catch(() => {/* keep defaults */});
+  }, []);
+
   function updateSection(sectionId: string, key: string, value: string | boolean) {
     setPages((prev) => prev.map((p) => {
       if (p.slug !== activePage) return p;
@@ -202,6 +238,24 @@ export default function PagesPage() {
   async function handleSave() {
     setSaving(true);
     try {
+      // Special case: hero section saves to site-config, not pages
+      if (activePage === "home") {
+        const heroSection = page.sections.find((s) => s.id === "hero");
+        if (heroSection?.fields) {
+          const res = await adminFetch("/api/admin/site-config", {
+            method: "PATCH",
+            body: JSON.stringify(heroSection.fields),
+          });
+          if (res.ok) {
+            toast.success("Hero default screen saved");
+          } else {
+            localStorage.setItem(`hero_config`, JSON.stringify(heroSection.fields));
+            toast.success("Hero saved locally");
+          }
+        }
+      }
+
+      // Save page config (for other sections)
       const res = await adminFetch("/api/admin/pages", {
         method: "POST",
         body: JSON.stringify({ slug: activePage, config: page }),
@@ -209,7 +263,6 @@ export default function PagesPage() {
       if (res.ok) {
         toast.success(`${page.label} page saved`);
       } else {
-        // Save to localStorage as fallback
         localStorage.setItem(`page_config_${activePage}`, JSON.stringify(page));
         toast.success(`${page.label} saved locally`);
       }
@@ -317,8 +370,10 @@ export default function PagesPage() {
               {section.editable && expandedSection === section.id && section.fields && (
                 <div className="px-4 pb-4 pt-1 border-t border-border space-y-4">
                   {Object.entries(section.fields).map(([key, value]) => {
-                    const isLong = key === "description" || key === "body" || key === "subtext";
+                    const isLong = key === "description" || key === "body" || key === "subtext" || key === "hero_description";
+                    const isUrl = key.includes("url") || key.includes("image");
                     const fieldLabel = key
+                      .replace(/^hero_/, "")
                       .replace(/_/g, " ")
                       .replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -334,9 +389,10 @@ export default function PagesPage() {
                           />
                         ) : (
                           <input
-                            type={key.includes("url") ? "url" : "text"}
+                            type={isUrl ? "url" : "text"}
                             value={value}
                             onChange={(e) => updateSection(section.id, key, e.target.value)}
+                            placeholder={key === "hero_bg_image_url" ? "https://… (leave blank for no background image)" : undefined}
                             className={inputCls}
                           />
                         )}

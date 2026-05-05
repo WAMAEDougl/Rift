@@ -3,56 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Leaf, Flame, Wheat, ShieldCheck } from "lucide-react";
 import HeroSlideshow from "@/components/HeroSlideshow";
-import { useSlideshow } from "@/lib/slideshow-context";
 import { useEffect, useState } from "react";
-
-// ── Hero text — only shown when no DB banners exist ───────────────────────────
-function HeroContent() {
-  const { fromDB } = useSlideshow();
-  if (fromDB) return null;
-
-  return (
-    <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-28 lg:px-10">
-      <div className="max-w-2xl">
-        <span className="eyebrow text-accent/80">Earth-first · Est. 2018</span>
-        <h1 className="mt-5 font-display text-6xl font-medium leading-[1.0] tracking-tight text-white md:text-7xl lg:text-[6rem]">
-          Where the Rift
-          <br />
-          <em className="font-normal italic text-accent">feeds the table.</em>
-        </h1>
-        <p className="mt-7 max-w-lg text-lg leading-relaxed text-white/70">
-          Heritage African cooking, hand-crafted in small batches from the volcanic
-          soils of the Rift Valley. Delivered to your door with care.
-        </p>
-        <div className="mt-10 flex flex-wrap items-center gap-4">
-          <Link href="/shop"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground transition hover:opacity-90 shadow-soft">
-            Order Now <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link href="/story"
-            className="inline-flex items-center gap-2 rounded-full border border-white/30 px-8 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-white hover:bg-white/10">
-            Our Story
-          </Link>
-        </div>
-        <div className="mt-16 flex items-center gap-10 border-t border-white/15 pt-8">
-          {[
-            { value: "100%", label: "Organic Heritage" },
-            { value: "42", label: "Partner Farms" },
-            { value: "6+", label: "Years Crafting" },
-          ].map((stat, i) => (
-            <div key={stat.label} className="flex items-center gap-10">
-              {i > 0 && <div className="h-8 w-px bg-white/20" />}
-              <div>
-                <div className="font-display text-3xl font-medium text-white">{stat.value}</div>
-                <div className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-white/50">{stat.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Testimonials — fetched client-side ────────────────────────────────────────
 interface Testimonial {
@@ -120,10 +71,8 @@ export default function HomePage() {
       {/* ── HERO ── */}
       <section className="relative min-h-[92vh] flex items-center overflow-hidden">
         <HeroSlideshow />
-        <HeroContent />
 
-        {/* Floating badge — only show when no DB banners (would overlap) */}
-        <FloatingBadge />
+
       </section>
 
       {/* ── PILLARS ── */}
@@ -247,16 +196,4 @@ export default function HomePage() {
   );
 }
 
-// ── Floating badge — hidden when DB banners are active ────────────────────────
-function FloatingBadge() {
-  const { fromDB } = useSlideshow();
-  if (fromDB) return null;
-  return (
-    <div className="absolute bottom-16 right-10 hidden rounded-2xl bg-card/95 backdrop-blur-sm p-5 shadow-card lg:block max-w-[200px]">
-      <div className="eyebrow text-[10px]">Hand-crafted</div>
-      <p className="mt-2 font-display text-base leading-snug text-foreground">
-        Small batch. Every week. Never shortcut.
-      </p>
-    </div>
-  );
-}
+

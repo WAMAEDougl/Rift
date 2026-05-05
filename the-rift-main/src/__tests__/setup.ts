@@ -1,5 +1,8 @@
 // Global test setup
 
+// Required for React's act() to work correctly in jsdom
+(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
+
 // Mock localStorage for tests
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
