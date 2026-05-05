@@ -123,10 +123,10 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={activeTheme}>
       <head>
-        {/* Inline dark-mode detection — runs before first paint to avoid flash */}
+        {/* Light mode is default — only apply dark if user explicitly chose it */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}else{document.documentElement.classList.remove("dark")}}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"){document.documentElement.classList.add("dark")}else{document.documentElement.classList.remove("dark")}}catch(e){}})()`,
           }}
         />
         {/* JSON-LD structured data — Schema.org Restaurant */}
