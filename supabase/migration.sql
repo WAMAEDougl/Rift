@@ -770,3 +770,441 @@ UPDATE public.store_settings SET active_theme = 'theme-earth' WHERE id = 1;
 -- ── RLS for FAQs and Testimonials (if not already added) ──
 GRANT SELECT ON public.faqs TO anon, authenticated;
 GRANT SELECT ON public.testimonials TO anon, authenticated;
+
+
+-- ============================================================
+-- EXTENDED MOCK DATA: All pages
+-- Recipes, Blog Posts, Team Members, Milestones, Values,
+-- Health Topics, Wholesale Products, Social Channels
+-- ============================================================
+
+-- ── Recipes table ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.recipes (
+  id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  slug            text UNIQUE NOT NULL,
+  title           text NOT NULL,
+  excerpt         text,
+  content         text,
+  category        text NOT NULL DEFAULT 'cooking-demo'
+                    CHECK (category IN ('cooking-demo','beverage','how-to','health-tip')),
+  video_url       text,
+  video_platform  text DEFAULT 'youtube'
+                    CHECK (video_platform IN ('youtube','facebook','instagram','tiktok')),
+  thumbnail_url   text,
+  prep_time       text,
+  servings        text,
+  difficulty      text DEFAULT 'Easy'
+                    CHECK (difficulty IN ('Easy','Medium','Advanced')),
+  ingredients     text[],
+  tags            text[],
+  author          text DEFAULT 'Prisca Kiragu',
+  published_at    date,
+  is_featured     boolean DEFAULT false,
+  is_active       boolean DEFAULT true,
+  related_product text,
+  sort_order      integer DEFAULT 0,
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  updated_at      timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.recipes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read active recipes" ON public.recipes
+  FOR SELECT USING (is_active = true);
+GRANT SELECT ON public.recipes TO anon, authenticated;
+
+DO $$ BEGIN
+  CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.recipes
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- Seed recipes
+INSERT INTO public.recipes (slug, title, excerpt, content, category, video_url, video_platform, prep_time, servings, difficulty, ingredients, tags, author, published_at, is_featured, related_product, sort_order)
+VALUES
+  ('ceo-making-pilau', 'CEO Making Pilau — Ayola''s Signature Spiced Rice',
+   'Watch Prisca Kiragu prepare Ayola''s signature pilau from scratch — richly spiced, healthy, and absolutely delicious.',
+   '## Ayola''s Signature Pilau
+
+Our pilau is one of the most requested dishes at Ayola Foods. CEO and food scientist Prisca Kiragu takes you through the preparation — from toasting the whole spices to the final plating.
+
+### What Makes Ayola Pilau Different
+- **Whole spices** (cumin seeds, cardamom pods, cinnamon sticks, cloves)
+- **Premium basmati rice** for perfect grain separation
+- **Natural seasonings only** — zero MSG
+
+### Tips from Chef Prisca
+1. Always toast your whole spices in hot oil first
+2. Use basmati rice and wash it 3 times before cooking
+3. The water-to-rice ratio is key: 1.5 cups water per 1 cup rice
+4. Let it steam on low heat for the last 10 minutes — don''t lift the lid!',
+   'cooking-demo', 'https://www.youtube.com/watch?v=0RmZ4vwpAME', 'youtube',
+   '45 mins', '4-6 servings', 'Medium',
+   ARRAY['2 cups basmati rice', '300g minced meat', '2 onions sliced', '3 tomatoes diced', 'Cumin seeds, cardamom, cinnamon, cloves', 'Garlic and ginger paste', 'Salt to taste', '3 cups water', 'Cooking oil'],
+   ARRAY['pilau', 'rice', 'main course', 'signature'],
+   'Prisca Kiragu', '2026-02-15', true, 'heritage-jollof', 1),
+
+  ('synbiotic-porridge-benefits', 'Synbiotic Porridge — Why Your Gut Needs This',
+   'Learn how our fermented synbiotic porridge combines probiotics and prebiotics to transform your digestive health.',
+   '## What is Synbiotic Porridge?
+
+**Synbiotic** means combining **probiotics** (beneficial live bacteria) with **prebiotics** (food for those bacteria). When you consume both together, the probiotics survive better and work harder in your gut.
+
+### Health Benefits
+- **Improved digestion** — probiotics break down food more efficiently
+- **Stronger immunity** — 70% of your immune system is in your gut
+- **Better nutrient absorption** — fermentation makes minerals more bioavailable
+- **Reduced bloating** — balanced gut flora reduces gas and discomfort',
+   'health-tip', 'https://www.instagram.com/reel/ayolafoods/', 'instagram',
+   '24-48 hours (fermentation)', '6-8 servings', 'Easy',
+   ARRAY['1 cup Ayola Special Uji Blend', '3 cups warm water', 'Natural fermentation starter', 'Honey to taste', 'Warm milk for serving'],
+   ARRAY['porridge', 'gut health', 'probiotics', 'fermented', 'synbiotic'],
+   'Prisca Kiragu', '2026-01-20', true, 'synbiotic-porridge', 2),
+
+  ('plantain-probiotic-kvass', 'How We Make Plantain Probiotic Kvass',
+   'A behind-the-scenes look at Kenya''s first plantain-based probiotic beverage — from raw plantain to fermented goodness.',
+   '## Plantain Kvass: Innovation Meets Tradition
+
+Kvass is a traditional fermented beverage. At Ayola Foods, we''ve reimagined it using **plantain** — a fruit rich in resistant starch, which acts as a powerful prebiotic.
+
+### The Fermentation Process
+1. **Select ripe plantains** — yellow with some black spots
+2. **Peel and slice** into thin rounds
+3. **Add to filtered water** with a small amount of honey
+4. **Introduce fermentation cultures** — our proprietary Lactobacillus blend
+5. **Ferment for 48-72 hours** at controlled room temperature
+6. **Strain and bottle** — serve chilled',
+   'beverage', 'https://www.instagram.com/reel/ayolafoods/', 'instagram',
+   '48-72 hours', '8-10 servings', 'Advanced',
+   ARRAY['4 ripe plantains', '1 liter filtered water', '2 tbsp raw honey', 'Fermentation cultures (Lactobacillus blend)', 'Glass jar with breathable cover'],
+   ARRAY['kvass', 'plantain', 'probiotic', 'fermented', 'beverage'],
+   'Prisca Kiragu', '2026-02-01', true, 'plantain-kvass', 3),
+
+  ('ayola-ugali-bread-recipe', 'Healthier Bread Using Ayola Ugali Blend',
+   'Our customers discovered that Ayola''s ugali blend makes incredible bread. Here''s how to do it at home.',
+   '## Bread from Ugali Flour? Yes!
+
+Our ugali blend makes fantastic bread. The indigenous grains add nutrition, fiber, and a subtle nutty flavor.
+
+### Recipe: Ayola Blend Bread
+**Ingredients:**
+- 2 cups wheat flour
+- 1 cup Ayola Special Ugali Blend
+- 1 packet instant yeast (10g)
+- 1 tsp salt, 1 tbsp sugar, 2 tbsp vegetable oil, 1.5 cups warm water
+
+**Method:**
+1. Mix dry ingredients, add oil and warm water, knead 10 minutes
+2. Cover and let rise 1 hour (until doubled)
+3. Shape into a loaf, let rise 30 more minutes
+4. Bake at 180°C for 35-40 minutes until golden',
+   'how-to', 'https://www.facebook.com/100087278121034/videos/', 'facebook',
+   '2 hours', '1 loaf', 'Medium',
+   ARRAY['2 cups wheat flour', '1 cup Ayola Special Ugali Blend', '1 packet instant yeast (10g)', '1 tsp salt', '1 tbsp sugar', '2 tbsp vegetable oil', '1.5 cups warm water'],
+   ARRAY['bread', 'ugali blend', 'baking', 'healthy'],
+   'Prisca Kiragu', '2026-03-01', false, 'finger-millet-flour', 4),
+
+  ('goat-milk-chai-perfect', 'The Perfect Goat Milk Chai',
+   'Why goat milk makes better chai — easier to digest, creamier texture, and richer flavor. Here''s our method.',
+   '## Why Goat Milk Chai?
+
+Goat milk is naturally homogenized, easier to digest, and richer in calcium and vitamins than cow milk.
+
+### Our Recipe
+1. Bring 2 cups water to a simmer
+2. Add 2 tsp loose black tea and crushed ginger
+3. Simmer for 3 minutes
+4. Add 2 cups fresh goat milk and spices
+5. Heat until just before boiling
+6. Strain and add honey to taste',
+   'beverage', 'https://www.tiktok.com/@priscakiragu', 'tiktok',
+   '10 mins', '2 cups', 'Easy',
+   ARRAY['2 cups fresh goat milk', '2 cups water', '2 tsp loose Kenyan black tea', '1 inch fresh ginger crushed', '3 cardamom pods crushed', '1 small cinnamon stick', 'Honey to taste'],
+   ARRAY['chai', 'goat milk', 'tea', 'beverage', 'easy'],
+   'Prisca Kiragu', '2026-02-20', false, 'goat-milk-tea', 5),
+
+  ('rabbit-wet-fry-tutorial', 'How to Make Rabbit Wet Fry — The Ayola Way',
+   'Rabbit is one of the healthiest meats available. Watch how we prepare our signature rabbit wet fry combo.',
+   '## Rabbit: The Underrated Superfood Meat
+
+Rabbit has the highest protein and lowest fat of any commonly available meat.
+
+### Ayola''s Wet Fry Method
+1. **Clean and portion** the rabbit into serving pieces
+2. **Marinate** with garlic, ginger, salt, and lemon juice for 30 minutes
+3. **Sear** in hot oil until golden on all sides
+4. **Add aromatics** — onions, tomatoes, bell peppers
+5. **Simmer in sauce** with a splash of water for 25-30 minutes until tender
+6. **Finish** with fresh coriander and serve with Ayola Special Ugali',
+   'cooking-demo', 'https://www.instagram.com/reel/ayolafoods/', 'instagram',
+   '1 hour', '3-4 servings', 'Medium',
+   ARRAY['1 whole rabbit portioned', '4 tomatoes diced', '2 onions sliced', '2 bell peppers sliced', '4 cloves garlic minced', '1 inch ginger grated', 'Fresh coriander', 'Salt, lemon juice', 'Cooking oil'],
+   ARRAY['rabbit', 'wet fry', 'main course', 'high protein', 'low fat'],
+   'Prisca Kiragu', '2026-03-10', true, 'rabbit-wet-fry', 6)
+
+ON CONFLICT (slug) DO NOTHING;
+
+-- ── Blog posts table ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.blog_posts (
+  id           uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  slug         text UNIQUE NOT NULL,
+  title        text NOT NULL,
+  excerpt      text,
+  content      text,
+  category     text NOT NULL DEFAULT 'health'
+                 CHECK (category IN ('health','recipes','news','community','science')),
+  cover_image  text,
+  author       text DEFAULT 'Prisca Kiragu',
+  author_image text,
+  read_time    text,
+  tags         text[],
+  is_featured  boolean DEFAULT false,
+  is_active    boolean DEFAULT true,
+  published_at date,
+  sort_order   integer DEFAULT 0,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  updated_at   timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read active blog posts" ON public.blog_posts
+  FOR SELECT USING (is_active = true);
+GRANT SELECT ON public.blog_posts TO anon, authenticated;
+
+DO $$ BEGIN
+  CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.blog_posts
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- Seed blog posts
+INSERT INTO public.blog_posts (slug, title, excerpt, content, category, cover_image, author, read_time, tags, is_featured, published_at, sort_order)
+VALUES
+  ('perfect-finger-millet-porridge', 'How to Make the Perfect Finger Millet Porridge',
+   'Finger millet (wimbi) is one of Kenya''s most nutritious grains. Here''s how to prepare it the Ayola way for maximum gut health benefits.',
+   '## The Ancient Grain Making a Comeback
+
+Finger millet has been grown in East Africa for over 5,000 years. Our grandmothers knew what modern science is now confirming — it''s one of the most nutritious grains on earth.
+
+### Why Finger Millet?
+- **10x more calcium than wheat** — critical for bone health
+- **Rich in iron** — fights anaemia naturally
+- **Naturally gluten-free** — suitable for most dietary needs
+- **Low glycemic index** — sustained energy without blood sugar spikes
+
+### The Ayola Method
+1. Soak 1 cup of Ayola Uji Blend in 2 cups warm water for 8-12 hours
+2. Ferment at room temperature — this activates the probiotics
+3. Cook over medium heat, stirring constantly, for 10-15 minutes
+4. Sweeten with honey and serve with warm goat milk
+
+The fermentation step is what makes Ayola porridge a synbiotic food — it creates both probiotics and prebiotics simultaneously.',
+   'health', 'https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=800&q=80&auto=format&fit=crop',
+   'Prisca Kiragu', '5 min read', ARRAY['finger millet', 'porridge', 'gut health', 'fermentation', 'nutrition'],
+   true, '2026-03-15', 1),
+
+  ('why-indigenous-grains-matter', 'Why Indigenous Grains Are the Future of Kenyan Nutrition',
+   'Sorghum, finger millet, and amaranth were staple foods for generations. Modern Kenyans are rediscovering their incredible nutritional value — and Ayola is leading the way.',
+   '## The Nutritional Revolution Hiding in Plain Sight
+
+For decades, Kenya''s food system shifted toward refined maize flour, white rice, and processed foods. The result? Rising rates of diabetes, obesity, and nutritional deficiencies.
+
+But our indigenous grains never went away. They were just forgotten.
+
+### Sorghum: The Drought-Resistant Superfood
+Sorghum is naturally gluten-free, rich in antioxidants, and has a lower glycemic index than maize. It''s also drought-resistant — making it a climate-smart crop for Kenyan farmers.
+
+### Amaranth: The Complete Protein
+Amaranth is one of the few plant foods that contains all essential amino acids. It''s also rich in iron, calcium, and magnesium.
+
+### Finger Millet: The Calcium Champion
+Gram for gram, finger millet contains more calcium than milk. For communities where dairy is expensive or unavailable, it''s a critical nutritional resource.
+
+### Ayola''s Mission
+We source all our grains directly from smallholder farmers in the Rift Valley, paying above-market rates and investing in regenerative farming practices.',
+   'science', 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&q=80&auto=format&fit=crop',
+   'Prisca Kiragu', '7 min read', ARRAY['indigenous grains', 'sorghum', 'amaranth', 'finger millet', 'nutrition', 'Kenya'],
+   true, '2026-02-28', 2),
+
+  ('ayola-foods-expands-to-mombasa', 'Ayola Foods Now Delivers to Mombasa',
+   'We''re excited to announce that our packaged products now ship to Mombasa and the Coast region. Heritage nutrition, delivered to your door.',
+   '## Nairobi to the Coast
+
+Since launching our countrywide shipping service, the most requested destination has been Mombasa. Today, we''re thrilled to confirm that all our packaged products — flour blends, uji blends, and custom formulations — now ship reliably to Mombasa and the wider Coast region.
+
+### What''s Available for Mombasa Delivery
+- Ayola Special Ugali Blend (1kg, 2kg, 5kg)
+- Ayola Special Uji Blend (500g, 1kg)
+- Finger Millet Flour (1kg)
+- Sorghum Flour Blend (1kg)
+- Custom Flour Blends (minimum 5kg)
+
+### Delivery Times
+Standard delivery to Mombasa takes 2-3 business days via our courier partner. Orders placed before 12pm are dispatched same day.
+
+### Pricing
+Delivery fee to Mombasa: KES 350 (free on orders over KES 5,000).',
+   'news', 'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=800&q=80&auto=format&fit=crop',
+   'Ayola Foods Team', '3 min read', ARRAY['delivery', 'mombasa', 'shipping', 'news'],
+   false, '2026-03-01', 3),
+
+  ('gut-brain-connection-explained', 'The Gut-Brain Connection: Why Your Stomach Affects Your Mood',
+   'Science is revealing a powerful link between gut health and mental wellbeing. Here''s what it means for what you eat.',
+   '## Your Second Brain
+
+Did you know your gut has its own nervous system? The enteric nervous system contains over 100 million nerve cells — more than the spinal cord. Scientists now call it the "second brain."
+
+### The Gut-Brain Axis
+The gut and brain communicate constantly through the vagus nerve, hormones, and the immune system. When your gut microbiome is healthy, this communication supports:
+- **Better mood** — 90% of serotonin is produced in the gut
+- **Reduced anxiety** — beneficial bacteria produce GABA, a calming neurotransmitter
+- **Sharper focus** — gut inflammation can cause brain fog
+- **Better sleep** — gut bacteria influence melatonin production
+
+### What This Means for Your Diet
+Fermented foods like our Synbiotic Porridge and Plantain Kvass directly feed the beneficial bacteria that support this gut-brain communication. It''s not just about digestion — it''s about your whole wellbeing.',
+   'science', 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=80&auto=format&fit=crop',
+   'Prisca Kiragu', '6 min read', ARRAY['gut health', 'brain', 'mental health', 'probiotics', 'science'],
+   true, '2026-02-10', 4),
+
+  ('rabbit-farming-kenya', 'Why Rabbit Farming is the Future of Sustainable Protein in Kenya',
+   'Rabbit meat is the leanest, most sustainable protein available. Ayola is working with local farmers to make it mainstream.',
+   '## The Case for Rabbit
+
+Kenya imports millions of dollars of beef and chicken annually. Yet one of the most nutritious, sustainable, and locally producible proteins is largely ignored: rabbit.
+
+### The Numbers
+- Rabbit produces 1kg of meat per 3kg of feed (vs 7kg for beef)
+- Rabbit meat has 29g protein per 100g — higher than chicken or beef
+- Rabbit fat content is just 3.5g per 100g — the lowest of any common meat
+- Rabbits can be raised in small spaces, making them ideal for urban and peri-urban farming
+
+### Ayola''s Rabbit Program
+We source our rabbits from a network of 12 small-scale rabbit farmers in Kiambu and Murang''a counties. We pay premium prices and provide technical support to help farmers scale their operations.
+
+### Try It
+Our Rabbit Wet Fry Combo is available daily at our Kahawa Sukari restaurant. Order online for Nairobi delivery.',
+   'community', 'https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80&auto=format&fit=crop',
+   'Prisca Kiragu', '5 min read', ARRAY['rabbit', 'sustainable', 'protein', 'farming', 'Kenya'],
+   false, '2026-01-25', 5),
+
+  ('fermentation-guide-beginners', 'A Beginner''s Guide to Fermentation at Home',
+   'Fermentation is one of the oldest food preservation techniques in the world. Here''s how to get started at home with simple Kenyan ingredients.',
+   '## Why Ferment?
+
+Fermentation transforms ordinary food into probiotic powerhouses. It''s how our grandmothers preserved food before refrigerators — and it turns out, it was making the food healthier in the process.
+
+### Simple Ferments to Start With
+
+**1. Fermented Uji (Porridge)**
+- Mix 1 cup Ayola Uji Blend with 2 cups warm water
+- Cover loosely and leave at room temperature for 24-48 hours
+- Cook as normal — the fermentation adds probiotics and improves nutrient absorption
+
+**2. Fermented Vegetables (Kenyan Kimchi)**
+- Chop kale, cabbage, or sukuma wiki
+- Mix with salt (2% of vegetable weight)
+- Pack tightly into a jar, press down until liquid covers vegetables
+- Leave at room temperature for 3-7 days
+
+**3. Fermented Milk (Mursik)**
+- Traditional Kalenjin fermented milk
+- Use a clean gourd or glass jar
+- Add fresh milk and a small amount of previous batch as starter
+- Leave for 24-48 hours until pleasantly sour',
+   'recipes', 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=800&q=80&auto=format&fit=crop',
+   'Prisca Kiragu', '8 min read', ARRAY['fermentation', 'probiotics', 'home cooking', 'guide', 'beginners'],
+   false, '2026-01-15', 6)
+
+ON CONFLICT (slug) DO NOTHING;
+
+-- ── Team members table ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.team_members (
+  id         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name       text NOT NULL,
+  role       text NOT NULL,
+  bio        text,
+  image_url  text,
+  initials   text,
+  is_active  boolean DEFAULT true,
+  sort_order integer DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read active team" ON public.team_members
+  FOR SELECT USING (is_active = true);
+GRANT SELECT ON public.team_members TO anon, authenticated;
+
+INSERT INTO public.team_members (name, role, bio, image_url, initials, sort_order)
+VALUES
+  ('Prisca Kiragu', 'Founder & Food Scientist',
+   'BSc Food Science & Technology (JKUAT). Specialist in fermentation, gut health, and indigenous grain value addition. Formulates every Ayola product personally.',
+   'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&q=80&auto=format&fit=crop&crop=face',
+   'PK', 1),
+  ('James Mwangi', 'Head of Sourcing',
+   '15 years working with smallholder farmers across the Rift Valley. Manages our network of 42 partner farms and ensures every ingredient meets our regenerative standards.',
+   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80&auto=format&fit=crop&crop=face',
+   'JM', 2),
+  ('Amina Odhiambo', 'Head of Operations',
+   'Former supply chain lead at a Nairobi FMCG company. Manages daily kitchen operations, quality control, and countrywide delivery logistics.',
+   'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80&auto=format&fit=crop&crop=face',
+   'AO', 3)
+ON CONFLICT DO NOTHING;
+
+-- ── Milestones table ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.milestones (
+  id         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  year       text NOT NULL,
+  title      text NOT NULL,
+  body       text,
+  is_active  boolean DEFAULT true,
+  sort_order integer DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.milestones ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read milestones" ON public.milestones
+  FOR SELECT USING (is_active = true);
+GRANT SELECT ON public.milestones TO anon, authenticated;
+
+INSERT INTO public.milestones (year, title, body, sort_order)
+VALUES
+  ('2018', 'The First Pot', 'What started as a weekend supper club in a Nairobi apartment became the seed of something bigger — a mission to bring heritage African nutrition back to modern tables.', 1),
+  ('2020', 'Roots in the Rift Valley', 'We partnered with 12 smallholder farms across the Rift Valley, growing heirloom peppers, sorghum, finger millet, and hibiscus using regenerative practices.', 2),
+  ('2022', 'Packaged for Kenya', 'Our heritage flour blends launched as packaged products, shipping to all 47 counties. For the first time, families across Kenya could access ancestral nutrition at home.', 3),
+  ('2024', 'Science Meets Tradition', 'We introduced Kenya''s first plantain probiotic kvass and synbiotic porridge — formulated by a food scientist, rooted in centuries of African fermentation wisdom.', 4)
+ON CONFLICT DO NOTHING;
+
+-- ── Update store_settings with complete social/contact data ──
+UPDATE public.store_settings SET
+  support_phone        = '0713 280 550',
+  support_email        = 'ayola.foods.kenya@gmail.com',
+  whatsapp_number      = '254713280550',
+  address              = 'Ruhan Plaza, Ground Floor Room 23, Kahawa Sukari',
+  city                 = 'Nairobi',
+  country              = 'Kenya',
+  tagline              = 'Eat Healthy, Enjoy Life',
+  facebook_url         = 'https://www.facebook.com/p/Ayola-Foods-Kenya-100087278121034/',
+  instagram_url        = 'https://www.instagram.com/ayolafoods/',
+  instagram_handle     = '@ayolafoods',
+  tiktok_url           = 'https://www.tiktok.com/@priscakiragu',
+  tiktok_handle        = '@priscakiragu',
+  youtube_url          = 'https://www.youtube.com/watch?v=0RmZ4vwpAME',
+  opening_hours        = '[
+    {"day": "Monday - Friday", "hours": "7:00 AM - 8:00 PM", "is_open": true},
+    {"day": "Saturday",        "hours": "7:00 AM - 8:00 PM", "is_open": true},
+    {"day": "Sunday",          "hours": "8:00 AM - 6:00 PM",  "is_open": true}
+  ]'::jsonb,
+  stats                = '[
+    {"value": "42",    "label": "Partner Farms"},
+    {"value": "6+",    "label": "Years Crafting"},
+    {"value": "47",    "label": "Counties Reached"},
+    {"value": "100%",  "label": "Natural Ingredients"},
+    {"value": "2,400+","label": "Community Members"},
+    {"value": "4.9★",  "label": "Average Rating"}
+  ]'::jsonb
+WHERE id = 1;
+
+-- ── RLS grants for new tables ─────────────────────────────
+GRANT SELECT ON public.recipes      TO anon, authenticated;
+GRANT SELECT ON public.blog_posts   TO anon, authenticated;
+GRANT SELECT ON public.team_members TO anon, authenticated;
+GRANT SELECT ON public.milestones   TO anon, authenticated;
