@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     const deliveryFee = calculateDeliveryFee(
       validation.subtotal,
       data.delivery_type,
-      data.delivery_city
+      data.delivery_city ?? "Nairobi"
     );
     const total = validation.subtotal + deliveryFee;
     const orderNumber = await generateOrderNumber();
