@@ -5,9 +5,9 @@ import { MapPin, Clock, Phone, Navigation, Utensils, Heart, Star, ArrowRight } f
 import HeroSlideshow from "@/components/HeroSlideshow";
 
 export const metadata: Metadata = {
-  title: "Visit Us — AyolaFoods",
+  title: "Visit Us — Rift & Root",
   description:
-    "Visit Ayola Foods restaurant at Ruhan Plaza, Kahawa Sukari, Nairobi. Healthy meals, probiotic beverages, and heritage flour blends. Open Mon-Sat 7AM-8PM.",
+    "Visit Rift & Root restaurant at Ruhan Plaza, Kahawa Sukari, Nairobi. Healthy meals, probiotic beverages, and heritage flour blends. Open Mon-Sat 7AM-8PM.",
 };
 
 const operatingHours = [
@@ -38,7 +38,7 @@ const directions = [
   "From Thika Road, take the Kahawa Sukari exit",
   "Head towards Quickmatt Supermarket",
   "Ruhan Plaza is right near Quickmatt — Ground Floor, Room 23",
-  "Look for the Ayola Foods signage at the entrance",
+  "Look for the Rift & Root signage at the entrance",
 ];
 
 export default function VisitUsPage() {
@@ -121,7 +121,7 @@ export default function VisitUsPage() {
               What to Expect
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              First time visiting? Here&apos;s what makes the Ayola experience special.
+              First time visiting? Here&apos;s what makes the Rift &amp; Root experience special.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">

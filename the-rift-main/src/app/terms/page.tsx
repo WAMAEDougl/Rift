@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — AyolaFoods",
+  title: "Terms of Service — Rift & Root",
 };
 
 export default function TermsOfServicePage() {
@@ -13,10 +13,10 @@ export default function TermsOfServicePage() {
         <p className="text-sm text-muted-foreground/60">Last updated: March 2026</p>
 
         <h2>1. Acceptance of Terms</h2>
-        <p>By using the Ayola Foods Kenya website and services, you agree to these terms. If you do not agree, please do not use our services.</p>
+        <p>By using the Rift &amp; Root website and services, you agree to these terms. If you do not agree, please do not use our services.</p>
 
         <h2>2. Products &amp; Services</h2>
-        <p>Ayola Foods offers ready meals (dine-in and delivery), probiotic beverages, and packaged flour blends. All products are prepared in our commercial kitchen at Ruhan Plaza, Kahawa Sukari.</p>
+        <p>Rift &amp; Root offers ready meals (dine-in and delivery), probiotic beverages, and packaged flour blends. All products are prepared in our commercial kitchen at Ruhan Plaza, Kahawa Sukari.</p>
         <ul>
           <li>Product images are for illustration. Actual presentation may vary.</li>
           <li>Prices are in Kenya Shillings (KES) and may change without notice.</li>
@@ -48,10 +48,10 @@ export default function TermsOfServicePage() {
         <p>We provide allergen information for each product on our website. However, our kitchen handles multiple ingredients including wheat, dairy, eggs, and nuts. If you have severe allergies, please inform us before ordering.</p>
 
         <h2>7. Intellectual Property</h2>
-        <p>All content on this website — text, images, logos, recipes — is owned by Ayola Foods Limited. You may not reproduce or distribute our content without written permission.</p>
+        <p>All content on this website — text, images, logos, recipes — is owned by Rift &amp; Root Limited. You may not reproduce or distribute our content without written permission.</p>
 
         <h2>8. Limitation of Liability</h2>
-        <p>Ayola Foods is not liable for indirect, incidental, or consequential damages. Our maximum liability is limited to the value of the order in question.</p>
+        <p>Rift &amp; Root is not liable for indirect, incidental, or consequential damages. Our maximum liability is limited to the value of the order in question.</p>
 
         <h2>9. Governing Law</h2>
         <p>These terms are governed by the laws of Kenya. Any disputes shall be resolved through the courts of Nairobi.</p>

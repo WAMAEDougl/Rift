@@ -397,7 +397,17 @@ export default function OrderDetailPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Phone size={10} /> Phone</p>
-                <p className="font-medium text-foreground">{order.customer_phone}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-foreground">{order.customer_phone}</p>
+                  <a
+                    href={`https://wa.me/${order.customer_phone.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/10 text-green-600 text-xs font-semibold hover:bg-green-500/20 transition-colors"
+                  >
+                    <MessageCircle size={11} /> WhatsApp
+                  </a>
+                </div>
               </div>
               {order.customer_email && (
                 <div className="col-span-2">

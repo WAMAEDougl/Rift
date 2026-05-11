@@ -292,7 +292,7 @@ export default function OrdersPage() {
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Revenue</p>
           </div>
           <p className="font-display text-2xl font-medium text-foreground">{formatKES(totalRevenue)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Current page</p>
+          <p className="text-xs text-muted-foreground mt-1">Current page only — not all orders</p>
         </div>
         <div className="bg-accent/5 rounded-2xl border border-accent/20 p-6">
           <div className="flex items-center gap-3 mb-3">
@@ -300,7 +300,7 @@ export default function OrdersPage() {
             <p className="text-xs text-accent font-medium uppercase tracking-wide">Needs Attention</p>
           </div>
           <p className="font-display text-2xl font-medium text-foreground">{pendingCount} Pending</p>
-          <p className="text-xs text-accent mt-1">Orders awaiting fulfillment</p>
+          <p className="text-xs text-accent mt-1">Current page only — not all orders</p>
         </div>
         <div className="bg-card rounded-2xl border border-border p-6">
           <div className="flex items-center gap-3 mb-3">

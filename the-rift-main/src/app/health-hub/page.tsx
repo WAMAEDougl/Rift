@@ -4,9 +4,9 @@ import { Heart, Microscope, Wheat, Leaf, Brain, ShieldCheck, ArrowRight } from "
 import HeroSlideshow from "@/components/HeroSlideshow";
 
 export const metadata: Metadata = {
-  title: "Health Hub — AyolaFoods",
+  title: "Health Hub — Rift & Root",
   description:
-    "Learn about gut health, probiotics, indigenous grains, and the food science behind Ayola Foods products. Education from a certified food scientist.",
+    "Learn about gut health, probiotics, indigenous grains, and the food science behind Rift & Root products. Education from a certified food scientist.",
 };
 
 const topics = [
@@ -25,7 +25,7 @@ const topics = [
   {
     icon: Heart,
     title: "Why Probiotics Matter",
-    description: "Probiotics are live beneficial bacteria that improve your digestive health. They're found in fermented foods — exactly what Ayola specializes in.",
+    description: "Probiotics are live beneficial bacteria that improve your digestive health. They're found in fermented foods — exactly what Rift & Root specializes in.",
     keyPoints: [
       "Probiotics improve nutrient absorption by up to 30%",
       "They reduce bloating, gas, and digestive discomfort",
@@ -44,7 +44,7 @@ const topics = [
       "Amaranth is a complete protein (all essential amino acids)",
       "These grains have lower glycemic index than refined flour",
     ],
-    ayolaProduct: "Ayola Special Uji Blend",
+    ayolaProduct: "Special Uji Blend",
   },
   {
     icon: Leaf,
@@ -73,19 +73,19 @@ const topics = [
   {
     icon: ShieldCheck,
     title: "The Food Scientist Difference",
-    description: "Every Ayola product is formulated by Prisca Kiragu, a trained food scientist from JKUAT. This means evidence-based formulation, not guesswork.",
+    description: "Every Rift & Root product is formulated by Prisca Kiragu, a trained food scientist from JKUAT. This means evidence-based formulation, not guesswork.",
     keyPoints: [
       "Controlled fermentation for consistent probiotic counts",
       "Precise grain blending ratios for optimal nutrition",
       "Food safety protocols from ingredient sourcing to serving",
       "Ongoing research into new indigenous ingredient applications",
     ],
-    ayolaProduct: "All Ayola Products",
+    ayolaProduct: "All Rift & Root Products",
   },
 ];
 
 const dietaryGuides = [
-  { title: "Gut Health Diet", description: "Best Ayola products for improving digestion", products: ["Synbiotic Porridge", "Plantain Kvass", "Uji Blend"] },
+  { title: "Gut Health Diet", description: "Best Rift & Root products for improving digestion", products: ["Synbiotic Porridge", "Plantain Kvass", "Uji Blend"] },
   { title: "High Protein", description: "For athletes and fitness enthusiasts", products: ["Rabbit Wet Fry", "Turkey Eggs Combo", "Heavy Meal Combo"] },
   { title: "Vegetarian/Vegan", description: "Complete plant-based nutrition", products: ["Vegan Combo", "Plantain Kvass", "Ugali Blend", "Uji Blend"] },
   { title: "Weight Management", description: "Lower calorie, higher nutrition options", products: ["Synbiotic Porridge", "Vegan Combo", "Goat Milk Tea"] },
@@ -164,7 +164,7 @@ export default function HealthHubPage() {
               Dietary Guides
             </h2>
             <p className="text-muted-foreground">
-              Find the right Ayola products for your health goals.
+              Find the right Rift &amp; Root products for your health goals.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -194,7 +194,7 @@ export default function HealthHubPage() {
             Ready to Eat Healthier?
           </h2>
           <p className="text-secondary-foreground/80 mb-8 text-lg">
-            Every Ayola product is designed with your health in mind. Start your journey today.
+            Every Rift &amp; Root product is designed with your health in mind. Start your journey today.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <Link

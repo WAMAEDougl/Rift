@@ -3,7 +3,43 @@ import { getServiceClient, apiError, apiSuccess, checkRateLimit } from "@/lib/ut
 import { generateOrderNumber, calculateDeliveryFee, validateOrderItems } from "@/lib/order-utils";
 import { createNotification } from "@/lib/admin/notifications";
 
+async function sendOrderConfirmationEmail(params: {
+  email: string;
+  name: string;
+  orderNumber: string;
+  total: number;
+  items: { product_name: string; quantity: number; line_total: number }[];
+}) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return;
+
+  const itemRows = params.items
+    .map((i) => `<tr><td>${i.quantity}x ${i.product_name}</td><td>KES ${i.line_total.toLocaleString()}</td></tr>`)
+    .join("");
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      from: "Rift & Root <orders@riftandroot.co.ke>",
+      to: params.email,
+      subject: `Order Confirmed — ${params.orderNumber}`,
+      html: `<h2>Thanks for your order, ${params.name}!</h2>
+<p>Your order <strong>${params.orderNumber}</strong> has been received.</p>
+<table>${itemRows}</table>
+<p><strong>Subtotal: KES ${params.total.toLocaleString()}</strong></p>
+<p>Delivery fee will be confirmed via WhatsApp. We'll be in touch shortly.</p>`,
+    }),
+  }).catch(() => {});
+}
+
 export async function POST(request: Request) {
+  const origin = request.headers.get("origin");
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl && origin && origin !== siteUrl) {
+    return apiError("Forbidden", 403);
+  }
+
   const ip = request.headers.get("x-forwarded-for") || "unknown";
   if (!checkRateLimit(`order:${ip}`, 5, 60000)) {
     return apiError("Too many orders. Please wait a minute.", 429);
@@ -83,6 +119,16 @@ export async function POST(request: Request) {
       `New order placed by ${data.customer_name}`,
       order.id
     );
+
+    if (data.customer_email) {
+      sendOrderConfirmationEmail({
+        email: data.customer_email,
+        name: data.customer_name,
+        orderNumber: order.order_number,
+        total: validation.subtotal,
+        items: validation.validatedItems,
+      });
+    }
 
     return apiSuccess({
       order: {

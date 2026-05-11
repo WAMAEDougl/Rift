@@ -36,7 +36,7 @@ export async function GET(request: Request) {
   let itemsQuery = admin
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, subtotal, delivery_fee, total, delivery_type, status, payment_method, payment_status, created_at, order_items(count)"
+      "id, order_number, customer_name, customer_phone, delivery_address, delivery_city, subtotal, delivery_fee, total, delivery_type, status, payment_method, payment_status, created_at, order_items(count)"
     );
 
   if (status) itemsQuery = itemsQuery.eq("status", status);

@@ -4,11 +4,11 @@ import { getProductsFromDB, getCategoriesFromDB } from "@/lib/products";
 import ProductsClient from "./ProductsClient";
 
 export const metadata: Metadata = {
-  title: "Our Products — AyolaFoods",
+  title: "Our Products — Rift & Root",
   description:
     "Every product is crafted with indigenous Kenyan ingredients, modern nutrition science, and deep respect for Africa's culinary traditions.",
   openGraph: {
-    title: "Our Products — AyolaFoods",
+    title: "Our Products — Rift & Root",
     description:
       "Heritage African meals, beverages and pantry goods. Hand-crafted in small batches in Nairobi.",
   },

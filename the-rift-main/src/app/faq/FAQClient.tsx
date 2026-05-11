@@ -97,7 +97,7 @@ export default function FAQClient({ faqs, categories }: FAQClientProps) {
             <p className="text-muted-foreground mb-5">
               We&apos;re here to help. Reach out on WhatsApp and we&apos;ll respond within minutes.
             </p>
-            <a href={getWhatsAppOrderLink("Hi, I have a question about Ayola Foods")}
+            <a href={getWhatsAppOrderLink("Hi, I have a question about Rift & Root")}
               target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-secondary px-7 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-secondary-foreground transition hover:opacity-90">
               <MessageCircle className="w-4 h-4" /> Chat on WhatsApp

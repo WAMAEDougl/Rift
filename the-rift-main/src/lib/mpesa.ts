@@ -99,7 +99,7 @@ export async function initiateSTKPush(
       PhoneNumber: normalizePhone(phone),
       CallBackURL: callbackUrl,
       AccountReference: orderNumber,
-      TransactionDesc: `Ayola Foods Order ${orderNumber}`,
+      TransactionDesc: `Rift & Root Order ${orderNumber}`,
     }),
   });
 

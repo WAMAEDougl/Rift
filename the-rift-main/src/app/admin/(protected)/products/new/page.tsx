@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Upload, X, Loader2, Package } from "lucide-react";
+import { ArrowLeft, Upload, X, Loader2, Package, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { adminFetch } from "@/lib/admin/fetch";
 
 interface Category { id: string; name: string; }
 
@@ -17,6 +18,7 @@ export default function NewProductPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesError, setCategoriesError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -41,11 +43,18 @@ export default function NewProductPage() {
 
   const [slugManual, setSlugManual] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/admin/categories")
+  function loadCategories() {
+    setCategoriesError(false);
+    adminFetch("/api/admin/categories")
       .then((r) => r.json())
-      .then((j) => { if (j.data) setCategories(j.data); });
-  }, []);
+      .then((j) => {
+        if (j.data) setCategories(j.data);
+        else setCategoriesError(true);
+      })
+      .catch(() => setCategoriesError(true));
+  }
+
+  useEffect(() => { loadCategories(); }, []);
 
   function set(field: string, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -60,6 +69,11 @@ export default function NewProductPage() {
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large. Maximum size is 5MB.");
+      e.target.value = "";
+      return;
+    }
     setUploading(true);
     try {
       const fd = new FormData();
@@ -85,7 +99,7 @@ export default function NewProductPage() {
         category_id: form.category_id,
         description: form.description.trim() || null,
         long_description: form.long_description.trim() || null,
-        price: parseInt(form.price, 10),
+        price: parseFloat(form.price),
         size: form.size.trim() || null,
         image_url: form.image_url.trim() || null,
         badge: form.badge.trim() || null,
@@ -158,11 +172,21 @@ export default function NewProductPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={labelCls}>Category *</label>
-                  <select value={form.category_id} onChange={(e) => set("category_id", e.target.value)} required
-                    className={inputCls}>
-                    <option value="">Select category</option>
-                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  {categoriesError ? (
+                    <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-xl">
+                      <AlertCircle size={14} />
+                      <span>Failed to load categories.</span>
+                      <button type="button" onClick={loadCategories} className="underline flex items-center gap-1">
+                        <RefreshCw size={12} /> Retry
+                      </button>
+                    </div>
+                  ) : (
+                    <select value={form.category_id} onChange={(e) => set("category_id", e.target.value)} required
+                      className={inputCls}>
+                      <option value="">Select category</option>
+                      {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  )}
                 </div>
                 <div>
                   <label className={labelCls}>Price (KES) *</label>

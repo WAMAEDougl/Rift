@@ -18,8 +18,7 @@ import {
 export default function CartPage() {
   const { items, totalItems, totalPrice, updateQuantity } = useCart();
 
-  const deliveryFee = totalPrice >= 2000 ? 0 : 200;
-  const grandTotal = totalPrice + deliveryFee;
+  const MAX_QUANTITY = 20;
 
   if (items.length === 0) {
     return (
@@ -105,8 +104,9 @@ export default function CartPage() {
                   </span>
                   <button
                     onClick={() =>
-                      updateQuantity(item.product.id, item.quantity + 1)
+                      updateQuantity(item.product.id, Math.min(item.quantity + 1, MAX_QUANTITY))
                     }
+                    disabled={item.quantity >= MAX_QUANTITY}
                     className="w-9 h-9 flex items-center justify-center hover:bg-muted rounded-r-xl transition-colors"
                     aria-label="Increase quantity"
                   >
@@ -140,29 +140,18 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Delivery</span>
-                  <span
-                    className={
-                      deliveryFee === 0
-                        ? "text-secondary font-bold"
-                        : "font-medium text-foreground"
-                    }
-                  >
-                    {deliveryFee === 0 ? "FREE" : formatPrice(deliveryFee)}
+                  <span className="text-muted-foreground text-xs italic">
+                    Confirmed on WhatsApp
                   </span>
                 </div>
-                {totalPrice >= 2000 ? (
-                  <p className="text-xs text-secondary font-medium bg-secondary/10 px-3 py-1.5 rounded-lg">
-                    You&apos;re saving KES 200 on delivery!
-                  </p>
-                ) : (
+                {totalPrice < 2000 && (
                   <p className="text-xs text-accent bg-muted/50 px-3 py-1.5 rounded-lg">
-                    Add {formatPrice(2000 - totalPrice)} more to unlock free
-                    delivery
+                    Orders above KES 2,000 qualify for free delivery
                   </p>
                 )}
                 <div className="flex justify-between text-lg font-bold pt-3 border-t border-border">
-                  <span className="text-foreground">Total</span>
-                  <span className="text-primary">{formatPrice(grandTotal)}</span>
+                  <span className="text-foreground">Subtotal</span>
+                  <span className="text-primary">{formatPrice(totalPrice)}</span>
                 </div>
               </div>
               <Link

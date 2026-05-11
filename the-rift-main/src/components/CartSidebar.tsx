@@ -62,7 +62,7 @@ export default function CartSidebar() {
                     Your cart is empty
                   </p>
                   <p className="text-sm text-muted-foreground/60 mt-1">
-                    Add some delicious Ayola products!
+                    Add some delicious Rift &amp; Root products!
                   </p>
                   <button
                     onClick={() => setIsCartOpen(false)}

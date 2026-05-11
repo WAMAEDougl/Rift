@@ -74,10 +74,6 @@ export default async function AdminDashboardPage() {
           <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium mb-1">{greeting}</p>
           <h1 className="font-display text-3xl font-medium text-foreground leading-tight">Dashboard</h1>
         </div>
-        <Link href="/admin/orders/new"
-          className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors hover:opacity-90 w-fit">
-          <ShoppingCart size={15} /> New Order
-        </Link>
       </div>
 
       {/* ── KPI stat cards ── */}

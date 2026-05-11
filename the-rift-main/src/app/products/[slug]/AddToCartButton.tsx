@@ -7,6 +7,8 @@ import { useCart } from "@/lib/cart-context";
 import type { Product } from "@/lib/products";
 import { formatPrice } from "@/lib/products";
 
+const MAX_QUANTITY = 20;
+
 export default function AddToCartButton({ product }: { product: Product }) {
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
@@ -35,8 +37,9 @@ export default function AddToCartButton({ product }: { product: Product }) {
           {quantity}
         </span>
         <button
-          onClick={() => setQuantity(quantity + 1)}
-          className="p-3 hover:bg-muted transition-colors"
+          onClick={() => setQuantity(Math.min(quantity + 1, MAX_QUANTITY))}
+          disabled={quantity >= MAX_QUANTITY}
+          className="p-3 hover:bg-muted transition-colors disabled:opacity-40"
           aria-label="Increase quantity"
         >
           <Plus className="w-4 h-4" />

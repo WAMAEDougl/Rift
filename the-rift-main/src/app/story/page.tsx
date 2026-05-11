@@ -5,11 +5,11 @@ import farmer from "@/assets/story-farmer.jpg";
 import hands from "@/assets/story-hands.jpg";
 
 export const metadata: Metadata = {
-  title: "Our Story — AyolaFoods",
+  title: "Our Story — Rift & Root",
   description:
-    "From a single grandmother's kitchen in Nairobi to a movement for regenerative African food. Meet the farmers, makers and soil behind AyolaFoods.",
+    "From a single grandmother's kitchen in Nairobi to a movement for regenerative African food. Meet the farmers, makers and soil behind Rift & Root.",
   openGraph: {
-    title: "Our Story — AyolaFoods",
+    title: "Our Story — Rift & Root",
     description: "From one grandmother's kitchen to a movement for regenerative African food.",
     images: [{ url: farmer.src }],
   },
@@ -39,7 +39,7 @@ export default function StoryPage() {
               <em className="font-normal italic text-primary">every hand that tends it.</em>
             </h1>
             <p className="mt-8 max-w-md text-lg leading-relaxed text-muted-foreground">
-              AyolaFoods was born from a question: what would a modern African kitchen look like
+              Rift &amp; Root was born from a question: what would a modern African kitchen look like
               if it never stopped listening to the land? Six years later, we&apos;re still answering.
             </p>
           </div>

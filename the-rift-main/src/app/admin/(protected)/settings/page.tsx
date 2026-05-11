@@ -274,6 +274,12 @@ function BusinessTab() {
   }
 
   async function handleSave() {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (settings.support_email && !emailRegex.test(settings.support_email)) {
+      toast.error("Please enter a valid support email address");
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
@@ -1578,10 +1584,12 @@ function ThemesTab() {
     try {
       const res = await adminFetch("/api/admin/settings", {
         method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active_theme: activeTheme }),
       });
       if (res.ok) {
-        toast.success("Theme applied — reload the site to see changes");
+        toast.success("Theme applied — reloading…");
+        setTimeout(() => window.location.reload(), 1500);
       } else {
         toast.error("Failed to save theme");
       }

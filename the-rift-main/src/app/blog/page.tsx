@@ -5,12 +5,12 @@ import { blogPosts, blogCategories, formatDate } from "@/lib/blog";
 import BlogClient from "./BlogClient";
 
 export const metadata: Metadata = {
-  title: "Stories & Recipes — AyolaFoods",
+  title: "Stories & Recipes — Rift & Root",
   description:
-    "Recipes, nutrition tips, farmer stories, and the latest from Ayola Foods. Discover the goodness behind every product.",
+    "Recipes, nutrition tips, farmer stories, and the latest from Rift & Root. Discover the goodness behind every product.",
   openGraph: {
-    title: "Stories & Recipes — AyolaFoods",
-    description: "Recipes, nutrition tips, farmer stories, and the latest from Ayola Foods.",
+    title: "Stories & Recipes — Rift & Root",
+    description: "Recipes, nutrition tips, farmer stories, and the latest from Rift & Root.",
   },
 };
 
@@ -29,7 +29,7 @@ export default function BlogPage() {
             Stories &amp; Recipes
           </h1>
           <p className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Recipes, nutrition tips, farmer stories, and the latest from Ayola Foods.
+            Recipes, nutrition tips, farmer stories, and the latest from Rift &amp; Root.
           </p>
         </div>
       </section>

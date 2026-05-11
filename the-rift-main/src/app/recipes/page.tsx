@@ -5,11 +5,11 @@ import { recipes, recipeCategories } from "@/lib/recipes";
 import RecipesClient from "./RecipesClient";
 
 export const metadata: Metadata = {
-  title: "Recipes from the Rift — AyolaFoods",
+  title: "Recipes from the Rift — Rift & Root",
   description:
     "Heritage African recipes from our kitchen — slow-cooked stews, sun-dried infusions, and pantry staples to make at home.",
   openGraph: {
-    title: "Recipes from the Rift — AyolaFoods",
+    title: "Recipes from the Rift — Rift & Root",
     description: "Heritage African recipes — slow-cooked stews, infusions and staples.",
   },
 };
@@ -24,11 +24,11 @@ export default function RecipesPage() {
             <ChefHat className="w-4 h-4" /> Recipes &amp; Videos
           </span>
           <h1 className="mt-6 max-w-4xl font-display text-5xl leading-[1.05] md:text-7xl">
-            Cook with Ayola
+            Cook with Rift &amp; Root
           </h1>
           <p className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground">
             Watch CEO Prisca Kiragu demonstrate our signature dishes, learn about gut health,
-            and discover how to use Ayola products at home.
+            and discover how to use Rift &amp; Root products at home.
           </p>
         </div>
       </section>

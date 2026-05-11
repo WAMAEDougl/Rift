@@ -68,7 +68,7 @@ export default function FloatingWhatsApp() {
           <div className="p-4">
             <div className="bg-muted/50 rounded-xl p-3 mb-4">
               <p className="text-sm text-foreground/80">
-                Hi! 👋 Welcome to Ayola Foods. How can we help you today?
+                Hi! 👋 Welcome to Rift &amp; Root. How can we help you today?
               </p>
               <p className="text-xs text-muted-foreground/60 mt-1">
                 Tap a message below or type your own

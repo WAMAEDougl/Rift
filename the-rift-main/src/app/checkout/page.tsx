@@ -36,7 +36,9 @@ export default function CheckoutPage() {
     total: number;
   } | null>(null);
 
-  const [form, setForm] = useState({ name: "", phone: "", notes: "" });
+  const MIN_ORDER_KES = 500;
+
+  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
 
   useEffect(() => {
     const saved = getItem<SavedCustomer>(STORAGE_KEYS.CUSTOMER);
@@ -92,19 +94,36 @@ export default function CheckoutPage() {
               <span className="text-muted-foreground text-sm">To be confirmed on WhatsApp</span>
             </div>
           </div>
-          <Link href="/products"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground transition hover:opacity-90">
-            Continue Shopping
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(orderResult.order_number);
+              }}
+              className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground transition hover:bg-muted">
+              Copy Order Number
+            </button>
+            <Link href="/products"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground transition hover:opacity-90">
+              Continue Shopping
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   const handlePlaceOrder = async () => {
-    if (!form.name.trim()) { setError("Enter your name"); return; }
-    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 9) {
-      setError("Enter a valid WhatsApp phone number");
+    if (!form.name.trim() || form.name.trim().length < 2) {
+      setError("Please enter your full name (minimum 2 characters)");
+      return;
+    }
+    const phoneRegex = /^(\+?254|0)[17]\d{8}$/;
+    if (!phoneRegex.test(form.phone.replace(/\s/g, ""))) {
+      setError("Invalid phone number format. Please use a valid Kenyan number e.g. 0712 345 678");
+      return;
+    }
+    if (totalPrice < MIN_ORDER_KES) {
+      setError(`Minimum order is KES ${MIN_ORDER_KES.toLocaleString()}. Add more items to continue.`);
       return;
     }
 
@@ -119,6 +138,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           customer_name: form.name,
           customer_phone: form.phone,
+          customer_email: form.email || null,
           delivery_address: null,
           delivery_city: null,
           delivery_type: "delivery",
@@ -135,6 +155,12 @@ export default function CheckoutPage() {
         order_id: data.order.id,
         total: data.order.total,
       });
+      localStorage.setItem("last_order", JSON.stringify({
+        order_number: data.order.order_number,
+        order_id: data.order.id,
+        phone: form.phone,
+        timestamp: new Date().toISOString(),
+      }));
       clearCart();
       setStep("confirmed");
     } catch {
@@ -189,6 +215,14 @@ export default function CheckoutPage() {
                     className={inputCls} />
                   <p className="text-xs text-muted-foreground/60 mt-1.5 ml-1">
                     We&apos;ll send your order confirmation and payment request to this number.
+                  </p>
+                </div>
+                <div>
+                  <input type="email" placeholder="Email address (optional — for order confirmation)" value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className={inputCls} />
+                  <p className="text-xs text-muted-foreground/60 mt-1.5 ml-1">
+                    We&apos;ll send you an order confirmation email if provided.
                   </p>
                 </div>
               </div>

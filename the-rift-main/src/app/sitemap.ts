@@ -4,7 +4,7 @@ import { products } from "@/lib/products";
 import { recipes } from "@/lib/recipes";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://ayolafoods.com";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://riftandroot.co.ke";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [

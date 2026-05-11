@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Return & Refund Policy — AyolaFoods",
+  title: "Return & Refund Policy — Rift & Root",
 };
 
 export default function ReturnsPolicyPage() {

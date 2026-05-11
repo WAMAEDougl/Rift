@@ -10,12 +10,33 @@ export default function ContactPage() {
     name: "", email: "", phone: "", subject: "general", message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [popupBlocked, setPopupBlocked] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const msg = `Hi Ayola Foods! 👋\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nSubject: ${formData.subject}\n\nMessage: ${formData.message}`;
-    window.open(getWhatsAppOrderLink(msg), "_blank");
-    setSubmitted(true);
+    setFormError("");
+
+    const phoneRegex = /^(\+?254|0)[17]\d{8}$/;
+    if (!phoneRegex.test(formData.phone.replace(/\s/g, ""))) {
+      setFormError("Enter a valid phone number e.g. 0712 345 678");
+      return;
+    }
+    if (!formData.message.trim()) {
+      setFormError("Please enter a message before submitting");
+      return;
+    }
+
+    const msg = `Hi Rift & Root! 👋\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nSubject: ${formData.subject}\n\nMessage: ${formData.message.trim()}`;
+    const url = getWhatsAppOrderLink(msg);
+    const popup = window.open(url, "_blank");
+    if (popup === null) {
+      setPopupBlocked(true);
+      setWhatsappUrl(url);
+    } else {
+      setSubmitted(true);
+    }
   };
 
   const inputCls = "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm placeholder:text-muted-foreground/50";
@@ -85,6 +106,24 @@ export default function ContactPage() {
                     Send Another Message
                   </button>
                 </div>
+              ) : popupBlocked ? (
+                <div className="bg-accent/10 border border-accent/20 rounded-2xl p-8 text-center">
+                  <span className="text-5xl block mb-4">⚠️</span>
+                  <h3 className="font-display text-xl font-medium text-foreground mb-2">
+                    Popup Blocked
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Your browser blocked the WhatsApp popup. Click the button below to open it manually.
+                  </p>
+                  <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-secondary-foreground transition hover:opacity-90">
+                    <MessageCircle className="w-4 h-4" /> Open WhatsApp
+                  </a>
+                  <button onClick={() => { setPopupBlocked(false); setSubmitted(true); }}
+                    className="block mt-3 mx-auto text-sm text-muted-foreground hover:underline">
+                    I&apos;ve sent the message
+                  </button>
+                </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="grid sm:grid-cols-2 gap-5">
@@ -127,6 +166,11 @@ export default function ContactPage() {
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       className={`${inputCls} resize-none`} placeholder="Tell us how we can help..." />
                   </div>
+                  {formError && (
+                    <p className="text-sm text-destructive bg-destructive/10 px-4 py-2 rounded-lg">
+                      {formError}
+                    </p>
+                  )}
                   <button type="submit"
                     className="w-full bg-secondary text-secondary-foreground py-3.5 rounded-xl font-bold hover:opacity-90 transition-colors text-sm inline-flex items-center justify-center gap-2 shadow-soft">
                     <MessageCircle className="w-5 h-5" /> Send via WhatsApp
@@ -141,7 +185,7 @@ export default function ContactPage() {
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d997.0!2d36.9487!3d-1.1962!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f3ffd56859239%3A0xb5741c3010640f68!2sayolafoodke!5e0!3m2!1sen!2ske!4v1"
                   width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade" title="Ayola Foods Location"
+                  referrerPolicy="no-referrer-when-downgrade" title="Rift & Root Location"
                 />
               </div>
               <p className="text-xs text-muted-foreground/60 text-center">
@@ -156,7 +200,7 @@ export default function ContactPage() {
                   For fastest service, WhatsApp us directly. We deliver across Nairobi and ship
                   packaged products countrywide.
                 </p>
-                <a href={getWhatsAppOrderLink("Hi Ayola Foods! I'd like to place an order 🍽️")}
+                <a href={getWhatsAppOrderLink("Hi Rift & Root! I'd like to place an order 🍽️")}
                   target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-secondary-foreground transition hover:opacity-90">
                   <MessageCircle className="w-4 h-4" /> Chat on WhatsApp

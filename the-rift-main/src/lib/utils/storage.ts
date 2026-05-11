@@ -24,6 +24,6 @@ export function removeItem(key: string): void {
 
 // Storage keys — centralized to avoid key collisions
 export const STORAGE_KEYS = {
-  CART: "ayola-cart",
-  CUSTOMER: "ayola-customer",
+  CART: "rift-cart",
+  CUSTOMER: "rift-customer",
 } as const;

@@ -1,9 +1,9 @@
-// Ayola Foods Kenya — Business Constants
+// Rift & Root — Business Constants
 // All verified contact details and business info
 
 export const BUSINESS = {
-  name: "Ayola Foods Kenya",
-  legalName: "Ayola Foods Limited",
+  name: "Rift & Root",
+  legalName: "Rift & Root Limited",
   tagline: "Eat Healthy, Enjoy Life",
   founder: "Prisca Kiragu",
   founderTitle: "Food Scientist (JKUAT)",

@@ -21,11 +21,11 @@ export const createOrderSchema = z.object({
   customer_name: z.string().min(2, "Name is too short").max(100, "Name is too long"),
   customer_phone: phoneSchema,
   customer_email: z.string().email("Invalid email").nullish().or(z.literal("")),
-  delivery_address: z.string().min(3, "Address is too short").max(500),
-  delivery_city: z.string().min(2).max(50).default("Nairobi"),
+  delivery_address: z.string().min(3, "Address is too short").max(500).nullish(),
+  delivery_city: z.string().min(2).max(50).default("Nairobi").nullish(),
   delivery_type: z.enum(["delivery", "pickup", "shipping"]).default("delivery"),
   order_notes: z.string().max(500).optional().nullable(),
-  payment_method: z.enum(["mpesa", "cash_on_delivery"]).default("cash_on_delivery"),
+  payment_method: z.enum(["mpesa", "cash_on_delivery", "whatsapp"]).default("cash_on_delivery"),
   items: z
     .array(
       z.object({

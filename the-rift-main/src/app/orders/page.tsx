@@ -24,14 +24,15 @@ type Order = {
 };
 
 export const metadata: Metadata = {
-  title: "My Orders — AyolaFoods",
-  description: "View your Ayola Foods order history.",
+  title: "My Orders — Rift & Root",
+  description: "View your Rift & Root order history.",
 };
 
 const statusConfig: Record<string, { icon: typeof Check; label: string; color: string }> = {
   pending: { icon: Clock, label: "Pending", color: "text-accent bg-accent/10" },
   confirmed: { icon: Check, label: "Confirmed", color: "text-secondary bg-secondary/10" },
   preparing: { icon: Package, label: "Preparing", color: "text-primary bg-primary/10" },
+  ready: { icon: Check, label: "Ready for Pickup", color: "text-secondary bg-secondary/10" },
   dispatched: { icon: Truck, label: "On the Way", color: "text-primary bg-primary/10" },
   delivered: { icon: Check, label: "Delivered", color: "text-secondary bg-secondary/10" },
   cancelled: { icon: Clock, label: "Cancelled", color: "text-destructive bg-destructive/10" },
@@ -145,7 +146,7 @@ export default async function OrdersPage() {
                     <div className="text-sm text-muted-foreground">
                       {order.delivery_type === "pickup"
                         ? "Pickup"
-                        : `Delivery — ${order.delivery_city}`}
+                        : `Delivery — ${order.delivery_city ?? "Location not specified"}`}
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="font-bold text-primary">

@@ -260,9 +260,10 @@ export default function ProductsPage() {
         <div className="bg-card rounded-2xl border border-border p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center"><TrendingUp size={16} className="text-secondary" /></div>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Catalog Value</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Sum of Product Prices</p>
           </div>
           <p className="font-display text-2xl font-medium text-foreground">{formatKES(totalValuation)}</p>
+          <p className="text-xs text-muted-foreground mt-1">Current page only</p>
         </div>
         <div className="bg-primary/5 rounded-2xl border border-primary/20 p-6">
           <div className="flex items-center gap-3 mb-3">

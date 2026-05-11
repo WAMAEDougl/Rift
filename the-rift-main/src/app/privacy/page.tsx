@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — AyolaFoods",
+  title: "Privacy Policy — Rift & Root",
 };
 
 export default function PrivacyPolicyPage() {
@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-sm text-muted-foreground/60">Last updated: March 2026</p>
 
         <h2>1. Who We Are</h2>
-        <p>Ayola Foods Limited (&ldquo;Ayola Foods&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) operates this website and the Ayola Foods restaurant at Ruhan Plaza, Kahawa Sukari, Nairobi. Contact: ayola.foods.kenya@gmail.com, 0713 280 550.</p>
+        <p>Rift &amp; Root Limited (&ldquo;Rift &amp; Root&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) operates this website and the Rift &amp; Root restaurant at Ruhan Plaza, Kahawa Sukari, Nairobi. Contact: ayola.foods.kenya@gmail.com, 0713 280 550.</p>
 
         <h2>2. Information We Collect</h2>
         <ul>

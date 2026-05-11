@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import { getWhatsAppOrderLink, BUSINESS } from "@/lib/constants";
-import { Building2, School, Hotel, ShoppingBag, Package, TrendingUp, ArrowRight, Check } from "lucide-react";
+import { Building2, School, Hotel, ShoppingBag, Package, TrendingUp, ArrowRight, Check, MessageCircle } from "lucide-react";
 import HeroSlideshow from "@/components/HeroSlideshow";
 
 const buyerTypes = [
-  { icon: ShoppingBag, label: "Supermarkets & Retail", description: "Stock Ayola products on your shelves" },
+  { icon: ShoppingBag, label: "Supermarkets & Retail", description: "Stock Rift & Root products on your shelves" },
   { icon: School, label: "Schools & Institutions", description: "Nutritious meals and flour for school feeding" },
   { icon: Hotel, label: "Hotels & Restaurants", description: "Premium flour blends for your kitchen" },
   { icon: Building2, label: "Corporate & Events", description: "Catering and bulk orders for events" },
 ];
 
 const wholesaleProducts = [
-  { name: "Ayola Special Ugali Blend", retail: 250, wholesale: "Contact for pricing", minOrder: "50 units" },
-  { name: "Ayola Special Uji Blend", retail: 600, wholesale: "Contact for pricing", minOrder: "50 units" },
+  { name: "Special Ugali Blend", retail: 250, wholesale: "Contact for pricing", minOrder: "50 units" },
+  { name: "Special Uji Blend", retail: 600, wholesale: "Contact for pricing", minOrder: "50 units" },
   { name: "Custom Flour Blend", retail: 0, wholesale: "Custom quote", minOrder: "100 units" },
   { name: "Catering (Ready Meals)", retail: 0, wholesale: "Per-event pricing", minOrder: "20 servings" },
 ];
@@ -34,12 +34,29 @@ export default function WholesalePage() {
     businessType: "", products: "", quantity: "", message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [popupBlocked, setPopupBlocked] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError("");
+
+    const phoneRegex = /^(\+?254|0)[17]\d{8}$/;
+    if (!phoneRegex.test(formData.phone.replace(/\s/g, ""))) {
+      setFormError("Enter a valid phone number e.g. 0712 345 678");
+      return;
+    }
+
     const msg = `WHOLESALE INQUIRY\n\nBusiness: ${formData.businessName}\nContact: ${formData.contactName}\nPhone: ${formData.phone}\nEmail: ${formData.email}\nType: ${formData.businessType}\nProducts: ${formData.products}\nQuantity: ${formData.quantity}\n\n${formData.message}`;
-    window.open(getWhatsAppOrderLink(msg), "_blank");
-    setSubmitted(true);
+    const url = getWhatsAppOrderLink(msg);
+    const popup = window.open(url, "_blank");
+    if (popup === null) {
+      setPopupBlocked(true);
+      setWhatsappUrl(url);
+    } else {
+      setSubmitted(true);
+    }
   };
 
   const inputCls = "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm placeholder:text-muted-foreground/50";
@@ -143,7 +160,7 @@ export default function WholesalePage() {
                 <p><strong>WhatsApp:</strong> {BUSINESS.phone1}</p>
               </div>
               <a
-                href={`mailto:${BUSINESS.email}?subject=Wholesale Inquiry — Ayola Foods`}
+                href={`mailto:${BUSINESS.email}?subject=Wholesale Inquiry — Rift & Root`}
                 className="inline-flex items-center gap-2 rounded-full bg-background px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-foreground mt-6 transition hover:bg-accent"
               >
                 Email Us <ArrowRight className="w-4 h-4" />
@@ -165,6 +182,24 @@ export default function WholesalePage() {
               <Check className="w-12 h-12 text-secondary mx-auto mb-4" />
               <h3 className="font-display text-xl font-medium text-foreground mb-2">Inquiry Sent!</h3>
               <p className="text-muted-foreground">We&apos;ll get back to you within 24 hours with a quote.</p>
+              <button onClick={() => { setSubmitted(false); setFormData({ businessName: "", contactName: "", phone: "", email: "", businessType: "", products: "", quantity: "", message: "" }); }}
+                className="mt-4 text-primary font-semibold text-sm hover:underline">
+                Submit Another Inquiry
+              </button>
+            </div>
+          ) : popupBlocked ? (
+            <div className="bg-accent/10 rounded-2xl p-8 text-center border border-accent/20">
+              <MessageCircle className="w-12 h-12 text-accent mx-auto mb-4" />
+              <h3 className="font-display text-xl font-medium text-foreground mb-2">Popup Blocked</h3>
+              <p className="text-muted-foreground mb-4">Your browser blocked the WhatsApp popup. Open it manually below.</p>
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground transition hover:opacity-90">
+                Open WhatsApp
+              </a>
+              <button onClick={() => { setPopupBlocked(false); setSubmitted(true); }}
+                className="block mt-3 mx-auto text-sm text-muted-foreground hover:underline">
+                I&apos;ve sent the inquiry
+              </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -192,10 +227,13 @@ export default function WholesalePage() {
               </select>
               <input type="text" placeholder="Products interested in" value={formData.products}
                 onChange={(e) => setFormData({ ...formData, products: e.target.value })} className={inputCls} />
-              <input type="text" placeholder="Estimated monthly quantity" value={formData.quantity}
+              <input type="number" placeholder="Estimated monthly quantity (units)" min="1" value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} className={inputCls} />
               <textarea placeholder="Additional details..." rows={3} value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })} className={inputCls} />
+              {formError && (
+                <p className="text-sm text-destructive bg-destructive/10 px-4 py-2 rounded-lg">{formError}</p>
+              )}
               <button type="submit"
                 className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-bold hover:opacity-90 transition-colors shadow-soft">
                 Send Inquiry via WhatsApp
