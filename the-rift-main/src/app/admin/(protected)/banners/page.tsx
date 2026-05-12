@@ -195,7 +195,7 @@ export default function BannersPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd, credentials: "include" });
       const json = await res.json();
       if (!res.ok) { toast.error(json.error?.message ?? "Upload failed"); return; }
       set("image_url", json.data.url);

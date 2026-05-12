@@ -50,7 +50,7 @@ export default function CustomerDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    fetch(`/api/admin/customers/${id}`)
+    adminFetch(`/api/admin/customers/${id}`)
       .then((r) => r.json())
       .then((j) => {
         if (j.data) {
