@@ -46,8 +46,8 @@ export default function EditProductPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/admin/categories").then((r) => r.json()),
-      fetch(`/api/admin/products/${id}`).then((r) => r.json()),
+      adminFetch("/api/admin/categories").then((r) => r.json()),
+      adminFetch(`/api/admin/products/${id}`).then((r) => r.json()),
     ]).then(([catJson, prodJson]) => {
       if (catJson.data) setCategories(catJson.data);
       if (prodJson.data) {

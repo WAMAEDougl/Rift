@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 60_000;
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -12,9 +15,37 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (!lockedUntil) { setCountdown(0); return; }
+    const tick = () => {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      if (remaining <= 0) { setCountdown(0); setLockedUntil(null); setFailedAttempts(0); }
+      else setCountdown(remaining);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lockedUntil]);
+
+  const isLocked = countdown > 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (lockedUntil) {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      if (remaining > 0) {
+        setError(`Too many failed attempts. Please wait ${remaining} seconds.`);
+        return;
+      }
+      setLockedUntil(null);
+      setFailedAttempts(0);
+    }
+
     setLoading(true);
     setError("");
 
@@ -27,7 +58,14 @@ export default function AdminLoginPage() {
       });
 
       if (authError || !data.user) {
-        setError(authError?.message ?? "Invalid email or password");
+        const next = failedAttempts + 1;
+        setFailedAttempts(next);
+        if (next >= MAX_ATTEMPTS) {
+          setLockedUntil(Date.now() + LOCKOUT_MS);
+          setError(`Too many failed attempts. Please wait 60 seconds before trying again.`);
+        } else {
+          setError(`${authError?.message ?? "Invalid email or password"} (${next}/${MAX_ATTEMPTS} attempts)`);
+        }
         setLoading(false);
         return;
       }
@@ -168,13 +206,15 @@ export default function AdminLoginPage() {
 
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loading || isLocked}
               className="w-full h-11 mt-2"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" /> Signing in…
                 </span>
+              ) : isLocked ? (
+                `Retry in ${countdown}s`
               ) : (
                 "Sign In"
               )}

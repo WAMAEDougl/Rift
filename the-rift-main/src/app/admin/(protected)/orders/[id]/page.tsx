@@ -6,13 +6,21 @@ import Link from "next/link";
 import {
   ArrowLeft, Package, User, Phone, MapPin, CreditCard, Clock,
   Send, Loader2, MessageCircle, AlertCircle, RefreshCw, Smartphone,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
 import type { WaSenderMessage } from "@/lib/wasender";
 import { adminFetch } from "@/lib/admin/fetch";
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  whatsapp: "WhatsApp / M-Pesa",
+  mpesa: "M-Pesa (Direct)",
+  cash: "Cash on Delivery",
+};
 
 interface OrderItem {
   id: string;
@@ -254,17 +262,18 @@ export default function OrderDetailPage() {
   const [whatsappMessages, setWhatsappMessages] = useState<WaSenderMessage[] | null>(null);
   const [whatsappError, setWhatsappError] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    fetch(`/api/admin/orders/${id}`)
+    adminFetch(`/api/admin/orders/${id}`)
       .then((r) => r.json())
       .then((j) => {
         if (j.data) {
           setOrder(j.data);
           // Fetch WhatsApp history after order loads
           if (j.data.customer_phone) {
-            fetch(`/api/admin/whatsapp/history?phone=${encodeURIComponent(j.data.customer_phone)}`)
+            adminFetch(`/api/admin/whatsapp/history?phone=${encodeURIComponent(j.data.customer_phone)}`)
               .then((r) => r.json())
               .then((wj) => {
                 if (wj.data) setWhatsappMessages(wj.data);
@@ -433,7 +442,7 @@ export default function OrderDetailPage() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Method</p>
-                <p className="font-medium text-foreground uppercase">{order.payment_method}</p>
+                <p className="font-medium text-foreground">{PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Status</p>
@@ -467,11 +476,15 @@ export default function OrderDetailPage() {
             </div>
             <div className="space-y-2">
               {ORDER_STATUSES.map((s) => (
-                <button key={s} onClick={() => handleStatusChange(s)} disabled={updatingStatus || order.status === s}
+                <button key={s}
+                  onClick={() => s === "cancelled" ? setCancelConfirmOpen(true) : handleStatusChange(s)}
+                  disabled={updatingStatus || order.status === s}
                   className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                     order.status === s
                       ? "bg-primary/10 text-primary border border-primary/20"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
+                      : s === "cancelled"
+                        ? "text-destructive hover:bg-destructive/10 border border-transparent"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
                   }`}>
                   <span className="capitalize">{s}</span>
                   {order.status === s && <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">Current</span>}
@@ -480,12 +493,45 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          {/* STK Push panel */}
-          <AdminSTKPushPanel
-            orderId={order.id}
-            subtotal={order.subtotal}
-            currentTotal={order.total}
-          />
+          {/* Cancel confirmation dialog */}
+          <Dialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
+            <DialogContent className="max-w-sm rounded-2xl p-6 bg-card">
+              <DialogHeader className="space-y-3">
+                <div className="w-12 h-12 bg-destructive/10 rounded-xl flex items-center justify-center text-destructive mx-auto">
+                  <AlertTriangle size={22} />
+                </div>
+                <div className="text-center space-y-1">
+                  <DialogTitle className="font-display text-lg font-medium text-foreground">
+                    Cancel this order?
+                  </DialogTitle>
+                  <p className="text-sm text-muted-foreground">
+                    This will mark order <span className="font-semibold text-foreground">{order.order_number}</span> as cancelled. This action cannot be undone.
+                  </p>
+                </div>
+              </DialogHeader>
+              <DialogFooter className="mt-6 flex-row gap-3">
+                <button onClick={() => setCancelConfirmOpen(false)}
+                  className="flex-1 px-4 py-2.5 bg-muted hover:bg-muted/80 text-muted-foreground rounded-xl text-sm font-semibold transition-colors">
+                  Keep Order
+                </button>
+                <button
+                  onClick={() => { setCancelConfirmOpen(false); handleStatusChange("cancelled"); }}
+                  disabled={updatingStatus}
+                  className="flex-1 px-4 py-2.5 bg-destructive text-destructive-foreground rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 hover:opacity-90">
+                  Cancel Order
+                </button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* STK Push panel — only for unpaid orders */}
+          {!["paid", "completed"].includes(order.payment_status) && (
+            <AdminSTKPushPanel
+              orderId={order.id}
+              subtotal={order.subtotal}
+              currentTotal={order.total}
+            />
+          )}
 
           {/* Notes */}
           {order.notes && (

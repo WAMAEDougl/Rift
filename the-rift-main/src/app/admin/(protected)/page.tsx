@@ -24,7 +24,7 @@ export default async function AdminDashboardPage() {
     { count: totalProducts },
   ] = await Promise.all([
     supabase.from("orders").select("*", { count: "exact", head: true }),
-    supabase.from("orders").select("total").eq("payment_status", "paid"),
+    supabase.from("orders").select("total").in("payment_status", ["paid", "completed"]),
     supabase.from("orders").select("*", { count: "exact", head: true }).in("status", ["pending", "confirmed"]),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "customer"),
     supabase.from("orders")
