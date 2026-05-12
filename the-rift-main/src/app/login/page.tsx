@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -20,6 +20,19 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (!lockedUntil) { setCountdown(0); return; }
+    const tick = () => {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      if (remaining <= 0) { setCountdown(0); setLockedUntil(null); setFailedAttempts(0); }
+      else setCountdown(remaining);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lockedUntil]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +73,7 @@ function LoginForm() {
     router.refresh();
   };
 
-  const isLocked = lockedUntil !== null && Date.now() < lockedUntil;
+  const isLocked = countdown > 0;
 
   const inputCls =
     "w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm placeholder:text-muted-foreground/50";
@@ -109,6 +122,8 @@ function LoginForm() {
             <>
               <Loader2 className="w-4 h-4 animate-spin" /> Signing in...
             </>
+          ) : isLocked ? (
+            <>Retry in {countdown}s</>
           ) : (
             <>
               Sign In <ArrowRight className="w-4 h-4" />

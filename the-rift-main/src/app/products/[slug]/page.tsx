@@ -144,7 +144,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 </span>
                 {product.categorySlug === "packaged" && (
                   <span className="inline-flex items-center gap-1">
-                    <Truck className="w-4 h-4 text-primary" /> Free Delivery over KES 2,000
+                    <Truck className="w-4 h-4 text-primary" /> Free Delivery Available
                   </span>
                 )}
               </div>

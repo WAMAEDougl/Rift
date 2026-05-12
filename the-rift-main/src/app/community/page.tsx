@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import HeroSlideshow from "@/components/HeroSlideshow";
+import { BUSINESS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -59,9 +60,9 @@ const defaults: CommunityContent = {
     { title: "Health Journeys", desc: "Real stories of gut health transformation, weight management, and better everyday eating." },
   ],
   socialChannels: [
-    { label: "Instagram", handle: "@riftandroot", href: "#", followers: "3.2K" },
-    { label: "Facebook", handle: "Rift & Root Kenya", href: "#", followers: "1.8K" },
-    { label: "YouTube", handle: "Rift & Root", href: "#", followers: "940" },
+    { label: "Instagram", handle: BUSINESS.instagramHandle, href: BUSINESS.instagram, followers: "3.2K" },
+    { label: "Facebook", handle: "Rift & Root Kenya", href: BUSINESS.facebook, followers: "1.8K" },
+    { label: "YouTube", handle: "Rift & Root", href: BUSINESS.youtube, followers: "940" },
   ],
 };
 
@@ -144,7 +145,7 @@ export default async function CommunityPage() {
           <span className="eyebrow text-accent/80 inline-flex items-center gap-2">
             <Users className="w-4 h-4" /> Our Community
           </span>
-          <h1 className="mt-4 font-display text-5xl font-medium leading-tight text-white md:text-7xl max-w-3xl">
+          <h1 className="mt-4 font-display text-3xl font-medium leading-tight text-white sm:text-5xl md:text-7xl max-w-3xl">
             {c.heroTitle}
           </h1>
           <p className="mt-5 max-w-xl text-lg text-white/70">{c.heroSubtitle}</p>
@@ -180,7 +181,7 @@ export default async function CommunityPage() {
       </section>
 
       {/* ── BENEFITS ── */}
-      <section className="py-24 lg:py-32">
+      <section className="py-14 md:py-24 lg:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-10">
           <div className="mb-16 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
@@ -215,7 +216,7 @@ export default async function CommunityPage() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="bg-muted/30 py-24 lg:py-32">
+      <section className="bg-muted/30 py-14 md:py-24 lg:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-10">
           <div className="mb-16 text-center">
             <span className="eyebrow inline-flex items-center gap-2">
@@ -276,7 +277,7 @@ export default async function CommunityPage() {
       </section>
 
       {/* ── SOCIAL ── */}
-      <section className="py-24 lg:py-32">
+      <section className="py-14 md:py-24 lg:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-10">
           <div className="mb-16 text-center">
             <span className="eyebrow">Follow along</span>

@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -23,6 +24,10 @@ export default function RegisterPage() {
     }
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords do not match. Please re-enter.");
       return;
     }
 
@@ -115,6 +120,21 @@ export default function RegisterPage() {
                   className={inputCls}
                   autoComplete="new-password"
                 />
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+                <input
+                  type="password"
+                  required
+                  placeholder="Confirm password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  className={`${inputCls} ${confirm && confirm !== password ? "border-destructive focus:border-destructive focus:ring-destructive" : ""}`}
+                  autoComplete="new-password"
+                />
+                {confirm && confirm !== password && (
+                  <p className="text-xs text-destructive mt-1 ml-1">Passwords do not match</p>
+                )}
               </div>
 
               {error && (

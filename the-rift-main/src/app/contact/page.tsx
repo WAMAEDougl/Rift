@@ -69,7 +69,7 @@ export default function ContactPage() {
           <h1 className="mt-6 font-display text-4xl sm:text-5xl font-medium text-white">
             Let&apos;s Connect
           </h1>
-          <p className="mt-4 text-white/70 max-w-2xl text-lg">
+          <p className="mt-4 text-white/70 max-w-2xl text-base md:text-lg">
             Visit us at Kahawa Sukari, order via WhatsApp, or send us a message.
           </p>
         </div>

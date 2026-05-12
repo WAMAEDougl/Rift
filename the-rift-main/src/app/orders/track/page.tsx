@@ -99,7 +99,7 @@ export default function TrackOrderPage() {
               <input
                 type="text"
                 required
-                placeholder="e.g. RR-20240101-001"
+                placeholder="e.g. AY-20240101-0001"
                 value={orderNumber}
                 onChange={(e) => setOrderNumber(e.target.value)}
                 className={inputCls}

@@ -19,6 +19,7 @@ import {
   Plus,
   Minus,
   Trash2,
+  Copy,
 } from "lucide-react";
 
 type Step = "form" | "confirmed";
@@ -38,6 +39,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [showNotes, setShowNotes] = useState(false);
   const [step, setStep] = useState<Step>("form");
+  const [copied, setCopied] = useState(false);
 
   const [orderResult, setOrderResult] = useState<{
     order_number: string;
@@ -47,8 +49,9 @@ export default function CheckoutPage() {
   } | null>(null);
 
   const MIN_ORDER_KES = 500;
+  const MAX_QTY = 20;
 
-  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "", city: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "", city: "", address: "" });
   const [zones, setZones] = useState<DeliveryZone[]>([]);
   const [matchedZone, setMatchedZone] = useState<DeliveryZone | null>(null);
 
@@ -65,7 +68,6 @@ export default function CheckoutPage() {
     }
   }, []);
 
-  // Match typed city/area against delivery zones
   useEffect(() => {
     if (!form.city.trim() || zones.length === 0) { setMatchedZone(null); return; }
     const query = form.city.trim().toLowerCase();
@@ -80,13 +82,23 @@ export default function CheckoutPage() {
     : null;
 
   const orderTotal = totalPrice + (deliveryFee ?? 0);
+  const belowMinimum = totalPrice < MIN_ORDER_KES;
 
   const buildWhatsAppMessage = () => {
-    const cityLine = form.city ? `Delivery area: ${form.city}\n` : "";
+    const cityLine = form.city ? `Area: ${form.city}\n` : "";
+    const addressLine = form.address ? `Address: ${form.address}\n` : "";
     const feeLine = deliveryFee !== null ? `Delivery fee: KES ${deliveryFee.toLocaleString()}\n` : "";
     return `Hi Rift & Root! I'd like to order:\n\n${items
       .map((i) => `• ${i.quantity}x ${i.product.name} — KES ${(i.product.price * i.quantity).toLocaleString()}`)
-      .join("\n")}\n\nSubtotal: KES ${totalPrice.toLocaleString()}\n${feeLine}${cityLine}\nWe'll discuss delivery and payment on WhatsApp.`;
+      .join("\n")}\n\nSubtotal: KES ${totalPrice.toLocaleString()}\n${feeLine}${cityLine}${addressLine}\nWe'll discuss delivery and payment on WhatsApp.`;
+  };
+
+  const handleCopyOrderNumber = () => {
+    if (!orderResult) return;
+    navigator.clipboard.writeText(orderResult.order_number).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
 
   if (items.length === 0 && step === "form") {
@@ -115,7 +127,7 @@ export default function CheckoutPage() {
             Your order has been received. Please check your WhatsApp for further instructions and payment details.
           </p>
           <p className="text-sm text-muted-foreground/70 mb-6">
-            We&apos;ll discuss delivery and send you a payment request via WhatsApp.
+            We&apos;ll confirm delivery details and send you a payment request via WhatsApp.
           </p>
           <div className="bg-card rounded-2xl p-6 text-left mb-6 space-y-3 border border-border">
             <div className="flex justify-between">
@@ -128,9 +140,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Delivery fee</span>
-              <span className={orderResult.delivery_fee === 0 && orderResult.total === totalPrice
-                ? "text-muted-foreground text-xs italic"
-                : "text-foreground font-medium"}>
+              <span className={orderResult.delivery_fee === 0 ? "text-muted-foreground text-xs italic" : "text-foreground font-medium"}>
                 {orderResult.delivery_fee > 0
                   ? formatPrice(orderResult.delivery_fee)
                   : "To be confirmed on WhatsApp"}
@@ -139,11 +149,9 @@ export default function CheckoutPage() {
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(orderResult.order_number);
-              }}
-              className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground transition hover:bg-muted">
-              Copy Order Number
+              onClick={handleCopyOrderNumber}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-7 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-foreground transition hover:bg-muted">
+              {copied ? <><Check className="w-3.5 h-3.5 text-secondary" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy Order Number</>}
             </button>
             <Link href="/products"
               className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground transition hover:opacity-90">
@@ -162,17 +170,21 @@ export default function CheckoutPage() {
     }
     const phoneRegex = /^(\+?254|0)[17]\d{8}$/;
     if (!phoneRegex.test(form.phone.replace(/\s/g, ""))) {
-      setError("Invalid phone number format. Please use a valid Kenyan number e.g. 0712 345 678");
+      setError("Invalid phone number. Please use a valid Kenyan number e.g. 0712 345 678");
       return;
     }
-    if (totalPrice < MIN_ORDER_KES) {
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setError("Please enter a valid email address or leave the field empty.");
+      return;
+    }
+    if (belowMinimum) {
       setError(`Minimum order is KES ${MIN_ORDER_KES.toLocaleString()}. Add more items to continue.`);
       return;
     }
 
     setLoading(true);
     setError("");
-    setItem(STORAGE_KEYS.CUSTOMER, { name: form.name, phone: form.phone, address: "", city: "" });
+    setItem(STORAGE_KEYS.CUSTOMER, { name: form.name, phone: form.phone, address: form.address, city: form.city });
 
     try {
       const res = await fetch("/api/orders", {
@@ -182,7 +194,7 @@ export default function CheckoutPage() {
           customer_name: form.name,
           customer_phone: form.phone,
           customer_email: form.email || null,
-          delivery_address: form.city || null,
+          delivery_address: form.address || form.city || null,
           delivery_city: form.city || null,
           delivery_type: "delivery",
           delivery_fee: deliveryFee ?? 0,
@@ -194,11 +206,13 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Order failed. Please try again."); setLoading(false); return; }
 
+      const serverDeliveryFee = data.order.delivery_fee ?? deliveryFee ?? 0;
+
       setOrderResult({
         order_number: data.order.order_number,
         order_id: data.order.id,
-        total: data.order.total,
-        delivery_fee: deliveryFee ?? 0,
+        total: data.order.subtotal ?? data.order.total,
+        delivery_fee: serverDeliveryFee,
       });
       localStorage.setItem("last_order", JSON.stringify({
         order_number: data.order.order_number,
@@ -244,6 +258,14 @@ export default function CheckoutPage() {
               <div className="flex-1 h-px bg-border" />
             </div>
 
+            {/* Minimum order warning */}
+            {belowMinimum && (
+              <div className="flex items-start gap-2 bg-accent/10 text-accent px-4 py-3 rounded-xl text-sm">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>Minimum order is KES {MIN_ORDER_KES.toLocaleString()}. Current total is {formatPrice(totalPrice)} — add more items to proceed.</span>
+              </div>
+            )}
+
             {/* Your Info */}
             <div className="bg-card rounded-2xl p-5 border border-border">
               <h2 className="font-display text-lg font-medium text-foreground mb-1">Your Info</h2>
@@ -251,7 +273,7 @@ export default function CheckoutPage() {
                 We&apos;ll contact you on WhatsApp to confirm delivery details and send your payment request.
               </p>
               <div className="space-y-3">
-                <input type="text" placeholder="Your name" value={form.name}
+                <input type="text" placeholder="Your full name" value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className={inputCls} />
                 <div>
@@ -278,6 +300,14 @@ export default function CheckoutPage() {
                       We deliver to: {zones.flatMap((z) => z.areas).slice(0, 6).join(", ")}{zones.flatMap(z => z.areas).length > 6 ? " and more" : ""}
                     </p>
                   )}
+                </div>
+                <div>
+                  <input type="text" placeholder="Street / building details (optional, e.g. House 4B, Mango Close)" value={form.address}
+                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                    className={inputCls} />
+                  <p className="text-xs text-muted-foreground/60 mt-1.5 ml-1">
+                    Specific address so we can find you easily.
+                  </p>
                 </div>
                 <div>
                   <input type="email" placeholder="Email address (optional — for order confirmation)" value={form.email}
@@ -331,7 +361,7 @@ export default function CheckoutPage() {
             )}
 
             {/* Place Order */}
-            <button onClick={handlePlaceOrder} disabled={loading}
+            <button onClick={handlePlaceOrder} disabled={loading || belowMinimum}
               className="w-full bg-primary text-primary-foreground py-4 rounded-2xl font-bold text-lg hover:opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-soft">
               {loading
                 ? <><Loader2 className="w-5 h-5 animate-spin" /> Placing Order...</>
@@ -376,8 +406,9 @@ export default function CheckoutPage() {
                           : <Minus className="w-3 h-3" />}
                       </button>
                       <span className="w-6 text-center text-sm font-medium text-foreground">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+                      <button onClick={() => updateQuantity(item.product.id, Math.min(item.quantity + 1, MAX_QTY))}
+                        disabled={item.quantity >= MAX_QTY}
+                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors disabled:opacity-40"
                         aria-label="Increase quantity">
                         <Plus className="w-3 h-3" />
                       </button>

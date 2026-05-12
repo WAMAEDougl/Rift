@@ -24,8 +24,6 @@ interface Order {
   id: string;
   order_number: string;
   customer_name: string;
-  customer_phone: string;
-  customer_email: string | null;
   delivery_address: string;
   delivery_city: string;
   delivery_type: string;
@@ -104,21 +102,33 @@ export default function OrderDetailPage() {
   const status = statusConfig[order.status] ?? statusConfig.pending;
   const StatusIcon = status.icon;
   const paymentLabel =
-    order.payment_method === "mpesa" ? "M-Pesa" : "Cash on Delivery";
+    order.payment_method === "mpesa" ? "M-Pesa"
+    : order.payment_method === "whatsapp" ? "WhatsApp / M-Pesa"
+    : "Cash on Delivery";
+
+  const statusHeadings: Record<string, { title: string; subtitle: string }> = {
+    pending: { title: "Order Received!", subtitle: "We'll contact you on WhatsApp to confirm delivery and payment." },
+    confirmed: { title: "Order Confirmed!", subtitle: "Your order is confirmed and being prepared." },
+    preparing: { title: "Being Prepared", subtitle: "Your order is being freshly prepared right now." },
+    dispatched: { title: "On the Way!", subtitle: "Your order has been dispatched and is heading to you." },
+    delivered: { title: "Delivered!", subtitle: "Your order was delivered. Enjoy your meal!" },
+    cancelled: { title: "Order Cancelled", subtitle: "This order was cancelled. Contact us if you have questions." },
+  };
+  const heading = statusHeadings[order.status] ?? statusHeadings.pending;
 
   return (
     <div className="pt-28 pb-20 bg-muted/30 min-h-screen">
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="w-10 h-10 text-secondary" />
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${order.status === "cancelled" ? "bg-destructive/10" : "bg-secondary/10"}`}>
+            <StatusIcon className={`w-10 h-10 ${order.status === "cancelled" ? "text-destructive" : "text-secondary"}`} />
           </div>
           <h1 className="font-display text-3xl font-medium text-foreground mb-2">
-            Order Placed!
+            {heading.title}
           </h1>
           <p className="text-muted-foreground">
-            We&apos;re preparing your order now.
+            {heading.subtitle}
           </p>
         </div>
 

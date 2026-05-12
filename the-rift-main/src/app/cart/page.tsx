@@ -146,11 +146,11 @@ export default function CartPage() {
                 </div>
                 {totalPrice < 2000 && (
                   <p className="text-xs text-accent bg-muted/50 px-3 py-1.5 rounded-lg">
-                    Orders above KES 2,000 qualify for free delivery
+                    Add more to qualify for free delivery — confirmed at checkout
                   </p>
                 )}
                 <div className="flex justify-between text-lg font-bold pt-3 border-t border-border">
-                  <span className="text-foreground">Subtotal</span>
+                  <span className="text-foreground">Total</span>
                   <span className="text-primary">{formatPrice(totalPrice)}</span>
                 </div>
               </div>

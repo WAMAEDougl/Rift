@@ -43,17 +43,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const MAX_QUANTITY = 20;
+
   const addItem = useCallback((product: Product, quantity = 1) => {
     persistItems((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
         return prev.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: Math.min(item.quantity + quantity, MAX_QUANTITY) }
             : item
         );
       }
-      return [...prev, { product, quantity }];
+      return [...prev, { product, quantity: Math.min(quantity, MAX_QUANTITY) }];
     });
     setIsCartOpen(true);
   }, [persistItems]);

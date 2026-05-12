@@ -10,7 +10,7 @@ export async function GET(
   const column = id.startsWith("AY-") ? "order_number" : "id";
   const { data: order, error } = await supabase
     .from("orders")
-    .select("*, order_items(*)")
+    .select("id, order_number, customer_name, delivery_address, delivery_city, delivery_type, subtotal, delivery_fee, total, payment_method, payment_status, status, created_at, order_items(id, product_name, product_price, quantity, line_total)")
     .eq(column, id)
     .single();
 
