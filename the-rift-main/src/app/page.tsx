@@ -104,7 +104,7 @@ export default function HomePage() {
       {/* ── STORY / MANIFESTO ── */}
       <section className="overflow-hidden">
         <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-2">
-          <div className="relative min-h-[500px] lg:min-h-[700px]">
+          <div className="relative min-h-[300px] lg:min-h-[700px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://images.unsplash.com/photo-1574484284002-952d92456975?w=1200&q=85&auto=format&fit=crop&crop=top"
@@ -124,7 +124,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col justify-center bg-muted/30 px-8 py-20 lg:px-16 lg:py-24">
+          <div className="flex flex-col justify-center bg-muted/30 px-6 py-12 sm:px-8 sm:py-16 lg:px-16 lg:py-24">
             <span className="eyebrow">The Rift &amp; Root Promise</span>
             <h2 className="mt-5 font-display text-4xl font-medium leading-[1.05] md:text-5xl">
               A bridge between ancestral wisdom
@@ -159,9 +159,9 @@ export default function HomePage() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="py-24 lg:py-32">
+      <section className="py-16 lg:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-10">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 lg:mb-16">
             <span className="eyebrow">Kind Words</span>
             <h2 className="mt-4 font-display text-4xl font-medium md:text-5xl">The community harvest</h2>
           </div>

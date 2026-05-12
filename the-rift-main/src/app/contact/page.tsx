@@ -66,7 +66,7 @@ export default function ContactPage() {
         <HeroSlideshow gradient="top" showControls={false} />
         <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
           <span className="eyebrow text-accent/80">Contact Us</span>
-          <h1 className="mt-6 font-display text-5xl sm:text-6xl font-medium text-white">
+          <h1 className="mt-6 font-display text-4xl sm:text-5xl font-medium text-white">
             Let&apos;s Connect
           </h1>
           <p className="mt-4 text-white/70 max-w-2xl text-lg">
@@ -100,7 +100,7 @@ export default function ContactPage() {
       {/* Map + Form */}
       <section className="py-20 bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
             {/* Form */}
             <div>
               <h2 className="font-display text-3xl font-medium text-foreground mb-2">
@@ -199,7 +199,7 @@ export default function ContactPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              <div className="bg-muted rounded-2xl overflow-hidden h-64">
+              <div className="bg-muted rounded-2xl overflow-hidden aspect-video">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d997.0!2d36.9487!3d-1.1962!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f3ffd56859239%3A0xb5741c3010640f68!2sayolafoodke!5e0!3m2!1sen!2ske!4v1"
                   width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"

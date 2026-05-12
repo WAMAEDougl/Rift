@@ -111,9 +111,13 @@ export function Header({ storeName }: { storeName?: string | null }) {
         </div>
       </div>
 
-      {/* ── Mobile drawer ── */}
-      {open && (
-        <div className="border-t border-border/60 bg-background md:hidden">
+      {/* ── Mobile drawer (animated) ── */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out md:hidden ${
+          open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="border-t border-border/60 bg-background">
           <nav className="mx-auto flex max-w-7xl flex-col px-4 py-3" aria-label="Mobile navigation">
             {navLinks.map((link) => (
               <Link
@@ -148,7 +152,7 @@ export function Header({ storeName }: { storeName?: string | null }) {
             </div>
           </nav>
         </div>
-      )}
+      </div>
     </header>
   );
 }

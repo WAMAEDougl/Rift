@@ -21,14 +21,14 @@ export default function BlogPage() {
     <>
       {/* Header */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-28">
+        <div className="mx-auto max-w-7xl px-6 py-12 md:py-20 lg:px-10 lg:py-28">
           <span className="eyebrow inline-flex items-center gap-2">
             <BookOpen className="w-4 h-4" /> Blog &amp; Recipes
           </span>
-          <h1 className="mt-6 font-display text-5xl leading-[1.05] md:text-7xl">
+          <h1 className="mt-6 font-display text-4xl leading-[1.05] md:text-6xl">
             Stories &amp; Recipes
           </h1>
-          <p className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground">
+          <p className="mt-8 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
             Recipes, nutrition tips, farmer stories, and the latest from Rift &amp; Root.
           </p>
         </div>
@@ -42,7 +42,7 @@ export default function BlogPage() {
             className="block rounded-[2rem] overflow-hidden border border-border bg-card hover:shadow-card transition-all group"
           >
             <div className="grid md:grid-cols-2">
-              <div className="h-64 md:h-auto ink-gradient flex items-center justify-center">
+              <div className="h-48 md:h-auto ink-gradient flex items-center justify-center">
                 <span className="text-8xl opacity-70 group-hover:scale-110 transition-transform">
                   📖
                 </span>

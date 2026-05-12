@@ -14,9 +14,9 @@ export function Footer({ settings }: { settings?: FooterSettings | null }) {
   const city = settings?.city ?? "Kahawa Sukari, Nairobi";
   const email = settings?.support_email ?? "hello@riftandroot.com";
   return (
-    <footer className="ink-gradient mt-32">
-      <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
-        <div className="grid gap-12 md:grid-cols-12">
+    <footer className="ink-gradient mt-16 md:mt-32">
+      <div className="mx-auto max-w-7xl px-6 py-12 md:py-20 lg:px-10">
+        <div className="grid gap-8 md:gap-12 md:grid-cols-12">
           {/* Brand */}
           <div className="md:col-span-5">
             <div className="flex items-center gap-2">

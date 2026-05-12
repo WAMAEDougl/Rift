@@ -155,7 +155,7 @@ export default function HeroSlideshow({
                 </div>
 
                 {/* Headline */}
-                <h1 className="mt-6 font-display text-5xl font-medium leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-[5.5rem]">
+                <h1 className="mt-6 font-display text-4xl font-medium leading-[1.02] tracking-tight text-white sm:text-5xl lg:text-[5.5rem]">
                   {cfg.hero_headline}
                   {cfg.hero_headline_accent && (
                     <>
@@ -307,7 +307,7 @@ export default function HeroSlideshow({
               )}
               {activeSlide.title && (
                 <div
-                  className="font-display text-5xl sm:text-6xl lg:text-[5.5rem] font-medium leading-[1.0] tracking-tight mb-6 [&_strong]:font-bold [&_em]:italic"
+                  className="font-display text-4xl sm:text-5xl lg:text-[5.5rem] font-medium leading-[1.0] tracking-tight mb-6 [&_strong]:font-bold [&_em]:italic"
                   style={{ color: activeSlide.titleColor ?? "#ffffff" }}
                   dangerouslySetInnerHTML={{ __html: activeSlide.title }}
                 />

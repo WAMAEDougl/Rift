@@ -40,11 +40,11 @@ export default function ShopClient({ products }: ShopClientProps) {
 
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-20 lg:px-10">
           <span className="eyebrow text-accent/80">Our Catalogue</span>
-          <h1 className="mt-5 font-display text-5xl font-medium leading-tight text-white md:text-7xl max-w-2xl">
+          <h1 className="mt-5 font-display text-3xl font-medium leading-tight text-white sm:text-5xl md:text-7xl max-w-2xl">
             Artisanal
             <em className="font-normal italic text-accent"> nourishment.</em>
           </h1>
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-white/70">
+          <p className="mt-6 max-w-md text-base leading-relaxed text-white/70 md:text-lg">
             A living collection of heritage meals and pantry goods — each shaped by the
             season and the hands that make it.
           </p>
@@ -118,7 +118,7 @@ export default function ShopClient({ products }: ShopClientProps) {
             </button>
           </div>
         ) : (
-          <div className="grid gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-x-6 sm:gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

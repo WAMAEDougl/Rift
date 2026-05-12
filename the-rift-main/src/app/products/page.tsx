@@ -28,10 +28,10 @@ export default async function ProductsPage() {
           <span className="text-accent text-sm font-semibold uppercase tracking-wider inline-flex items-center gap-2">
             <Leaf className="w-4 h-4" /> Our Products
           </span>
-          <h1 className="text-5xl sm:text-6xl font-display font-medium mt-3 mb-4 text-background">
+          <h1 className="text-4xl sm:text-6xl font-display font-medium mt-3 mb-4 text-background">
             Taste the Heritage
           </h1>
-          <p className="text-background/60 max-w-2xl mx-auto text-lg">
+          <p className="text-background/60 max-w-2xl mx-auto text-base md:text-lg">
             Every product is crafted with indigenous Kenyan ingredients, modern nutrition science,
             and deep respect for Africa&apos;s culinary traditions.
           </p>
