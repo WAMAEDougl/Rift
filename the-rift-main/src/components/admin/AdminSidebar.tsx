@@ -185,19 +185,21 @@ export default function AdminSidebar({
       </div>
 
       {/* Mobile sidebar — slide-in drawer */}
-      {mobileOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-            onClick={onMobileClose}
-          />
-          {/* Drawer */}
-          <div className="lg:hidden fixed left-0 top-0 h-full z-50 w-64 shadow-2xl">
-            {sidebarContent}
-          </div>
-        </>
-      )}
+      {/* Mobile backdrop */}
+      <div
+        className={`lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
+          mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onMobileClose}
+      />
+      {/* Mobile drawer */}
+      <div
+        className={`lg:hidden fixed left-0 top-0 h-full z-50 w-64 shadow-2xl transition-transform duration-300 ease-out ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {sidebarContent}
+      </div>
     </>
   );
 }

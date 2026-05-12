@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatKES } from "@/lib/admin/formatters";
-import { adminFetch } from "@/lib/admin/fetch";
+import { adminFetch, adminFetchCached, invalidateAdminCache } from "@/lib/admin/fetch";
 
 interface Product {
   id: string;
@@ -42,13 +42,20 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [stockFilter, setStockFilter] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Debounce search input by 400ms
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const fetchCategories = useCallback(async () => {
-    const res = await adminFetch("/api/admin/categories");
+    const res = await adminFetchCached("/api/admin/categories", 300_000);
     const json = await res.json();
     if (json.data) setCategories(json.data as Category[]);
   }, []);
@@ -58,19 +65,19 @@ export default function ProductsPage() {
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("per_page", "20");
-    if (search) params.set("q", search);
+    if (debouncedSearch) params.set("q", debouncedSearch);
     if (categoryFilter) params.set("category_id", categoryFilter);
     if (stockFilter === "in_stock") params.set("in_stock", "true");
     if (stockFilter === "out_of_stock") params.set("in_stock", "false");
 
-    const res = await adminFetch(`/api/admin/products?${params.toString()}`);
+    const res = await adminFetchCached(`/api/admin/products?${params.toString()}`);
     const json = await res.json();
     if (json.data) {
       setProducts(json.data.items as Product[]);
       setPagination(json.data.pagination as PaginationMeta);
     }
     setLoading(false);
-  }, [page, search, categoryFilter, stockFilter]);
+  }, [page, debouncedSearch, categoryFilter, stockFilter]);
 
   useEffect(() => { fetchCategories(); }, [fetchCategories]);
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
@@ -83,6 +90,7 @@ export default function ProductsPage() {
       body: JSON.stringify({ [field]: value }),
     });
     if (!res.ok) { toast.error("Update failed"); return; }
+    invalidateAdminCache("/api/admin/products");
     setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, [field]: value } : p)));
   }
 
@@ -93,6 +101,7 @@ export default function ProductsPage() {
     const json = await res.json();
     setDeleteLoading(false);
     if (!res.ok) { toast.error(json.error?.message ?? "Delete failed"); setDeleteTarget(null); return; }
+    invalidateAdminCache("/api/admin/products");
     toast.success(`"${deleteTarget.name}" deleted`);
     setDeleteTarget(null);
     fetchProducts();
@@ -113,7 +122,7 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6 w-full">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="font-display text-3xl font-medium text-foreground">Products</h1>
           <p className="text-xs text-muted-foreground mt-1">{pagination?.total.toLocaleString()} total</p>
@@ -151,9 +160,72 @@ export default function ProductsPage() {
         </button>
       </div>
 
-      {/* Table */}
+      {/* Table + Cards */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
-        <div className="overflow-x-auto">
+
+        {/* ── Mobile card view (below sm) ── */}
+        <div className="sm:hidden divide-y divide-border">
+          {loading
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="p-4 flex items-center gap-3">
+                  <Skeleton className="w-14 h-14 rounded-xl shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-36 rounded" />
+                    <Skeleton className="h-3 w-20 rounded" />
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                      <Skeleton className="h-5 w-16 rounded" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <Skeleton className="w-8 h-8 rounded-lg" />
+                    <Skeleton className="w-8 h-8 rounded-lg" />
+                  </div>
+                </div>
+              ))
+            : products.map((product) => (
+                <div key={product.id} className="p-4 flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-muted border border-border shrink-0 flex items-center justify-center">
+                    {product.image_url
+                      ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                      : <Package size={22} className="text-muted-foreground/40" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-foreground text-sm truncate">{product.name}</p>
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{product.slug}</p>
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                        {product.category_name ?? "General"}
+                      </span>
+                      <span className="text-xs font-semibold text-foreground">{formatKES(product.price)}</span>
+                    </div>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Stock</span>
+                        <ToggleSwitch checked={product.in_stock} onChange={() => handleToggle(product, "in_stock")} />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Active</span>
+                        <ToggleSwitch checked={product.is_active} onChange={() => handleToggle(product, "is_active")} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5 shrink-0">
+                    <Link href={`/admin/products/${product.id}/edit`}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
+                      <Pencil size={15} />
+                    </Link>
+                    <button onClick={() => setDeleteTarget(product)}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+        </div>
+
+        {/* ── Desktop table view (sm+) ── */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-muted/30">
@@ -226,7 +298,7 @@ export default function ProductsPage() {
         )}
 
         {pagination && pagination.total_pages > 1 && (
-          <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="px-4 sm:px-6 py-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground">
               Showing <span className="text-foreground font-medium">{products.length}</span> of{" "}
               <span className="text-foreground font-medium">{pagination.total.toLocaleString()}</span> products
@@ -256,7 +328,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="bg-card rounded-2xl border border-border p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center"><TrendingUp size={16} className="text-secondary" /></div>
@@ -283,7 +355,7 @@ export default function ProductsPage() {
 
       {/* Delete dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
-        <DialogContent className="max-w-md rounded-2xl p-6 bg-card">
+        <DialogContent className="max-w-md rounded-2xl p-6 bg-card mx-4">
           <DialogHeader className="space-y-3">
             <div className="w-12 h-12 bg-destructive/10 rounded-xl flex items-center justify-center text-destructive mx-auto"><Trash2 size={22} /></div>
             <div className="text-center space-y-1">

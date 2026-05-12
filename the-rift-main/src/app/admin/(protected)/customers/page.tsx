@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
-import { adminFetch } from "@/lib/admin/fetch";
+import { adminFetchCached } from "@/lib/admin/fetch";
 
 interface Customer {
   id: string;
@@ -30,22 +30,29 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search input by 400ms
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("per_page", "20");
-    if (search) params.set("q", search);
+    if (debouncedSearch) params.set("q", debouncedSearch);
 
-    const res = await adminFetch(`/api/admin/customers?${params.toString()}`);
+    const res = await adminFetchCached(`/api/admin/customers?${params.toString()}`);
     const json = await res.json();
     if (json.data) {
       setCustomers(json.data.items);
       setPagination(json.data.pagination);
     }
     setLoading(false);
-  }, [page, search]);
+  }, [page, debouncedSearch]);
 
   useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
 
@@ -70,7 +77,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="bg-card rounded-2xl border border-border p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -117,9 +124,56 @@ export default function CustomersPage() {
         )}
       </div>
 
-      {/* Table */}
+      {/* Table + Cards */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
-        <div className="overflow-x-auto">
+
+        {/* ── Mobile card view (below sm) ── */}
+        <div className="sm:hidden divide-y divide-border">
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="p-4 flex items-center gap-3">
+                  <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-4 w-32 rounded" />
+                    <Skeleton className="h-3 w-24 rounded" />
+                    <Skeleton className="h-3 w-20 rounded" />
+                  </div>
+                  <div className="text-right space-y-1">
+                    <Skeleton className="h-4 w-16 rounded ml-auto" />
+                    <Skeleton className="h-3 w-20 rounded ml-auto" />
+                  </div>
+                </div>
+              ))
+            : customers.map((c) => (
+                <Link key={c.id} href={`/admin/customers/${c.id}`} className="flex items-center gap-3 p-4 hover:bg-muted/20 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold shrink-0">
+                    {(c.full_name ?? "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{c.full_name ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{c.phone}</p>
+                    {c.default_city && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <MapPin size={10} className="text-muted-foreground shrink-0" />
+                        <span className="text-xs text-muted-foreground">{c.default_city}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold text-foreground">{formatKES(c.total_spent)}</p>
+                    <div className="flex items-center gap-1 justify-end mt-0.5">
+                      <span className="text-xs text-muted-foreground">{c.order_count} order{c.order_count !== 1 ? "s" : ""}</span>
+                      {c.order_count > 1 && (
+                        <span className="text-[10px] font-semibold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded-full">Repeat</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+        </div>
+
+        {/* ── Desktop table view (sm+) ── */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-muted/30">
@@ -197,7 +251,7 @@ export default function CustomersPage() {
         )}
 
         {pagination && pagination.total_pages > 1 && (
-          <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="px-4 sm:px-6 py-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground">
               Showing <span className="text-foreground font-medium">{customers.length}</span> of{" "}
               <span className="text-foreground font-medium">{pagination.total.toLocaleString()}</span> customers

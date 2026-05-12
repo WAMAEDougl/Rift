@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import StatusBadge from "@/components/admin/StatusBadge";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
 import { toast } from "sonner";
-import { adminFetch } from "@/lib/admin/fetch";
+import { adminFetch, adminFetchCached, invalidateAdminCache } from "@/lib/admin/fetch";
 
 interface OrderRow {
   id: string;
@@ -49,6 +49,23 @@ export default function OrdersPage() {
   const status = searchParams.get("status") ?? "";
   const page = Number(searchParams.get("page") ?? "1");
 
+  // Local search state with debounce to avoid navigating on every keystroke
+  const [localQ, setLocalQ] = useState(q);
+  const qRef = useRef(q);
+  useEffect(() => { qRef.current = q; }, [q]);
+  useEffect(() => { setLocalQ(q); }, [q]);
+
+  useEffect(() => {
+    if (localQ === qRef.current) return;
+    const t = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (localQ) params.set("q", localQ); else params.delete("q");
+      params.set("page", "1");
+      router.push(`/admin/orders?${params.toString()}`);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [localQ]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const updateParam = useCallback(
     (updates: Record<string, string>) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -78,7 +95,7 @@ export default function OrdersPage() {
       params.set("page", String(page));
       params.set("per_page", "20");
 
-      const res = await adminFetch(`/api/admin/orders?${params.toString()}`);
+      const res = await adminFetchCached(`/api/admin/orders?${params.toString()}`);
       const json = await res.json();
       if (json.data) {
         setOrders(json.data.items);
@@ -113,6 +130,7 @@ export default function OrdersPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: Array.from(selectedIds), status: "confirmed" }),
       });
+      invalidateAdminCache("/api/admin/orders");
       toast.success("Orders confirmed");
       await fetchOrders();
     } finally { setBulkLoading(false); }
@@ -126,6 +144,7 @@ export default function OrdersPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: Array.from(selectedIds), status: "cancelled", reason: cancelReason || undefined }),
       });
+      invalidateAdminCache("/api/admin/orders");
       setShowCancelDialog(false);
       setCancelReason("");
       toast.success("Orders cancelled");
@@ -160,11 +179,11 @@ export default function OrdersPage() {
       {/* Filter bar */}
       <div className="bg-card rounded-2xl border border-border p-4 flex flex-wrap gap-3 items-center">
         <input
-          className="flex-1 min-w-[180px] border border-border rounded-xl px-3 py-2 text-sm bg-background text-foreground focus:ring-primary focus:border-primary outline-none placeholder:text-muted-foreground/50"
+          className="flex-1 min-w-[160px] border border-border rounded-xl px-3 py-2 text-sm bg-background text-foreground focus:ring-primary focus:border-primary outline-none placeholder:text-muted-foreground/50"
           placeholder="Search by ID or name..."
           type="text"
-          value={q}
-          onChange={(e) => updateParam({ q: e.target.value })}
+          value={localQ}
+          onChange={(e) => setLocalQ(e.target.value)}
         />
         <select
           className="border border-border rounded-xl px-3 py-2 text-sm bg-background text-foreground focus:ring-primary focus:border-primary outline-none"
@@ -176,14 +195,77 @@ export default function OrdersPage() {
             <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
           ))}
         </select>
-        <button onClick={() => router.push("/admin/orders")} className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1">
+        <button onClick={() => { setLocalQ(""); router.push("/admin/orders"); }} className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1">
           Clear
         </button>
       </div>
 
-      {/* Table */}
+      {/* Table + Cards */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
-        <div className="overflow-x-auto">
+
+        {/* ── Mobile card view (below sm) ── */}
+        <div className="sm:hidden divide-y divide-border">
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-24 rounded" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="w-6 h-6 rounded-full shrink-0" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-32 rounded" />
+                      <Skeleton className="h-3 w-24 rounded" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-4 w-20 rounded" />
+                  </div>
+                </div>
+              ))
+            : orders.map((order) => (
+                <div key={order.id} className={`p-4 ${selectedIds.has(order.id) ? "bg-primary/5" : ""}`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(order.id)}
+                        onChange={() => toggleRow(order.id)}
+                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer mt-0.5 shrink-0"
+                      />
+                      <Link href={`/admin/orders/${order.id}`} className="text-sm font-bold text-primary hover:underline">
+                        {order.order_number}
+                      </Link>
+                    </div>
+                    <StatusBadge status={order.status} type="order" />
+                  </div>
+                  <div className="pl-6">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
+                        {order.customer_name?.charAt(0).toUpperCase()}
+                      </div>
+                      <p className="text-sm font-medium text-foreground">{order.customer_name}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2 pl-8">{order.customer_phone}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <StatusBadge status={order.delivery_type} type="delivery" />
+                        <span className="text-xs text-muted-foreground">{order.item_count} item{order.item_count !== 1 ? "s" : ""}</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-foreground">{formatKES(order.total)}</p>
+                        <p className="text-xs text-muted-foreground">{formatRelativeTime(order.created_at)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+        </div>
+
+        {/* ── Desktop table view (sm+) ── */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-muted/30">
@@ -255,7 +337,7 @@ export default function OrdersPage() {
         )}
 
         {pagination && pagination.total_pages > 1 && (
-          <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="px-4 sm:px-6 py-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground">
               Showing <span className="text-foreground font-medium">{orders.length}</span> of{" "}
               <span className="text-foreground font-medium">{pagination.total.toLocaleString()}</span> orders
@@ -285,7 +367,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="bg-card rounded-2xl border border-border p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center"><TrendingUp size={16} className="text-secondary" /></div>
@@ -314,32 +396,32 @@ export default function OrdersPage() {
 
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-card border border-border shadow-card px-6 py-4 rounded-2xl flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary font-bold text-sm flex items-center justify-center">{selectedIds.size}</div>
-            <span className="text-sm font-semibold text-foreground">orders selected</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-card border border-border shadow-card px-4 sm:px-6 py-3 sm:py-4 rounded-2xl flex items-center gap-3 sm:gap-6 max-w-[calc(100vw-2rem)]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 text-primary font-bold text-sm flex items-center justify-center shrink-0">{selectedIds.size}</div>
+            <span className="text-sm font-semibold text-foreground whitespace-nowrap">selected</span>
           </div>
           <div className="h-6 w-px bg-border" />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button onClick={handleBulkConfirm} disabled={bulkLoading}
-              className="bg-primary text-primary-foreground px-4 py-2 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 hover:opacity-90">
-              Confirm Orders
+              className="bg-primary text-primary-foreground px-3 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-colors disabled:opacity-50 hover:opacity-90 whitespace-nowrap">
+              Confirm
             </button>
             <button onClick={() => setShowCancelDialog(true)} disabled={bulkLoading}
-              className="bg-destructive text-destructive-foreground px-4 py-2 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 hover:opacity-90">
-              Cancel Orders
+              className="bg-destructive text-destructive-foreground px-3 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-colors disabled:opacity-50 hover:opacity-90 whitespace-nowrap">
+              Cancel
             </button>
           </div>
           <button onClick={() => setSelectedIds(new Set())}
-            className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
-            <X size={16} />
+            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors shrink-0">
+            <X size={15} />
           </button>
         </div>
       )}
 
       {/* Cancel dialog */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent className="rounded-2xl p-6 max-w-md bg-card">
+        <DialogContent className="rounded-2xl p-6 max-w-md bg-card mx-4">
           <DialogHeader className="space-y-3">
             <div className="w-12 h-12 bg-destructive/10 rounded-xl flex items-center justify-center text-destructive mx-auto">
               <AlertTriangle size={22} />

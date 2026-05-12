@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
-import { adminFetch } from "@/lib/admin/fetch";
+import { adminFetchCached } from "@/lib/admin/fetch";
 
 interface Payment {
   id: string;
@@ -68,27 +68,33 @@ export default function PaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [tab, setTab] = useState<"all" | "pending" | "paid">("all");
+
+  // Debounce search input by 400ms
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("per_page", "20");
-    if (search) params.set("q", search);
-    // Tab drives status filter
+    if (debouncedSearch) params.set("q", debouncedSearch);
     const effectiveStatus = tab === "pending" ? "pending" : tab === "paid" ? "paid" : statusFilter;
     if (effectiveStatus) params.set("payment_status", effectiveStatus);
 
-    const res = await adminFetch(`/api/admin/payments?${params.toString()}`);
+    const res = await adminFetchCached(`/api/admin/payments?${params.toString()}`);
     const json = await res.json();
     if (json.data) {
       setPayments(json.data.items);
       setPagination(json.data.pagination);
     }
     setLoading(false);
-  }, [page, search, statusFilter, tab]);
+  }, [page, debouncedSearch, statusFilter, tab]);
 
   useEffect(() => { fetchPayments(); }, [fetchPayments]);
 
@@ -139,7 +145,7 @@ export default function PaymentsPage() {
       )}
 
       {/* KPI cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="bg-card rounded-2xl border border-border p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-green-500/10 flex items-center justify-center">
@@ -200,9 +206,67 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table + Cards */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
-        <div className="overflow-x-auto">
+
+        {/* ── Mobile card view (below sm) ── */}
+        <div className="sm:hidden divide-y divide-border">
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-24 rounded" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-5 w-20 rounded" />
+                  </div>
+                </div>
+              ))
+            : payments.map((p) => {
+                const isAwaitingSTK = p.payment_status === "pending" && p.payment_method === "whatsapp";
+                return (
+                  <div key={p.id} className={`p-4 ${isAwaitingSTK ? "bg-amber-500/[0.03]" : ""}`}>
+                    <div className="flex items-start justify-between mb-1.5">
+                      <Link href={`/admin/orders/${p.id}`} className="text-sm font-bold text-primary hover:underline font-mono">
+                        {p.order_number}
+                      </Link>
+                      <StatusBadge status={p.payment_status} />
+                    </div>
+                    <p className="text-sm font-medium text-foreground">{p.customer_name}</p>
+                    <p className="text-xs text-muted-foreground mb-2">{p.customer_phone}</p>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <MethodBadge method={p.payment_method} />
+                        {p.delivery_fee != null && p.delivery_fee > 0 && (
+                          <span className="text-xs text-muted-foreground">+{formatKES(p.delivery_fee)} delivery</span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-foreground">{formatKES(p.total)}</p>
+                        <p className="text-xs text-muted-foreground">{formatRelativeTime(p.created_at)}</p>
+                      </div>
+                    </div>
+                    {isAwaitingSTK && (
+                      <Link href={`/admin/orders/${p.id}`}
+                        className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors">
+                        <Smartphone size={11} /> Send STK Push
+                      </Link>
+                    )}
+                    {p.mpesa_receipt_number && (
+                      <span className="mt-2 inline-block font-mono text-xs text-foreground bg-muted/50 px-2 py-1 rounded-lg">
+                        {p.mpesa_receipt_number}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+        </div>
+
+        {/* ── Desktop table view (sm+) ── */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-muted/30">
@@ -289,7 +353,7 @@ export default function PaymentsPage() {
         )}
 
         {pagination && pagination.total_pages > 1 && (
-          <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="px-4 sm:px-6 py-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground">
               Showing <span className="text-foreground font-medium">{payments.length}</span> of{" "}
               <span className="text-foreground font-medium">{pagination.total.toLocaleString()}</span> transactions
