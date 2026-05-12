@@ -249,13 +249,30 @@ function BusinessTab() {
       const res = await adminFetch("/api/admin/settings");
       const json = await res.json();
       if (json.data) {
+        const d = json.data;
         setSettings({
           ...defaultBusiness,
-          ...json.data,
-          default_delivery_fee: String(json.data.default_delivery_fee ?? 0),
-          free_shipping_threshold: String(json.data.free_shipping_threshold ?? 0),
-          low_stock_threshold: String(json.data.low_stock_threshold ?? 5),
-          tax_rate: String(json.data.tax_rate ?? 0),
+          store_name: d.store_name ?? "",
+          tagline: d.tagline ?? "",
+          support_email: d.support_email ?? "",
+          support_phone: d.support_phone ?? "",
+          whatsapp_number: d.whatsapp_number ?? "",
+          address: d.address ?? "",
+          city: d.city ?? "",
+          country: d.country ?? "Kenya",
+          currency: d.currency ?? "KES",
+          mpesa_shortcode: d.mpesa_shortcode ?? "",
+          mpesa_environment: d.mpesa_environment ?? "sandbox",
+          wasender_api_key: d.wasender_api_key ?? "",
+          wasender_phone_id: d.wasender_phone_id ?? "",
+          default_delivery_fee: String(d.default_delivery_fee ?? 0),
+          free_shipping_threshold: String(d.free_shipping_threshold ?? 0),
+          low_stock_threshold: String(d.low_stock_threshold ?? 5),
+          tax_rate: String(d.tax_rate ?? 0),
+          tax_inclusive: d.tax_inclusive ?? false,
+          allow_guest_checkout: d.allow_guest_checkout ?? true,
+          new_order_sound_enabled: d.new_order_sound_enabled ?? true,
+          new_message_sound_enabled: d.new_message_sound_enabled ?? true,
         });
       }
     } catch {

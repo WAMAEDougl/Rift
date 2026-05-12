@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BUSINESS, getWhatsAppOrderLink } from "@/lib/constants";
+import { fetchPublicSettings, type PublicSettings } from "@/lib/use-settings";
 import { MapPin, Mail, Phone, MessageCircle } from "lucide-react";
 import HeroSlideshow from "@/components/HeroSlideshow";
 
@@ -13,6 +14,23 @@ export default function ContactPage() {
   const [formError, setFormError] = useState("");
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [siteSettings, setSiteSettings] = useState<PublicSettings | null>(null);
+
+  useEffect(() => {
+    fetchPublicSettings().then(setSiteSettings);
+  }, []);
+
+  const contactEmail = siteSettings?.support_email ?? BUSINESS.email;
+  const contactPhone = siteSettings?.support_phone ?? `${BUSINESS.phone1} / ${BUSINESS.phone2}`;
+  const contactAddress = siteSettings?.address ?? BUSINESS.address;
+  const contactArea = siteSettings?.city ?? `${BUSINESS.area}, ${BUSINESS.landmark}`;
+  const contactFullAddress = siteSettings?.address
+    ? `${siteSettings.address}, ${siteSettings.city ?? BUSINESS.city}`
+    : BUSINESS.fullAddress;
+  const waNumber = siteSettings?.whatsapp_number ?? BUSINESS.whatsapp;
+  const facebookUrl = siteSettings?.facebook_url ?? BUSINESS.facebook;
+  const instagramUrl = siteSettings?.instagram_url ?? BUSINESS.instagram;
+  const tiktokUrl = siteSettings?.tiktok_url ?? BUSINESS.tiktok;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +47,7 @@ export default function ContactPage() {
     }
 
     const msg = `Hi Rift & Root! 👋\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nSubject: ${formData.subject}\n\nMessage: ${formData.message.trim()}`;
-    const url = getWhatsAppOrderLink(msg);
+    const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
     const popup = window.open(url, "_blank");
     if (popup === null) {
       setPopupBlocked(true);
@@ -62,9 +80,9 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { icon: MapPin, label: "Visit Us", value: BUSINESS.address, sub: `${BUSINESS.area}, ${BUSINESS.landmark}` },
-              { icon: Mail, label: "Email Us", value: BUSINESS.email, sub: "We reply within 24 hours" },
-              { icon: Phone, label: "Call / WhatsApp", value: `${BUSINESS.phone1} / ${BUSINESS.phone2}`, sub: "WhatsApp available on both lines" },
+              { icon: MapPin, label: "Visit Us", value: contactAddress, sub: contactArea },
+              { icon: Mail, label: "Email Us", value: contactEmail, sub: "We reply within 24 hours" },
+              { icon: Phone, label: "Call / WhatsApp", value: contactPhone, sub: "WhatsApp available on both lines" },
             ].map((info) => (
               <div key={info.label} className="bg-muted/40 rounded-2xl p-6 text-center hover:shadow-card transition-all">
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
@@ -189,7 +207,7 @@ export default function ContactPage() {
                 />
               </div>
               <p className="text-xs text-muted-foreground/60 text-center">
-                📍 {BUSINESS.fullAddress}
+                📍 {contactFullAddress}
               </p>
 
               <div className="bg-secondary/5 border border-secondary/20 rounded-2xl p-8">
@@ -200,7 +218,7 @@ export default function ContactPage() {
                   For fastest service, WhatsApp us directly. We deliver across Nairobi and ship
                   packaged products countrywide.
                 </p>
-                <a href={getWhatsAppOrderLink("Hi Rift & Root! I'd like to place an order 🍽️")}
+                <a href={`https://wa.me/${waNumber}?text=${encodeURIComponent("Hi Rift & Root! I'd like to place an order 🍽️")}`}
                   target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-secondary-foreground transition hover:opacity-90">
                   <MessageCircle className="w-4 h-4" /> Chat on WhatsApp
@@ -211,9 +229,9 @@ export default function ContactPage() {
                 <h3 className="font-display text-xl font-medium mb-4">Follow Us</h3>
                 <div className="flex gap-3 flex-wrap">
                   {[
-                    { label: "Facebook", href: BUSINESS.facebook },
-                    { label: "Instagram", href: BUSINESS.instagram },
-                    { label: "TikTok", href: BUSINESS.tiktok },
+                    { label: "Facebook", href: facebookUrl },
+                    { label: "Instagram", href: instagramUrl },
+                    { label: "TikTok", href: tiktokUrl },
                   ].map((s) => (
                     <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
                       className="rounded-full border border-background/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-background transition hover:bg-background/10">

@@ -23,6 +23,15 @@ import {
 
 type Step = "form" | "confirmed";
 
+interface DeliveryZone {
+  id: string;
+  name: string;
+  areas: string[];
+  fee: number;
+  free_above: number | null;
+  estimated_days: string | null;
+}
+
 export default function CheckoutPage() {
   const { items, totalItems, totalPrice, clearCart, updateQuantity } = useCart();
   const [loading, setLoading] = useState(false);
@@ -34,11 +43,20 @@ export default function CheckoutPage() {
     order_number: string;
     order_id: string;
     total: number;
+    delivery_fee: number;
   } | null>(null);
 
   const MIN_ORDER_KES = 500;
 
-  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "", city: "" });
+  const [zones, setZones] = useState<DeliveryZone[]>([]);
+  const [matchedZone, setMatchedZone] = useState<DeliveryZone | null>(null);
+
+  useEffect(() => {
+    fetch("/api/delivery-zones")
+      .then((r) => r.json())
+      .then((d) => setZones(d.zones ?? []));
+  }, []);
 
   useEffect(() => {
     const saved = getItem<SavedCustomer>(STORAGE_KEYS.CUSTOMER);
@@ -47,10 +65,29 @@ export default function CheckoutPage() {
     }
   }, []);
 
-  const buildWhatsAppMessage = () =>
-    `Hi Rift & Root! I'd like to order:\n\n${items
+  // Match typed city/area against delivery zones
+  useEffect(() => {
+    if (!form.city.trim() || zones.length === 0) { setMatchedZone(null); return; }
+    const query = form.city.trim().toLowerCase();
+    const match = zones.find((z) =>
+      z.areas.some((a) => a.toLowerCase().includes(query) || query.includes(a.toLowerCase()))
+    );
+    setMatchedZone(match ?? null);
+  }, [form.city, zones]);
+
+  const deliveryFee = matchedZone
+    ? (matchedZone.free_above && totalPrice >= matchedZone.free_above ? 0 : matchedZone.fee)
+    : null;
+
+  const orderTotal = totalPrice + (deliveryFee ?? 0);
+
+  const buildWhatsAppMessage = () => {
+    const cityLine = form.city ? `Delivery area: ${form.city}\n` : "";
+    const feeLine = deliveryFee !== null ? `Delivery fee: KES ${deliveryFee.toLocaleString()}\n` : "";
+    return `Hi Rift & Root! I'd like to order:\n\n${items
       .map((i) => `• ${i.quantity}x ${i.product.name} — KES ${(i.product.price * i.quantity).toLocaleString()}`)
-      .join("\n")}\n\nSubtotal: KES ${totalPrice.toLocaleString()}\n\nWe'll discuss delivery and payment on WhatsApp.`;
+      .join("\n")}\n\nSubtotal: KES ${totalPrice.toLocaleString()}\n${feeLine}${cityLine}\nWe'll discuss delivery and payment on WhatsApp.`;
+  };
 
   if (items.length === 0 && step === "form") {
     return (
@@ -91,7 +128,13 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Delivery fee</span>
-              <span className="text-muted-foreground text-sm">To be confirmed on WhatsApp</span>
+              <span className={orderResult.delivery_fee === 0 && orderResult.total === totalPrice
+                ? "text-muted-foreground text-xs italic"
+                : "text-foreground font-medium"}>
+                {orderResult.delivery_fee > 0
+                  ? formatPrice(orderResult.delivery_fee)
+                  : "To be confirmed on WhatsApp"}
+              </span>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -139,9 +182,10 @@ export default function CheckoutPage() {
           customer_name: form.name,
           customer_phone: form.phone,
           customer_email: form.email || null,
-          delivery_address: null,
-          delivery_city: null,
+          delivery_address: form.city || null,
+          delivery_city: form.city || null,
           delivery_type: "delivery",
+          delivery_fee: deliveryFee ?? 0,
           order_notes: form.notes || null,
           payment_method: "whatsapp",
           items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
@@ -154,6 +198,7 @@ export default function CheckoutPage() {
         order_number: data.order.order_number,
         order_id: data.order.id,
         total: data.order.total,
+        delivery_fee: deliveryFee ?? 0,
       });
       localStorage.setItem("last_order", JSON.stringify({
         order_number: data.order.order_number,
@@ -218,6 +263,23 @@ export default function CheckoutPage() {
                   </p>
                 </div>
                 <div>
+                  <input type="text" placeholder="Delivery area / estate (e.g. Westlands, Kilimani)" value={form.city}
+                    onChange={(e) => setForm({ ...form, city: e.target.value })}
+                    className={inputCls} />
+                  {form.city && (
+                    <p className={`text-xs mt-1.5 ml-1 ${matchedZone ? "text-secondary font-medium" : "text-muted-foreground/60"}`}>
+                      {matchedZone
+                        ? `${matchedZone.name} — KES ${deliveryFee?.toLocaleString()} delivery${matchedZone.estimated_days ? ` · ${matchedZone.estimated_days}` : ""}${matchedZone.free_above && totalPrice < matchedZone.free_above ? ` (free above KES ${matchedZone.free_above.toLocaleString()})` : ""}`
+                        : "Area not in our zones — we'll confirm the fee on WhatsApp"}
+                    </p>
+                  )}
+                  {zones.length > 0 && !form.city && (
+                    <p className="text-xs text-muted-foreground/50 mt-1.5 ml-1">
+                      We deliver to: {zones.flatMap((z) => z.areas).slice(0, 6).join(", ")}{zones.flatMap(z => z.areas).length > 6 ? " and more" : ""}
+                    </p>
+                  )}
+                </div>
+                <div>
                   <input type="email" placeholder="Email address (optional — for order confirmation)" value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     className={inputCls} />
@@ -273,7 +335,7 @@ export default function CheckoutPage() {
               className="w-full bg-primary text-primary-foreground py-4 rounded-2xl font-bold text-lg hover:opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-soft">
               {loading
                 ? <><Loader2 className="w-5 h-5 animate-spin" /> Placing Order...</>
-                : <>Place Order — {formatPrice(totalPrice)}</>}
+                : <>Place Order — {formatPrice(orderTotal)}</>}
             </button>
 
             <p className="text-xs text-muted-foreground/60 text-center">
@@ -333,11 +395,17 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Delivery fee</span>
-                  <span className="text-muted-foreground text-xs italic">Confirmed on WhatsApp</span>
+                  {deliveryFee !== null ? (
+                    <span className={deliveryFee === 0 ? "text-secondary font-medium" : "text-foreground"}>
+                      {deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs italic">Enter area above</span>
+                  )}
                 </div>
                 <div className="flex justify-between text-base font-bold pt-2 border-t border-border">
                   <span className="text-foreground">Total</span>
-                  <span className="text-primary">{formatPrice(totalPrice)}</span>
+                  <span className="text-primary">{formatPrice(orderTotal)}</span>
                 </div>
               </div>
               <Link href="/products"

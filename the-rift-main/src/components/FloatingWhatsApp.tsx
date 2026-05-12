@@ -2,10 +2,22 @@
 
 import { useState } from "react";
 import { X, MessageCircle } from "lucide-react";
-import { BUSINESS, getWhatsAppOrderLink } from "@/lib/constants";
+import { BUSINESS } from "@/lib/constants";
 
-export default function FloatingWhatsApp() {
+interface FloatingWhatsAppProps {
+  whatsappNumber?: string | null;
+  storeName?: string | null;
+  supportPhone?: string | null;
+}
+
+export default function FloatingWhatsApp({ whatsappNumber, storeName, supportPhone }: FloatingWhatsAppProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const waNumber = whatsappNumber ?? BUSINESS.whatsapp;
+  const displayName = storeName ?? BUSINESS.name;
+  const phoneHref = supportPhone
+    ? `tel:${supportPhone.replace(/\s/g, "")}`
+    : "tel:+254713280550";
 
   const quickMessages = [
     { label: "I want to place an order", icon: "🛒" },
@@ -17,13 +29,13 @@ export default function FloatingWhatsApp() {
   const contactChannels = [
     {
       label: "Call Us",
-      href: "tel:+254713280550",
+      href: phoneHref,
       icon: "📞",
       color: "bg-primary hover:opacity-90",
     },
     {
       label: "WhatsApp",
-      href: `https://wa.me/${BUSINESS.whatsapp}`,
+      href: `https://wa.me/${waNumber}`,
       icon: "💬",
       color: "bg-primary hover:opacity-90",
     },
@@ -48,7 +60,7 @@ export default function FloatingWhatsApp() {
                   A
                 </div>
                 <div>
-                  <p className="font-bold text-sm">{BUSINESS.name}</p>
+                  <p className="font-bold text-sm">{displayName}</p>
                   <p className="text-primary-foreground/70 text-xs">
                     Usually replies within minutes
                   </p>
@@ -80,7 +92,7 @@ export default function FloatingWhatsApp() {
               {quickMessages.map((msg) => (
                 <a
                   key={msg.label}
-                  href={getWhatsAppOrderLink(msg.label)}
+                  href={`https://wa.me/${waNumber}?text=${encodeURIComponent(msg.label)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg border border-border text-sm text-foreground/80 hover:bg-muted hover:border-border hover:text-foreground transition-colors"

@@ -17,7 +17,8 @@ const navLinks = [
 
 type NavLink = (typeof navLinks)[number];
 
-export function Header() {
+export function Header({ storeName }: { storeName?: string | null }) {
+  const displayName = storeName ?? "Rift & Root";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
@@ -50,15 +51,13 @@ export function Header() {
         <Link
           href="/"
           className="flex items-center gap-3 group"
-          aria-label="Rift & Root home"
+          aria-label={`${displayName} home`}
         >
-          {/* Wordmark monogram */}
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground font-display text-base font-medium tracking-tight transition group-hover:bg-primary/90">
-            R
+            {displayName.charAt(0).toUpperCase()}
           </span>
           <span className="font-display text-[1.15rem] tracking-tight leading-none">
-            Rift &amp;{" "}
-            <span className="text-primary">Root</span>
+            {displayName}
           </span>
         </Link>
 

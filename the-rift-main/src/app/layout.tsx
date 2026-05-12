@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { unstable_noStore as noStore } from "next/cache";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart-context";
 import { SlideshowProvider } from "@/lib/slideshow-context";
@@ -103,8 +104,14 @@ export default async function RootLayout({
     sameAs: [],
   };
 
-  // Fetch active theme from DB
+  // Always fetch fresh — never serve a cached theme/settings
+  noStore();
+
   let activeTheme = "theme-earth";
+  let siteSettings: Record<string, string | null> | null = null;
+  const personalizationStyle: Record<string, string> = {};
+  let googleFontsHref: string | null = null;
+
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -112,17 +119,59 @@ export default async function RootLayout({
     );
     const { data } = await supabase
       .from("store_settings")
-      .select("active_theme")
+      .select(
+        "active_theme, store_name, support_phone, support_email, whatsapp_number, address, city, primary_color, secondary_color, accent_color, font_heading, font_body"
+      )
       .eq("id", 1)
       .single();
+
     if (data?.active_theme) activeTheme = data.active_theme;
+    if (data) siteSettings = data;
+
+    // Inject personalization colors as CSS variable overrides (inline style wins over theme)
+    if (data?.primary_color) personalizationStyle["--primary"] = data.primary_color;
+    if (data?.secondary_color) personalizationStyle["--secondary"] = data.secondary_color;
+    if (data?.accent_color) personalizationStyle["--accent"] = data.accent_color;
+
+    // Inject custom fonts — only if different from the built-in next/font fonts
+    const builtInFonts = ["Fraunces", "Plus Jakarta Sans"];
+    const fontsToLoad: string[] = [];
+    if (data?.font_heading && !builtInFonts.includes(data.font_heading)) {
+      personalizationStyle["--font-display"] = `'${data.font_heading}', serif`;
+      fontsToLoad.push(data.font_heading);
+    }
+    if (data?.font_body && !builtInFonts.includes(data.font_body) && data.font_body !== data.font_heading) {
+      personalizationStyle["--font-sans"] = `'${data.font_body}', sans-serif`;
+      fontsToLoad.push(data.font_body);
+    }
+    if (fontsToLoad.length > 0) {
+      const families = fontsToLoad
+        .map((f) => `family=${f.replace(/ /g, "+")}:wght@400;500;600;700`)
+        .join("&");
+      googleFontsHref = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+    }
   } catch {
-    // fallback to earth theme
+    // fallback to defaults
   }
 
   return (
-    <html lang="en" suppressHydrationWarning className={activeTheme}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={activeTheme}
+      style={Object.keys(personalizationStyle).length > 0
+        ? personalizationStyle as React.CSSProperties
+        : undefined}
+    >
       <head>
+        {/* Google Fonts for custom personalization fonts */}
+        {googleFontsHref && (
+          <>
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+            <link rel="stylesheet" href={googleFontsHref} />
+          </>
+        )}
         {/* Light mode is default — only apply dark if user explicitly chose it */}
         <script
           dangerouslySetInnerHTML={{
@@ -141,11 +190,15 @@ export default async function RootLayout({
       >
         <CartProvider>
           <SlideshowProvider>
-          <Header />
+          <Header storeName={siteSettings?.store_name ?? undefined} />
           <main>{children}</main>
-          <Footer />
+          <Footer settings={siteSettings} />
           <CartSidebar />
-          <FloatingWhatsApp />
+          <FloatingWhatsApp
+            whatsappNumber={siteSettings?.whatsapp_number ?? undefined}
+            storeName={siteSettings?.store_name ?? undefined}
+            supportPhone={siteSettings?.support_phone ?? undefined}
+          />
           <Toaster richColors position="bottom-right" />
           </SlideshowProvider>
         </CartProvider>

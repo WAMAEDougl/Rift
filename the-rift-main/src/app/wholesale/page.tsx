@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getWhatsAppOrderLink, BUSINESS } from "@/lib/constants";
+import { fetchPublicSettings, type PublicSettings } from "@/lib/use-settings";
 import { Building2, School, Hotel, ShoppingBag, Package, TrendingUp, ArrowRight, Check, MessageCircle } from "lucide-react";
 import HeroSlideshow from "@/components/HeroSlideshow";
 
@@ -37,6 +38,15 @@ export default function WholesalePage() {
   const [formError, setFormError] = useState("");
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [siteSettings, setSiteSettings] = useState<PublicSettings | null>(null);
+
+  useEffect(() => {
+    fetchPublicSettings().then(setSiteSettings);
+  }, []);
+
+  const contactEmail = siteSettings?.support_email ?? BUSINESS.email;
+  const contactPhone = siteSettings?.support_phone ?? BUSINESS.phone1;
+  const waNumber = siteSettings?.whatsapp_number ?? BUSINESS.whatsapp;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +59,7 @@ export default function WholesalePage() {
     }
 
     const msg = `WHOLESALE INQUIRY\n\nBusiness: ${formData.businessName}\nContact: ${formData.contactName}\nPhone: ${formData.phone}\nEmail: ${formData.email}\nType: ${formData.businessType}\nProducts: ${formData.products}\nQuantity: ${formData.quantity}\n\n${formData.message}`;
-    const url = getWhatsAppOrderLink(msg);
+    const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
     const popup = window.open(url, "_blank");
     if (popup === null) {
       setPopupBlocked(true);
@@ -155,12 +165,12 @@ export default function WholesalePage() {
               <h3 className="font-display text-2xl font-medium mb-3">Quick Contact</h3>
               <p className="text-background/70 mb-6">For wholesale inquiries:</p>
               <div className="space-y-3 text-sm text-background/85">
-                <p><strong>Phone:</strong> {BUSINESS.phone2}</p>
-                <p><strong>Email:</strong> {BUSINESS.email}</p>
-                <p><strong>WhatsApp:</strong> {BUSINESS.phone1}</p>
+                <p><strong>Phone:</strong> {contactPhone}</p>
+                <p><strong>Email:</strong> {contactEmail}</p>
+                <p><strong>WhatsApp:</strong> {contactPhone}</p>
               </div>
               <a
-                href={`mailto:${BUSINESS.email}?subject=Wholesale Inquiry — Rift & Root`}
+                href={`mailto:${contactEmail}?subject=Wholesale Inquiry — Rift & Root`}
                 className="inline-flex items-center gap-2 rounded-full bg-background px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-foreground mt-6 transition hover:bg-accent"
               >
                 Email Us <ArrowRight className="w-4 h-4" />

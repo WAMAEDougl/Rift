@@ -1,7 +1,18 @@
 import Link from "next/link";
 import { Instagram, Twitter, Youtube } from "lucide-react";
 
-export function Footer() {
+interface FooterSettings {
+  store_name?: string | null;
+  address?: string | null;
+  city?: string | null;
+  support_email?: string | null;
+}
+
+export function Footer({ settings }: { settings?: FooterSettings | null }) {
+  const storeName = settings?.store_name ?? "Rift & Root";
+  const address = settings?.address ?? "Ruhan Plaza, Ground Floor";
+  const city = settings?.city ?? "Kahawa Sukari, Nairobi";
+  const email = settings?.support_email ?? "hello@riftandroot.com";
   return (
     <footer className="ink-gradient mt-32">
       <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
@@ -13,7 +24,7 @@ export function Footer() {
                 R
               </span>
               <span className="font-display text-xl tracking-tight text-white">
-                Rift &amp; Root
+                {storeName}
               </span>
             </div>
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/60">
@@ -65,21 +76,21 @@ export function Footer() {
               Our Roots
             </h4>
             <p className="mt-5 text-sm leading-relaxed text-white/75">
-              Ruhan Plaza, Ground Floor<br />
-              Kahawa Sukari, Nairobi
+              {address}<br />
+              {city}
             </p>
             <a
-              href="mailto:hello@riftandroot.com"
+              href={`mailto:${email}`}
               className="mt-3 inline-block text-sm text-accent hover:text-accent/80 transition-colors"
             >
-              hello@riftandroot.com
+              {email}
             </a>
           </div>
         </div>
 
         {/* Bottom bar */}
         <div className="mt-16 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/40 md:flex-row md:items-center">
-          <p>© {new Date().getFullYear()} Rift &amp; Root. Earth-first sophistication.</p>
+          <p>© {new Date().getFullYear()} {storeName}. Earth-first sophistication.</p>
           <div className="flex gap-4 uppercase tracking-[0.2em]">
             <span>Sustainably Sourced</span>
             <span>·</span>

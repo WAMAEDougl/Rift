@@ -133,6 +133,19 @@ export default function ContentPage() {
 function AboutEditor() {
   const [content, setContent] = useState<AboutContent>(defaultAbout);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    adminFetch("/api/admin/content?page=about")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.data?.content && Object.keys(json.data.content).length > 0) {
+          setContent((prev) => ({ ...prev, ...json.data.content }));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   function setField(field: keyof AboutContent, value: unknown) {
     setContent((prev) => ({ ...prev, [field]: value }));
@@ -158,10 +171,16 @@ function AboutEditor() {
 
   async function handleSave() {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
+    const res = await adminFetch("/api/admin/content?page=about", {
+      method: "PATCH",
+      body: JSON.stringify(content),
+    });
     setSaving(false);
-    toast.success("About page content saved — update src/app/about/page.tsx to persist");
+    if (!res.ok) { toast.error("Failed to save — please try again"); return; }
+    toast.success("About page saved — changes are live on the site");
   }
+
+  if (loading) return <div className="text-center py-16 text-muted-foreground">Loading…</div>;
 
   return (
     <div className="space-y-6">
@@ -306,6 +325,19 @@ function AboutEditor() {
 function CommunityEditor() {
   const [content, setContent] = useState<CommunityContent>(defaultCommunity);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    adminFetch("/api/admin/content?page=community")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.data?.content && Object.keys(json.data.content).length > 0) {
+          setContent((prev) => ({ ...prev, ...json.data.content }));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   function setField(field: keyof CommunityContent, value: unknown) {
     setContent((prev) => ({ ...prev, [field]: value }));
@@ -331,10 +363,16 @@ function CommunityEditor() {
 
   async function handleSave() {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
+    const res = await adminFetch("/api/admin/content?page=community", {
+      method: "PATCH",
+      body: JSON.stringify(content),
+    });
     setSaving(false);
-    toast.success("Community page content saved — update src/app/community/page.tsx to persist");
+    if (!res.ok) { toast.error("Failed to save — please try again"); return; }
+    toast.success("Community page saved — changes are live on the site");
   }
+
+  if (loading) return <div className="text-center py-16 text-muted-foreground">Loading…</div>;
 
   return (
     <div className="space-y-6">
@@ -777,8 +815,8 @@ function TestimonialsEditor() {
 function SaveBar({ saving, onSave, previewHref }: { saving: boolean; onSave: () => void; previewHref: string }) {
   return (
     <div className="flex items-center justify-between gap-4 bg-card rounded-2xl border border-border p-4">
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2.5 text-xs text-amber-700 dark:text-amber-400 flex-1">
-        Changes are previewed in the admin. To persist permanently, update the corresponding page file in <code className="font-mono">src/app/</code>.
+      <div className="bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-2.5 text-xs text-green-700 dark:text-green-400 flex-1">
+        Changes are saved to the database and appear live on the website immediately.
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <a href={previewHref} target="_blank" rel="noopener noreferrer"

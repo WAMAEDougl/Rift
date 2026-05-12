@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BUSINESS, getWhatsAppOrderLink } from "@/lib/constants";
+import { getPublicSettings } from "@/lib/use-settings";
 import { MapPin, Clock, Phone, Navigation, Utensils, Heart, Star, ArrowRight } from "lucide-react";
 import HeroSlideshow from "@/components/HeroSlideshow";
 
@@ -41,7 +42,13 @@ const directions = [
   "Look for the Rift & Root signage at the entrance",
 ];
 
-export default function VisitUsPage() {
+export default async function VisitUsPage() {
+  const settings = await getPublicSettings();
+  const phone = settings.support_phone ?? BUSINESS.phone1;
+  const email = settings.support_email ?? BUSINESS.email;
+  const fullAddress = settings.address
+    ? `${settings.address}, ${settings.city ?? BUSINESS.city}`
+    : BUSINESS.fullAddress;
   return (
     <>
       {/* Hero */}
@@ -88,7 +95,7 @@ export default function VisitUsPage() {
             <div className="bg-card rounded-2xl border border-border p-6">
               <MapPin className="w-8 h-8 text-primary mb-4" />
               <h3 className="font-display text-lg font-medium text-foreground mb-2">Address</h3>
-              <p className="text-muted-foreground">{BUSINESS.fullAddress}</p>
+              <p className="text-muted-foreground">{fullAddress}</p>
             </div>
             <div className="bg-card rounded-2xl border border-border p-6">
               <Clock className="w-8 h-8 text-primary mb-4" />
@@ -105,9 +112,8 @@ export default function VisitUsPage() {
             <div className="bg-card rounded-2xl border border-border p-6">
               <Phone className="w-8 h-8 text-primary mb-4" />
               <h3 className="font-display text-lg font-medium text-foreground mb-2">Contact</h3>
-              <p className="text-muted-foreground text-sm mb-1">{BUSINESS.phone1}</p>
-              <p className="text-muted-foreground text-sm mb-1">{BUSINESS.phone2}</p>
-              <p className="text-muted-foreground text-sm">{BUSINESS.email}</p>
+              <p className="text-muted-foreground text-sm mb-1">{phone}</p>
+              <p className="text-muted-foreground text-sm">{email}</p>
             </div>
           </div>
         </div>
