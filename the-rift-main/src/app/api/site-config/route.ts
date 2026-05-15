@@ -13,7 +13,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("store_settings")
       .select(
-        "hero_bg_image_url, hero_eyebrow, hero_headline, hero_headline_accent, hero_description, hero_cta_text, hero_cta_url, hero_cta2_text, hero_cta2_url, hero_stat1_value, hero_stat1_label, hero_stat1_sub, hero_stat2_value, hero_stat2_label, hero_stat2_sub, hero_stat3_value, hero_stat3_label, hero_stat3_sub"
+        "store_name, logo_url, tagline, hero_bg_image_url, hero_eyebrow, hero_headline, hero_headline_accent, hero_description, hero_cta_text, hero_cta_url, hero_cta2_text, hero_cta2_url, hero_stat1_value, hero_stat1_label, hero_stat1_sub, hero_stat2_value, hero_stat2_label, hero_stat2_sub, hero_stat3_value, hero_stat3_label, hero_stat3_sub"
       )
       .eq("id", 1)
       .single();

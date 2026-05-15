@@ -175,8 +175,9 @@ function AboutEditor() {
       method: "PATCH",
       body: JSON.stringify(content),
     });
+    const json = await res.json().catch(() => ({})) as { error?: { message?: string } };
     setSaving(false);
-    if (!res.ok) { toast.error("Failed to save — please try again"); return; }
+    if (!res.ok) { toast.error(json.error?.message ?? "Failed to save — please try again"); return; }
     toast.success("About page saved — changes are live on the site");
   }
 
@@ -367,8 +368,9 @@ function CommunityEditor() {
       method: "PATCH",
       body: JSON.stringify(content),
     });
+    const json = await res.json().catch(() => ({})) as { error?: { message?: string } };
     setSaving(false);
-    if (!res.ok) { toast.error("Failed to save — please try again"); return; }
+    if (!res.ok) { toast.error(json.error?.message ?? "Failed to save — please try again"); return; }
     toast.success("Community page saved — changes are live on the site");
   }
 

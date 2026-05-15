@@ -385,8 +385,9 @@ export default function BannersPage() {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <button onClick={() => handleToggleActive(b)}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors hover:opacity-80 ${status.className}`}>
+                        <button type="button" onClick={() => handleToggleActive(b)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors hover:opacity-80 cursor-pointer ${status.className}`}
+                          title="Click to toggle active/inactive">
                           {b.is_active ? <Eye size={10} /> : <EyeOff size={10} />}
                           {status.label}
                         </button>

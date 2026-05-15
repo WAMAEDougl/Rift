@@ -11,11 +11,18 @@ import HeroSlideshow from "@/components/HeroSlideshow";
 const CATEGORIES = ["All", "Meals", "Beverages", "Breakfast", "Seasonal"] as const;
 type Category = (typeof CATEGORIES)[number];
 
-interface ShopClientProps {
-  products: LibProduct[];
+interface HeroConfig {
+  eyebrow?: string;
+  headline?: string;
+  description?: string;
 }
 
-export default function ShopClient({ products }: ShopClientProps) {
+interface ShopClientProps {
+  products: LibProduct[];
+  heroConfig?: HeroConfig;
+}
+
+export default function ShopClient({ products, heroConfig = {} }: ShopClientProps) {
   const [active, setActive] = useState<Category>("All");
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -39,14 +46,14 @@ export default function ShopClient({ products }: ShopClientProps) {
         <HeroSlideshow gradient="top" showControls={false} />
 
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-20 lg:px-10">
-          <span className="eyebrow text-accent/80">Our Catalogue</span>
+          <span className="eyebrow text-accent/80">{heroConfig.eyebrow ?? "Our Catalogue"}</span>
           <h1 className="mt-5 font-display text-3xl font-medium leading-tight text-white sm:text-5xl md:text-7xl max-w-2xl">
-            Artisanal
-            <em className="font-normal italic text-accent"> nourishment.</em>
+            {heroConfig.headline
+              ? heroConfig.headline
+              : <><span>Artisanal</span><em className="font-normal italic text-accent"> nourishment.</em></>}
           </h1>
           <p className="mt-6 max-w-md text-base leading-relaxed text-white/70 md:text-lg">
-            A living collection of heritage meals and pantry goods — each shaped by the
-            season and the hands that make it.
+            {heroConfig.description ?? "A living collection of heritage meals and pantry goods — each shaped by the season and the hands that make it."}
           </p>
 
           {/* Search bar */}

@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getAdminClient } from "@/lib/admin/supabase";
 import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 
 const MAX_ATTEMPTS = 5;
@@ -154,18 +155,40 @@ function LoginForm() {
   );
 }
 
-export default function LoginPage() {
+async function getStoreName(): Promise<string> {
+  try {
+    const admin = getAdminClient();
+    const { data } = await admin
+      .from("store_settings")
+      .select("store_name")
+      .eq("id", 1)
+      .single();
+    return data?.store_name || "Rift & Root";
+  } catch {
+    return "Rift & Root";
+  }
+}
+
+export default async function LoginPage() {
+  const storeName = await getStoreName();
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-muted/30">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-display text-lg">
-              R
+          <Link href="/" className="inline-flex items-center gap-2.5 justify-center">
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
+              style={{ background: "#1c1917" }}
+            >
+              <svg width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 19C11 19 4.5 14.5 4.5 9C4.5 6.015 7.462 3.5 11 3.5C14.538 3.5 17.5 6.015 17.5 9C17.5 14.5 11 19 11 19Z" fill="#c8a96e" fillOpacity="0.9"/>
+                <line x1="11" y1="19" x2="11" y2="11" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
             </span>
-            <span className="font-display text-xl tracking-tight">
-              Rift &amp; Root
+            <span className="font-display text-xl tracking-tight text-foreground">
+              {storeName}
             </span>
           </Link>
           <h1 className="mt-6 font-display text-2xl font-medium text-foreground">
@@ -182,7 +205,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           <Link href="/" className="hover:text-foreground transition-colors">
-            ← Back to Rift &amp; Root
+            ← Back to {storeName}
           </Link>
         </p>
       </div>

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatKES, formatDate, formatRelativeTime } from "@/lib/admin/formatters";
-import { adminFetchCached } from "@/lib/admin/fetch";
+import { adminFetchCached, invalidateAdminCache } from "@/lib/admin/fetch";
 
 interface Payment {
   id: string;
@@ -137,8 +137,10 @@ export default function PaymentsPage() {
               </p>
             </div>
           </div>
-          <button onClick={() => { setTab("pending"); setPage(1); }}
-            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:underline">
+          <button
+            type="button"
+            onClick={() => { invalidateAdminCache("/api/admin/payments"); setTab("pending"); setPage(1); }}
+            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer">
             View all <ArrowRight size={12} />
           </button>
         </div>

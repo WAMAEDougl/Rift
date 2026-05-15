@@ -196,7 +196,7 @@ export default function PagesPage() {
 
   const page = pages.find((p) => p.slug === activePage)!;
 
-  // Load saved hero config from DB on mount
+  // Load saved hero config (home page) from site-config
   useEffect(() => {
     adminFetch("/api/site-config")
       .then((r) => r.json())
@@ -221,6 +221,33 @@ export default function PagesPage() {
       .catch(() => {/* keep defaults */});
   }, []);
 
+  // Load saved page config for the active page from DB
+  useEffect(() => {
+    adminFetch(`/api/admin/pages?slug=${activePage}`)
+      .then((r) => r.json())
+      .then((json) => {
+        const saved = json.data?.content as PageConfig | null;
+        if (!saved?.sections) return;
+        setPages((prev) => prev.map((p) => {
+          if (p.slug !== activePage) return p;
+          // Merge saved sections back into defaults (preserve structure, update fields + visible)
+          return {
+            ...p,
+            sections: p.sections.map((s) => {
+              const savedSection = saved.sections.find((ss: PageSection) => ss.id === s.id);
+              if (!savedSection) return s;
+              return {
+                ...s,
+                visible: savedSection.visible ?? s.visible,
+                fields: savedSection.fields ? { ...s.fields, ...savedSection.fields } : s.fields,
+              };
+            }),
+          };
+        }));
+      })
+      .catch(() => {/* keep defaults */});
+  }, [activePage]);
+
   function updateSection(sectionId: string, key: string, value: string | boolean) {
     setPages((prev) => prev.map((p) => {
       if (p.slug !== activePage) return p;
@@ -238,37 +265,30 @@ export default function PagesPage() {
   async function handleSave() {
     setSaving(true);
     try {
-      // Special case: hero section saves to site-config, not pages
+      // Home hero: also save to site-config for live hero slideshow
       if (activePage === "home") {
         const heroSection = page.sections.find((s) => s.id === "hero");
         if (heroSection?.fields) {
-          const res = await adminFetch("/api/admin/site-config", {
+          await adminFetch("/api/admin/site-config", {
             method: "PATCH",
             body: JSON.stringify(heroSection.fields),
           });
-          if (res.ok) {
-            toast.success("Hero default screen saved");
-          } else {
-            localStorage.setItem(`hero_config`, JSON.stringify(heroSection.fields));
-            toast.success("Hero saved locally");
-          }
         }
       }
 
-      // Save page config (for other sections)
+      // Save full page config to DB
       const res = await adminFetch("/api/admin/pages", {
         method: "POST",
         body: JSON.stringify({ slug: activePage, config: page }),
       });
-      if (res.ok) {
-        toast.success(`${page.label} page saved`);
-      } else {
-        localStorage.setItem(`page_config_${activePage}`, JSON.stringify(page));
-        toast.success(`${page.label} saved locally`);
+      const json = await res.json().catch(() => ({})) as { error?: { message?: string } };
+      if (!res.ok) {
+        toast.error(json.error?.message ?? `Failed to save ${page.label} config`);
+        return;
       }
+      toast.success(`${page.label} page config saved`);
     } catch {
-      localStorage.setItem(`page_config_${activePage}`, JSON.stringify(page));
-      toast.success(`${page.label} saved locally`);
+      toast.error("Save failed — check your connection and try again");
     } finally {
       setSaving(false);
     }

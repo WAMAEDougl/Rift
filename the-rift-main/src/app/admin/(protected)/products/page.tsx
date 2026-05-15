@@ -84,14 +84,20 @@ export default function ProductsPage() {
 
   async function handleToggle(product: Product, field: "in_stock" | "is_active") {
     const value = !product[field];
+    // Optimistic update — show change immediately
+    setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, [field]: value } : p)));
     const res = await adminFetch(`/api/admin/products/${product.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ [field]: value }),
     });
-    if (!res.ok) { toast.error("Update failed"); return; }
+    if (!res.ok) {
+      // Revert on failure
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, [field]: !value } : p)));
+      toast.error("Update failed");
+      return;
+    }
     invalidateAdminCache("/api/admin/products");
-    setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, [field]: value } : p)));
   }
 
   async function handleDelete() {
@@ -184,14 +190,17 @@ export default function ProductsPage() {
                 </div>
               ))
             : products.map((product) => (
-                <div key={product.id} className="p-4 flex items-center gap-3">
+                <div key={product.id} className={`p-4 flex items-center gap-3 ${!product.is_active ? "opacity-50" : ""}`}>
                   <div className="w-14 h-14 rounded-xl overflow-hidden bg-muted border border-border shrink-0 flex items-center justify-center">
                     {product.image_url
                       ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                       : <Package size={22} className="text-muted-foreground/40" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground text-sm truncate">{product.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-foreground text-sm truncate">{product.name}</p>
+                      {!product.is_active && <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wide">Inactive · hidden in shop</span>}
+                    </div>
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">{product.slug}</p>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
@@ -247,7 +256,7 @@ export default function ProductsPage() {
                     </tr>
                   ))
                 : products.map((product) => (
-                    <tr key={product.id} className="hover:bg-muted/20 transition-colors">
+                    <tr key={product.id} className={`hover:bg-muted/20 transition-colors ${!product.is_active ? "opacity-50" : ""}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted border border-border shrink-0 flex items-center justify-center">
@@ -258,6 +267,7 @@ export default function ProductsPage() {
                           <div>
                             <p className="font-semibold text-foreground text-sm">{product.name}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 font-mono">{product.slug}</p>
+                            {!product.is_active && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wide">Hidden in shop</span>}
                           </div>
                         </div>
                       </td>
